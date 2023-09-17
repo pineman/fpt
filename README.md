@@ -20,7 +20,8 @@ https://en.wikipedia.org/wiki/Forth_(programming_language)
 ## implementations
 * jonesforth http://git.annexia.org/?p=jonesforth.git;a=blob;f=jonesforth.S;h=45e6e854a5d2a4c3f26af264dfce56379d401425;hb=HEAD -- literate assembly implementation
 * gforth https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Tutorial.html#Tutorial
-https://github.com/philburk/pforth
+* pforth https://github.com/philburk/pforth
+* https://web.archive.org/web/20060719095118/http://www.figuk.plus.com/4thres/systems.htm
 
 ## tests
 * https://forth-standard.org/standard/testsuite
@@ -29,3 +30,4 @@ https://github.com/philburk/pforth
 ## misc
 * https://www.forth.com/resources/forth-apps/#more_forth
 * http://www.figuk.plus.com/build/heart.htm
+* https://www.reddit.com/r/Forth/comments/y405cx/question_forth_implementation_and_performance/isekh0r/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button

@@ -13,6 +13,11 @@ while line = gets
       print "<#{stack.size}> "
       stack.each { print "#{_1} " }
     when '+'
+      if stack.size < 2
+        ok = false
+        print "stack underflow"
+        break
+      end
       stack.push(stack.pop + stack.pop)
     else
       begin
