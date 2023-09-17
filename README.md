@@ -7,7 +7,6 @@ https://en.wikipedia.org/wiki/Forth_(programming_language)
 * new https://forth-standard.org/standard/foreword
 
 ## articles
-* https://www.taygeta.com/forth.html -- John Hayes's ANS compiler validation program
 * https://skilldrick.github.io/easyforth/
 * https://beza1e1.tuxen.de/articles/forth.html
 
@@ -22,6 +21,10 @@ https://en.wikipedia.org/wiki/Forth_(programming_language)
 * jonesforth http://git.annexia.org/?p=jonesforth.git;a=blob;f=jonesforth.S;h=45e6e854a5d2a4c3f26af264dfce56379d401425;hb=HEAD -- literate assembly implementation
 * gforth https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Tutorial.html#Tutorial
 https://github.com/philburk/pforth
+
+## tests
+* https://forth-standard.org/standard/testsuite
+* https://www.taygeta.com/forth.html -- John Hayes's ANS compiler validation program
 
 ## misc
 * https://www.forth.com/resources/forth-apps/#more_forth
