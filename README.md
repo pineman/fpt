@@ -11,13 +11,14 @@ https://en.wikipedia.org/wiki/Forth_(programming_language)
 * https://beza1e1.tuxen.de/articles/forth.html
 
 ## books
+* Starting FORTH https://www.forth.com/starting-forth/0-starting-forth/ https://www.forth.com/wp-content/uploads/2018/01/Starting-FORTH.pdf
 * https://www.forth.com/forth-books/
-* https://www.forth.com/starting-forth/0-starting-forth/
 * https://galileo.phys.virginia.edu/classes/551.jvn.fall01/primer.htm
 * https://wiki.laptop.org/go/Forth_Lessons
 * https://web.archive.org/web/20080211084315/http://www.albany.net/~hello/simple.htm
  
 ## implementations
+* easyforth https://github.com/skilldrick/easyforth
 * jonesforth http://git.annexia.org/?p=jonesforth.git;a=blob;f=jonesforth.S;h=45e6e854a5d2a4c3f26af264dfce56379d401425;hb=HEAD -- literate assembly implementation
 * gforth https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Tutorial.html#Tutorial
 * pforth https://github.com/philburk/pforth
