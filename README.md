@@ -8,6 +8,7 @@ https://en.wikipedia.org/wiki/Forth_(programming_language)
 
 ## articles
 * https://skilldrick.github.io/easyforth/
+* https://blog.asrpo.com/forth_tutorial_part_1
 * https://beza1e1.tuxen.de/articles/forth.html
 
 ## books
@@ -23,6 +24,7 @@ https://en.wikipedia.org/wiki/Forth_(programming_language)
 * gforth https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Tutorial.html#Tutorial
 * pforth https://github.com/philburk/pforth
 * https://web.archive.org/web/20060719095118/http://www.figuk.plus.com/4thres/systems.htm
+* https://github.com/joelpeckham/pyforth
 
 ## tests
 * https://forth-standard.org/standard/testsuite
