@@ -2,7 +2,6 @@ use std::{thread, time::Duration};
 
 pub mod instructions;
 
-#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Instruction {
     opcode: u8,
@@ -58,14 +57,15 @@ impl LR35902 {
         self.memory[..256].clone_from_slice(bootrom);
     }
 
+    /// load 8 bit immediate at position pc + 1 + pos
     fn immediate8(&self, pos: u8) -> u8 {
-        self.memory[(self.pc as usize) + (pos as usize)]
+        self.memory[(self.pc as usize) + (pos as usize) + 1]
     }
 
+    /// load 16 bit immediate at position pc + 1 + pos
     pub fn immediate16(&self, pos: u8) -> u16 {
         ((self.immediate8(pos) as u16) << 8) + self.immediate8(pos + 1) as u16
     }
-
 
     pub fn load_instructions(&mut self, instructions: Vec<Instruction>) {
         self.instructions = instructions;
@@ -78,6 +78,35 @@ impl LR35902 {
         let f = instruction.function;
         f(self, instruction.opcode);
         self.pc += instruction.size as u16;
-        thread::sleep(Duration::from_micros(instruction.clocks as u64));
+        thread::sleep(Duration::from_micros((instruction.clocks / 4) as u64));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_immediate8() {
+        let mut cpu = LR35902::new();
+        let mut bootrom = [0; 256];
+        bootrom[0] = 1;
+        bootrom[1] = 2;
+        bootrom[2] = 3;
+        cpu.load_bootrom(&bootrom);
+
+        assert_eq!(cpu.immediate8(0), 2);
+    }
+
+    #[test]
+    fn test_immediate16() {
+        let mut cpu = LR35902::new();
+        let mut bootrom = [0; 256];
+        bootrom[0] = 1;
+        bootrom[1] = 2;
+        bootrom[2] = 3;
+        cpu.load_bootrom(&bootrom);
+
+        assert_eq!(cpu.immediate16(0), 2 * 256 + 3);
     }
 }
