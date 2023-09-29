@@ -58,6 +58,15 @@ impl LR35902 {
         self.memory[..256].clone_from_slice(bootrom);
     }
 
+    fn immediate8(&self, pos: u8) -> u8 {
+        self.memory[(self.pc as usize) + (pos as usize)]
+    }
+
+    pub fn immediate16(&self, pos: u8) -> u16 {
+        ((self.immediate8(pos) as u16) << 8) + self.immediate8(pos + 1) as u16
+    }
+
+
     pub fn load_instructions(&mut self, instructions: Vec<Instruction>) {
         self.instructions = instructions;
     }
