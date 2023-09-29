@@ -58,8 +58,8 @@ pub fn load_instructions() -> Vec<Instruction> {
         not_implemented(45),                  //46
         not_implemented(46),                  //47
         not_implemented(47),                  //48
-        Instruction::new(49, 12, 3, |_, _| {
-            println!("load");
+        Instruction::new(49, 12, 3, |cpu, _| {
+            cpu.sp = cpu.immediate16(1);
         }),
         not_implemented(50),  //50
         not_implemented(51),  //51
