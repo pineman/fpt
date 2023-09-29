@@ -19,8 +19,7 @@ jobs:
     - name: Version
       run: rustc --version
     - name: Build
-      run: cargo rustc --lib --verbose -- -D warnings
-        | cargo rustc --bin --verbose -- -D warnings
+      run: RUSTFLAGS="-D warnings" cargo rustc --verbose
 
 
   clippy:
