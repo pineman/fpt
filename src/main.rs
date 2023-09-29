@@ -1,3 +1,4 @@
 fn main() {
-    println!("Hello, world!");
+    let bootrom = include_bytes!("../dmg0.bin");
+    println!("{:x?}", bootrom);
 }
