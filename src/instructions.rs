@@ -7,10 +7,19 @@ fn not_implemented(opcode: u8) -> Instruction {
     })
 }
 
+fn not_implemented_cb(opcode: u8) -> Instruction {
+    Instruction::new(opcode, 4, 1, |_, opcode| {
+        println!("not-implemented cb: {}", opcode);
+        unimplemented!();
+    })
+}
+
 pub fn load_instructions() -> Vec<Instruction> {
     vec![
         Instruction::new(0, 4, 1, |_, _| {}), //0 nop
-        not_implemented(1),                   //1
+        Instruction::new(1, 12, 3, |cpu, _| {
+            cpu.bc = cpu.immediate16(0);
+        }), //1 LD BC,d16
         not_implemented(2),                   //2
         not_implemented(3),                   //3
         not_implemented(4),                   //4
@@ -42,7 +51,9 @@ pub fn load_instructions() -> Vec<Instruction> {
         not_implemented(30),                  //30
         not_implemented(31),                  //31
         not_implemented(32),                  //32
-        not_implemented(33),                  //33
+        Instruction::new(33, 12, 3, |cpu, _| {
+            cpu.hl = cpu.immediate16(0);
+        }), //33 LD HL,d16
         not_implemented(34),                  //34
         not_implemented(35),                  //35
         not_implemented(36),                  //36
@@ -61,7 +72,10 @@ pub fn load_instructions() -> Vec<Instruction> {
         Instruction::new(49, 12, 3, |cpu, _| {
             cpu.sp = cpu.immediate16(0);
         }), //49 LD SP,d16
-        not_implemented(50),                  //50
+        Instruction::new(50, 8, 1, |cpu, _| {
+            cpu.set_memory8(cpu.hl, cpu.a());
+            cpu.hl -= 1;
+        }), //50 LD (HL-),A
         not_implemented(51),                  //51
         not_implemented(52),                  //52
         not_implemented(53),                  //53
@@ -186,7 +200,9 @@ pub fn load_instructions() -> Vec<Instruction> {
         not_implemented(172),                 //172
         not_implemented(173),                 //173
         not_implemented(174),                 //174
-        not_implemented(175),                 //175
+        Instruction::new(1, 4, 1, |cpu, _| {
+            cpu.set_a(cpu.a());
+        }), //175 XOR A
         not_implemented(176),                 //176
         not_implemented(177),                 //177
         not_implemented(178),                 //178
@@ -214,7 +230,11 @@ pub fn load_instructions() -> Vec<Instruction> {
         not_implemented(200),                 //200
         not_implemented(201),                 //201
         not_implemented(202),                 //202
-        not_implemented(203),                 //203
+        Instruction::new(1, 4, 1, |cpu, _| {
+            let instruction = cpu.cb_instructions[cpu.memory8(cpu.pc + 1) as usize].clone();
+            (instruction.function)(cpu, dbg!(instruction.opcode));
+            cpu.pc += instruction.size as u16 + 1;
+        }), //203 PREFIX CB
         not_implemented(204),                 //204
         not_implemented(205),                 //205
         not_implemented(206),                 //206
@@ -267,5 +287,268 @@ pub fn load_instructions() -> Vec<Instruction> {
         not_implemented(253),                 //253
         not_implemented(254),                 //254
         not_implemented(255),                 //255
+    ]
+}
+
+pub fn cb_instructions() -> Vec<Instruction> {
+    vec![
+        not_implemented_cb(0),   //0
+        not_implemented_cb(1),   //1
+        not_implemented_cb(2),   //2
+        not_implemented_cb(3),   //3
+        not_implemented_cb(4),   //4
+        not_implemented_cb(5),   //5
+        not_implemented_cb(6),   //6
+        not_implemented_cb(7),   //7
+        not_implemented_cb(8),   //8
+        not_implemented_cb(9),   //9
+        not_implemented_cb(10),  //10
+        not_implemented_cb(11),  //11
+        not_implemented_cb(12),  //12
+        not_implemented_cb(13),  //13
+        not_implemented_cb(14),  //14
+        not_implemented_cb(15),  //15
+        not_implemented_cb(16),  //16
+        not_implemented_cb(17),  //17
+        not_implemented_cb(18),  //18
+        not_implemented_cb(19),  //19
+        not_implemented_cb(20),  //20
+        not_implemented_cb(21),  //21
+        not_implemented_cb(22),  //22
+        not_implemented_cb(23),  //23
+        not_implemented_cb(24),  //24
+        not_implemented_cb(25),  //25
+        not_implemented_cb(26),  //26
+        not_implemented_cb(27),  //27
+        not_implemented_cb(28),  //28
+        not_implemented_cb(29),  //29
+        not_implemented_cb(30),  //30
+        not_implemented_cb(31),  //31
+        not_implemented_cb(32),  //32
+        not_implemented_cb(33),  //33
+        not_implemented_cb(34),  //34
+        not_implemented_cb(35),  //35
+        not_implemented_cb(36),  //36
+        not_implemented_cb(37),  //37
+        not_implemented_cb(38),  //38
+        not_implemented_cb(39),  //39
+        not_implemented_cb(40),  //40
+        not_implemented_cb(41),  //41
+        not_implemented_cb(42),  //42
+        not_implemented_cb(43),  //43
+        not_implemented_cb(44),  //44
+        not_implemented_cb(45),  //45
+        not_implemented_cb(46),  //46
+        not_implemented_cb(47),  //47
+        not_implemented_cb(48),  //48
+        not_implemented_cb(49),  //49
+        not_implemented_cb(50),  //50
+        not_implemented_cb(51),  //51
+        not_implemented_cb(52),  //52
+        not_implemented_cb(53),  //53
+        not_implemented_cb(54),  //54
+        not_implemented_cb(55),  //55
+        not_implemented_cb(56),  //56
+        not_implemented_cb(57),  //57
+        not_implemented_cb(58),  //58
+        not_implemented_cb(59),  //59
+        not_implemented_cb(60),  //60
+        not_implemented_cb(61),  //61
+        not_implemented_cb(62),  //62
+        not_implemented_cb(63),  //63
+        not_implemented_cb(64),  //64
+        not_implemented_cb(65),  //65
+        not_implemented_cb(66),  //66
+        not_implemented_cb(67),  //67
+        not_implemented_cb(68),  //68
+        not_implemented_cb(69),  //69
+        not_implemented_cb(70),  //70
+        not_implemented_cb(71),  //71
+        not_implemented_cb(72),  //72
+        not_implemented_cb(73),  //73
+        not_implemented_cb(74),  //74
+        not_implemented_cb(75),  //75
+        not_implemented_cb(76),  //76
+        not_implemented_cb(77),  //77
+        not_implemented_cb(78),  //78
+        not_implemented_cb(79),  //79
+        not_implemented_cb(80),  //80
+        not_implemented_cb(81),  //81
+        not_implemented_cb(82),  //82
+        not_implemented_cb(83),  //83
+        not_implemented_cb(84),  //84
+        not_implemented_cb(85),  //85
+        not_implemented_cb(86),  //86
+        not_implemented_cb(87),  //87
+        not_implemented_cb(88),  //88
+        not_implemented_cb(89),  //89
+        not_implemented_cb(90),  //90
+        not_implemented_cb(91),  //91
+        not_implemented_cb(92),  //92
+        not_implemented_cb(93),  //93
+        not_implemented_cb(94),  //94
+        not_implemented_cb(95),  //95
+        not_implemented_cb(96),  //96
+        not_implemented_cb(97),  //97
+        not_implemented_cb(98),  //98
+        not_implemented_cb(99),  //99
+        not_implemented_cb(100), //100
+        not_implemented_cb(101), //101
+        not_implemented_cb(102), //102
+        not_implemented_cb(103), //103
+        not_implemented_cb(104), //104
+        not_implemented_cb(105), //105
+        not_implemented_cb(106), //106
+        not_implemented_cb(107), //107
+        not_implemented_cb(108), //108
+        not_implemented_cb(109), //109
+        not_implemented_cb(110), //110
+        not_implemented_cb(111), //111
+        not_implemented_cb(112), //112
+        not_implemented_cb(113), //113
+        not_implemented_cb(114), //114
+        not_implemented_cb(115), //115
+        not_implemented_cb(116), //116
+        not_implemented_cb(117), //117
+        not_implemented_cb(118), //118
+        not_implemented_cb(119), //119
+        not_implemented_cb(120), //120
+        not_implemented_cb(121), //121
+        not_implemented_cb(122), //122
+        not_implemented_cb(123), //123
+        Instruction::new(124, 2, 8, |cpu, opcode| {
+            cpu.set_a((cpu.h() >> 7) & 1);
+        }), // 124 BIT 7,H
+        not_implemented_cb(125), //125
+        not_implemented_cb(126), //126
+        not_implemented_cb(127), //127
+        not_implemented_cb(128), //128
+        not_implemented_cb(129), //129
+        not_implemented_cb(130), //130
+        not_implemented_cb(131), //131
+        not_implemented_cb(132), //132
+        not_implemented_cb(133), //133
+        not_implemented_cb(134), //134
+        not_implemented_cb(135), //135
+        not_implemented_cb(136), //136
+        not_implemented_cb(137), //137
+        not_implemented_cb(138), //138
+        not_implemented_cb(139), //139
+        not_implemented_cb(140), //140
+        not_implemented_cb(141), //141
+        not_implemented_cb(142), //142
+        not_implemented_cb(143), //143
+        not_implemented_cb(144), //144
+        not_implemented_cb(145), //145
+        not_implemented_cb(146), //146
+        not_implemented_cb(147), //147
+        not_implemented_cb(148), //148
+        not_implemented_cb(149), //149
+        not_implemented_cb(150), //150
+        not_implemented_cb(151), //151
+        not_implemented_cb(152), //152
+        not_implemented_cb(153), //153
+        not_implemented_cb(154), //154
+        not_implemented_cb(155), //155
+        not_implemented_cb(156), //156
+        not_implemented_cb(157), //157
+        not_implemented_cb(158), //158
+        not_implemented_cb(159), //159
+        not_implemented_cb(160), //160
+        not_implemented_cb(161), //161
+        not_implemented_cb(162), //162
+        not_implemented_cb(163), //163
+        not_implemented_cb(164), //164
+        not_implemented_cb(165), //165
+        not_implemented_cb(166), //166
+        not_implemented_cb(167), //167
+        not_implemented_cb(168), //168
+        not_implemented_cb(169), //169
+        not_implemented_cb(170), //170
+        not_implemented_cb(171), //171
+        not_implemented_cb(172), //172
+        not_implemented_cb(173), //173
+        not_implemented_cb(174), //174
+        not_implemented_cb(175), //175
+        not_implemented_cb(176), //176
+        not_implemented_cb(177), //177
+        not_implemented_cb(178), //178
+        not_implemented_cb(179), //179
+        not_implemented_cb(180), //180
+        not_implemented_cb(181), //181
+        not_implemented_cb(182), //182
+        not_implemented_cb(183), //183
+        not_implemented_cb(184), //184
+        not_implemented_cb(185), //185
+        not_implemented_cb(186), //186
+        not_implemented_cb(187), //187
+        not_implemented_cb(188), //188
+        not_implemented_cb(189), //189
+        not_implemented_cb(190), //190
+        not_implemented_cb(191), //191
+        not_implemented_cb(192), //192
+        not_implemented_cb(193), //193
+        not_implemented_cb(194), //194
+        not_implemented_cb(195), //195
+        not_implemented_cb(196), //196
+        not_implemented_cb(197), //197
+        not_implemented_cb(198), //198
+        not_implemented_cb(199), //199
+        not_implemented_cb(200), //200
+        not_implemented_cb(201), //201
+        not_implemented_cb(202), //202
+        not_implemented_cb(203), //203
+        not_implemented_cb(204), //204
+        not_implemented_cb(205), //205
+        not_implemented_cb(206), //206
+        not_implemented_cb(207), //207
+        not_implemented_cb(208), //208
+        not_implemented_cb(209), //209
+        not_implemented_cb(210), //210
+        not_implemented_cb(211), //211
+        not_implemented_cb(212), //212
+        not_implemented_cb(213), //213
+        not_implemented_cb(214), //214
+        not_implemented_cb(215), //215
+        not_implemented_cb(216), //216
+        not_implemented_cb(217), //217
+        not_implemented_cb(218), //218
+        not_implemented_cb(219), //219
+        not_implemented_cb(220), //220
+        not_implemented_cb(221), //221
+        not_implemented_cb(222), //222
+        not_implemented_cb(223), //223
+        not_implemented_cb(224), //224
+        not_implemented_cb(225), //225
+        not_implemented_cb(226), //226
+        not_implemented_cb(227), //227
+        not_implemented_cb(228), //228
+        not_implemented_cb(229), //229
+        not_implemented_cb(230), //230
+        not_implemented_cb(231), //231
+        not_implemented_cb(232), //232
+        not_implemented_cb(233), //233
+        not_implemented_cb(234), //234
+        not_implemented_cb(235), //235
+        not_implemented_cb(236), //236
+        not_implemented_cb(237), //237
+        not_implemented_cb(238), //238
+        not_implemented_cb(239), //239
+        not_implemented_cb(240), //240
+        not_implemented_cb(241), //241
+        not_implemented_cb(242), //242
+        not_implemented_cb(243), //243
+        not_implemented_cb(244), //244
+        not_implemented_cb(245), //245
+        not_implemented_cb(246), //246
+        not_implemented_cb(247), //247
+        not_implemented_cb(248), //248
+        not_implemented_cb(249), //249
+        not_implemented_cb(250), //250
+        not_implemented_cb(251), //251
+        not_implemented_cb(252), //252
+        not_implemented_cb(253), //253
+        not_implemented_cb(254), //254
+        not_implemented_cb(255), //255
     ]
 }
