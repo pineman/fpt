@@ -1,275 +1,271 @@
 use crate::Instruction;
 
-fn nop(opcode: u8) -> Instruction {
-    Instruction::new(0, 4, 1, |_, opcode| println!("not: {}", opcode))
-}
-
 fn not_implemented(opcode: u8) -> Instruction {
-    Instruction::new(0, 4, 1, |_, opcode| {
+    Instruction::new(opcode, 4, 1, |_, opcode| {
         println!("not-implemented: {}", opcode);
-        panic!();
+        unimplemented!();
     })
 }
 
 pub fn load_instructions() -> Vec<Instruction> {
     vec![
-        not_implemented(0),
-        not_implemented(1),
-        not_implemented(2),
-        not_implemented(3),
-        not_implemented(4),
-        not_implemented(5),
-        not_implemented(6),
-        not_implemented(7),
-        not_implemented(8),
-        not_implemented(9),
-        not_implemented(10),
-        not_implemented(11),
-        not_implemented(12),
-        not_implemented(13),
-        not_implemented(14),
-        not_implemented(15),
-        not_implemented(16),
-        not_implemented(17),
-        not_implemented(18),
-        not_implemented(19),
-        not_implemented(20),
-        not_implemented(21),
-        not_implemented(22),
-        not_implemented(23),
-        not_implemented(24),
-        not_implemented(25),
-        not_implemented(26),
-        not_implemented(27),
-        not_implemented(28),
-        not_implemented(29),
-        not_implemented(30),
-        not_implemented(31),
-        not_implemented(32),
-        not_implemented(33),
-        not_implemented(34),
-        not_implemented(35),
-        not_implemented(36),
-        not_implemented(37),
-        not_implemented(38),
-        not_implemented(39),
-        not_implemented(40),
-        not_implemented(41),
-        not_implemented(42),
-        not_implemented(43),
-        not_implemented(44),
-        not_implemented(45),
-        not_implemented(46),
-        not_implemented(47),
-        not_implemented(48),
+        Instruction::new(0, 4, 1, |_, _| {}), //0
+        not_implemented(0),                   //1
+        not_implemented(1),                   //2
+        not_implemented(2),                   //3
+        not_implemented(3),                   //4
+        not_implemented(4),                   //5
+        not_implemented(5),                   //6
+        not_implemented(6),                   //7
+        not_implemented(7),                   //8
+        not_implemented(8),                   //9
+        not_implemented(9),                   //10
+        not_implemented(10),                  //11
+        not_implemented(11),                  //12
+        not_implemented(12),                  //13
+        not_implemented(13),                  //14
+        not_implemented(14),                  //15
+        not_implemented(15),                  //16
+        not_implemented(16),                  //17
+        not_implemented(17),                  //18
+        not_implemented(18),                  //19
+        not_implemented(19),                  //20
+        not_implemented(20),                  //21
+        not_implemented(21),                  //22
+        not_implemented(22),                  //23
+        not_implemented(23),                  //24
+        not_implemented(24),                  //25
+        not_implemented(25),                  //26
+        not_implemented(26),                  //27
+        not_implemented(27),                  //28
+        not_implemented(28),                  //29
+        not_implemented(29),                  //30
+        not_implemented(30),                  //31
+        not_implemented(31),                  //32
+        not_implemented(32),                  //33
+        not_implemented(33),                  //34
+        not_implemented(34),                  //35
+        not_implemented(35),                  //36
+        not_implemented(36),                  //37
+        not_implemented(37),                  //38
+        not_implemented(38),                  //39
+        not_implemented(39),                  //40
+        not_implemented(40),                  //41
+        not_implemented(41),                  //42
+        not_implemented(42),                  //43
+        not_implemented(43),                  //44
+        not_implemented(44),                  //45
+        not_implemented(45),                  //46
+        not_implemented(46),                  //47
+        not_implemented(47),                  //48
         Instruction::new(49, 12, 3, |_, _| {
             println!("load");
         }),
-        not_implemented(50),
-        not_implemented(51),
-        not_implemented(52),
-        not_implemented(53),
-        not_implemented(54),
-        not_implemented(55),
-        not_implemented(56),
-        not_implemented(57),
-        not_implemented(58),
-        not_implemented(59),
-        not_implemented(60),
-        not_implemented(61),
-        not_implemented(62),
-        not_implemented(63),
-        not_implemented(64),
-        not_implemented(65),
-        not_implemented(66),
-        not_implemented(67),
-        not_implemented(68),
-        not_implemented(69),
-        not_implemented(70),
-        not_implemented(71),
-        not_implemented(72),
-        not_implemented(73),
-        not_implemented(74),
-        not_implemented(75),
-        not_implemented(76),
-        not_implemented(77),
-        not_implemented(78),
-        not_implemented(79),
-        not_implemented(80),
-        not_implemented(81),
-        not_implemented(82),
-        not_implemented(83),
-        not_implemented(84),
-        not_implemented(85),
-        not_implemented(86),
-        not_implemented(87),
-        not_implemented(88),
-        not_implemented(89),
-        not_implemented(90),
-        not_implemented(91),
-        not_implemented(92),
-        not_implemented(93),
-        not_implemented(94),
-        not_implemented(95),
-        not_implemented(96),
-        not_implemented(97),
-        not_implemented(98),
-        not_implemented(99),
-        not_implemented(100),
-        not_implemented(101),
-        not_implemented(102),
-        not_implemented(103),
-        not_implemented(104),
-        not_implemented(105),
-        not_implemented(106),
-        not_implemented(107),
-        not_implemented(108),
-        not_implemented(109),
-        not_implemented(110),
-        not_implemented(111),
-        not_implemented(112),
-        not_implemented(113),
-        not_implemented(114),
-        not_implemented(115),
-        not_implemented(116),
-        not_implemented(117),
-        not_implemented(118),
-        not_implemented(119),
-        not_implemented(120),
-        not_implemented(121),
-        not_implemented(122),
-        not_implemented(123),
-        not_implemented(124),
-        not_implemented(125),
-        not_implemented(126),
-        not_implemented(127),
-        not_implemented(128),
-        not_implemented(129),
-        not_implemented(130),
-        not_implemented(131),
-        not_implemented(132),
-        not_implemented(133),
-        not_implemented(134),
-        not_implemented(135),
-        not_implemented(136),
-        not_implemented(137),
-        not_implemented(138),
-        not_implemented(139),
-        not_implemented(140),
-        not_implemented(141),
-        not_implemented(142),
-        not_implemented(143),
-        not_implemented(144),
-        not_implemented(145),
-        not_implemented(146),
-        not_implemented(147),
-        not_implemented(148),
-        not_implemented(149),
-        not_implemented(150),
-        not_implemented(151),
-        not_implemented(152),
-        not_implemented(153),
-        not_implemented(154),
-        not_implemented(155),
-        not_implemented(156),
-        not_implemented(157),
-        not_implemented(158),
-        not_implemented(159),
-        not_implemented(160),
-        not_implemented(161),
-        not_implemented(162),
-        not_implemented(163),
-        not_implemented(164),
-        not_implemented(165),
-        not_implemented(166),
-        not_implemented(167),
-        not_implemented(168),
-        not_implemented(169),
-        not_implemented(170),
-        not_implemented(171),
-        not_implemented(172),
-        not_implemented(173),
-        not_implemented(174),
-        not_implemented(175),
-        not_implemented(176),
-        not_implemented(177),
-        not_implemented(178),
-        not_implemented(179),
-        not_implemented(180),
-        not_implemented(181),
-        not_implemented(182),
-        not_implemented(183),
-        not_implemented(184),
-        not_implemented(185),
-        not_implemented(186),
-        not_implemented(187),
-        not_implemented(188),
-        not_implemented(189),
-        not_implemented(190),
-        not_implemented(191),
-        not_implemented(192),
-        not_implemented(193),
-        not_implemented(194),
-        not_implemented(195),
-        not_implemented(196),
-        not_implemented(197),
-        not_implemented(198),
-        not_implemented(199),
-        not_implemented(200),
-        not_implemented(201),
-        not_implemented(202),
-        not_implemented(203),
-        not_implemented(204),
-        not_implemented(205),
-        not_implemented(206),
-        not_implemented(207),
-        not_implemented(208),
-        not_implemented(209),
-        not_implemented(210),
-        not_implemented(211),
-        not_implemented(212),
-        not_implemented(213),
-        not_implemented(214),
-        not_implemented(215),
-        not_implemented(216),
-        not_implemented(217),
-        not_implemented(218),
-        not_implemented(219),
-        not_implemented(220),
-        not_implemented(221),
-        not_implemented(222),
-        not_implemented(223),
-        not_implemented(224),
-        not_implemented(225),
-        not_implemented(226),
-        not_implemented(227),
-        not_implemented(228),
-        not_implemented(229),
-        not_implemented(230),
-        not_implemented(231),
-        not_implemented(232),
-        not_implemented(233),
-        not_implemented(234),
-        not_implemented(235),
-        not_implemented(236),
-        not_implemented(237),
-        not_implemented(238),
-        not_implemented(239),
-        not_implemented(240),
-        not_implemented(241),
-        not_implemented(242),
-        not_implemented(243),
-        not_implemented(244),
-        not_implemented(245),
-        not_implemented(246),
-        not_implemented(247),
-        not_implemented(248),
-        not_implemented(249),
-        not_implemented(250),
-        not_implemented(251),
-        not_implemented(252),
-        not_implemented(253),
-        not_implemented(254),
-        not_implemented(255)
+        not_implemented(50),  //50
+        not_implemented(51),  //51
+        not_implemented(52),  //52
+        not_implemented(53),  //53
+        not_implemented(54),  //54
+        not_implemented(55),  //55
+        not_implemented(56),  //56
+        not_implemented(57),  //57
+        not_implemented(58),  //58
+        not_implemented(59),  //59
+        not_implemented(60),  //60
+        not_implemented(61),  //61
+        not_implemented(62),  //62
+        not_implemented(63),  //63
+        not_implemented(64),  //64
+        not_implemented(65),  //65
+        not_implemented(66),  //66
+        not_implemented(67),  //67
+        not_implemented(68),  //68
+        not_implemented(69),  //69
+        not_implemented(70),  //70
+        not_implemented(71),  //71
+        not_implemented(72),  //72
+        not_implemented(73),  //73
+        not_implemented(74),  //74
+        not_implemented(75),  //75
+        not_implemented(76),  //76
+        not_implemented(77),  //77
+        not_implemented(78),  //78
+        not_implemented(79),  //79
+        not_implemented(80),  //80
+        not_implemented(81),  //81
+        not_implemented(82),  //82
+        not_implemented(83),  //83
+        not_implemented(84),  //84
+        not_implemented(85),  //85
+        not_implemented(86),  //86
+        not_implemented(87),  //87
+        not_implemented(88),  //88
+        not_implemented(89),  //89
+        not_implemented(90),  //90
+        not_implemented(91),  //91
+        not_implemented(92),  //92
+        not_implemented(93),  //93
+        not_implemented(94),  //94
+        not_implemented(95),  //95
+        not_implemented(96),  //96
+        not_implemented(97),  //97
+        not_implemented(98),  //98
+        not_implemented(99),  //99
+        not_implemented(100), //100
+        not_implemented(101), //101
+        not_implemented(102), //102
+        not_implemented(103), //103
+        not_implemented(104), //104
+        not_implemented(105), //105
+        not_implemented(106), //106
+        not_implemented(107), //107
+        not_implemented(108), //108
+        not_implemented(109), //109
+        not_implemented(110), //110
+        not_implemented(111), //111
+        not_implemented(112), //112
+        not_implemented(113), //113
+        not_implemented(114), //114
+        not_implemented(115), //115
+        not_implemented(116), //116
+        not_implemented(117), //117
+        not_implemented(118), //118
+        not_implemented(119), //119
+        not_implemented(120), //120
+        not_implemented(121), //121
+        not_implemented(122), //122
+        not_implemented(123), //123
+        not_implemented(124), //124
+        not_implemented(125), //125
+        not_implemented(126), //126
+        not_implemented(127), //127
+        not_implemented(128), //128
+        not_implemented(129), //129
+        not_implemented(130), //130
+        not_implemented(131), //131
+        not_implemented(132), //132
+        not_implemented(133), //133
+        not_implemented(134), //134
+        not_implemented(135), //135
+        not_implemented(136), //136
+        not_implemented(137), //137
+        not_implemented(138), //138
+        not_implemented(139), //139
+        not_implemented(140), //140
+        not_implemented(141), //141
+        not_implemented(142), //142
+        not_implemented(143), //143
+        not_implemented(144), //144
+        not_implemented(145), //145
+        not_implemented(146), //146
+        not_implemented(147), //147
+        not_implemented(148), //148
+        not_implemented(149), //149
+        not_implemented(150), //150
+        not_implemented(151), //151
+        not_implemented(152), //152
+        not_implemented(153), //153
+        not_implemented(154), //154
+        not_implemented(155), //155
+        not_implemented(156), //156
+        not_implemented(157), //157
+        not_implemented(158), //158
+        not_implemented(159), //159
+        not_implemented(160), //160
+        not_implemented(161), //161
+        not_implemented(162), //162
+        not_implemented(163), //163
+        not_implemented(164), //164
+        not_implemented(165), //165
+        not_implemented(166), //166
+        not_implemented(167), //167
+        not_implemented(168), //168
+        not_implemented(169), //169
+        not_implemented(170), //170
+        not_implemented(171), //171
+        not_implemented(172), //172
+        not_implemented(173), //173
+        not_implemented(174), //174
+        not_implemented(175), //175
+        not_implemented(176), //176
+        not_implemented(177), //177
+        not_implemented(178), //178
+        not_implemented(179), //179
+        not_implemented(180), //180
+        not_implemented(181), //181
+        not_implemented(182), //182
+        not_implemented(183), //183
+        not_implemented(184), //184
+        not_implemented(185), //185
+        not_implemented(186), //186
+        not_implemented(187), //187
+        not_implemented(188), //188
+        not_implemented(189), //189
+        not_implemented(190), //190
+        not_implemented(191), //191
+        not_implemented(192), //192
+        not_implemented(193), //193
+        not_implemented(194), //194
+        not_implemented(195), //195
+        not_implemented(196), //196
+        not_implemented(197), //197
+        not_implemented(198), //198
+        not_implemented(199), //199
+        not_implemented(200), //200
+        not_implemented(201), //201
+        not_implemented(202), //202
+        not_implemented(203), //203
+        not_implemented(204), //204
+        not_implemented(205), //205
+        not_implemented(206), //206
+        not_implemented(207), //207
+        not_implemented(208), //208
+        not_implemented(209), //209
+        not_implemented(210), //210
+        not_implemented(211), //211
+        not_implemented(212), //212
+        not_implemented(213), //213
+        not_implemented(214), //214
+        not_implemented(215), //215
+        not_implemented(216), //216
+        not_implemented(217), //217
+        not_implemented(218), //218
+        not_implemented(219), //219
+        not_implemented(220), //220
+        not_implemented(221), //221
+        not_implemented(222), //222
+        not_implemented(223), //223
+        not_implemented(224), //224
+        not_implemented(225), //225
+        not_implemented(226), //226
+        not_implemented(227), //227
+        not_implemented(228), //228
+        not_implemented(229), //229
+        not_implemented(230), //230
+        not_implemented(231), //231
+        not_implemented(232), //232
+        not_implemented(233), //233
+        not_implemented(234), //234
+        not_implemented(235), //235
+        not_implemented(236), //236
+        not_implemented(237), //237
+        not_implemented(238), //238
+        not_implemented(239), //239
+        not_implemented(240), //240
+        not_implemented(241), //241
+        not_implemented(242), //242
+        not_implemented(243), //243
+        not_implemented(244), //244
+        not_implemented(245), //245
+        not_implemented(246), //246
+        not_implemented(247), //247
+        not_implemented(248), //248
+        not_implemented(249), //249
+        not_implemented(250), //250
+        not_implemented(251), //251
+        not_implemented(252), //252
+        not_implemented(253), //253
+        not_implemented(254), //254
+        not_implemented(255), //255
     ]
 }
