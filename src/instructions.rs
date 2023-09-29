@@ -87,7 +87,9 @@ pub fn load_instructions() -> Vec<Instruction> {
         not_implemented(59),                  //59
         not_implemented(60),                  //60
         not_implemented(61),                  //61
-        not_implemented(62),                  //62
+        Instruction::new(62, 8, 2, |cpu, _| {
+            cpu.set_a(cpu.immediate8(0));
+        }), //62 LD A,d8
         not_implemented(63),                  //63
         not_implemented(64),                  //64
         not_implemented(65),                  //65
@@ -153,7 +155,9 @@ pub fn load_instructions() -> Vec<Instruction> {
         not_implemented(125),                 //125
         not_implemented(126),                 //126
         not_implemented(127),                 //127
-        not_implemented(128),                 //128
+        Instruction::new(128, 4, 1, |cpu, _| {
+            cpu.set_a(cpu.a() + cpu.b());
+        }), //175 XOR A
         not_implemented(129),                 //129
         not_implemented(130),                 //130
         not_implemented(131),                 //131
@@ -200,8 +204,8 @@ pub fn load_instructions() -> Vec<Instruction> {
         not_implemented(172),                 //172
         not_implemented(173),                 //173
         not_implemented(174),                 //174
-        Instruction::new(1, 4, 1, |cpu, _| {
-            cpu.set_a(cpu.a());
+        Instruction::new(175, 4, 1, |cpu, _| {
+            cpu.set_a(cpu.a() ^ cpu.a());
         }), //175 XOR A
         not_implemented(176),                 //176
         not_implemented(177),                 //177
@@ -257,7 +261,9 @@ pub fn load_instructions() -> Vec<Instruction> {
         not_implemented(223),                 //223
         not_implemented(224),                 //224
         not_implemented(225),                 //225
-        not_implemented(226),                 //226
+        Instruction::new(226, 8, 2, |cpu, _| {
+            cpu.set_memory8(cpu.c().into(), cpu.a());
+        }), //175 XOR A
         not_implemented(227),                 //227
         not_implemented(228),                 //228
         not_implemented(229),                 //229
@@ -416,7 +422,7 @@ pub fn cb_instructions() -> Vec<Instruction> {
         not_implemented_cb(121), //121
         not_implemented_cb(122), //122
         not_implemented_cb(123), //123
-        Instruction::new(124, 2, 8, |cpu, opcode| {
+        Instruction::new(124, 2, 8, |cpu, _| {
             cpu.set_a((cpu.h() >> 7) & 1);
         }), // 124 BIT 7,H
         not_implemented_cb(125), //125

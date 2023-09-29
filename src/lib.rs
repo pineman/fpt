@@ -59,6 +59,14 @@ impl LR35902 {
         return ((self.af >> 8) & 0xFF) as u8;
     }
 
+    pub fn b(&self) -> u8 {
+        return ((self.bc >> 8) & 0xFF) as u8;
+    }
+
+    pub fn c(&self) -> u8 {
+        return (self.bc & 0xFF) as u8;
+    }
+
     pub fn h(&self) -> u8 {
         return ((self.hl >> 8) & 0xFF) as u8;
     }
