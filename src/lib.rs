@@ -102,7 +102,7 @@ impl LR35902 {
     }
 
     pub fn set_c(&mut self, value: u8) {
-        self.bc = (self.bc & 0xFF00) | ((value as u16));
+        self.bc = (self.bc & 0xFF00) | (value as u16);
     }
 
     pub fn set_d(&mut self, value: u8) {
@@ -110,7 +110,7 @@ impl LR35902 {
     }
 
     pub fn set_e(&mut self, value: u8) {
-        self.de = (self.de & 0xFF00) | ((value as u16));
+        self.de = (self.de & 0xFF00) | (value as u16);
     }
 
     pub fn set_h(&mut self, value: u8) {
@@ -118,7 +118,7 @@ impl LR35902 {
     }
 
     pub fn set_l(&mut self, value: u8) {
-        self.hl = (self.hl & 0xFF00) | ((value as u16));
+        self.hl = (self.hl & 0xFF00) | (value as u16);
     }
 
     fn set_memory8(&mut self, index: u16, value: u8) {
