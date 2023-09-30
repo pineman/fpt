@@ -18,7 +18,9 @@ pub fn load_instructions() -> Vec<Instruction> {
     vec![
         Instruction::new(0x0, "NOP", 1, 4, |_, _| {}),
         Instruction::new(0x1, "LD BC,d16", 3, 12, |cpu, _| {
-            cpu.bc = cpu.immediate16(0);
+            // TODO: correctly test shit
+            // notice I said correctly just to spite Freitas
+            cpu.bc = cpu.get_immediate16(0);
         }),
         not_implemented(0x2),
         not_implemented(0x3),
@@ -36,7 +38,7 @@ pub fn load_instructions() -> Vec<Instruction> {
         not_implemented(0xF),
         not_implemented(0x10),
         Instruction::new(0x11, "LD DE,d16", 3, 12, |cpu, _| {
-            cpu.de = cpu.immediate16(0);
+            cpu.de = cpu.get_immediate16(0);
         }),
         not_implemented(0x12),
         not_implemented(0x13),
@@ -54,7 +56,7 @@ pub fn load_instructions() -> Vec<Instruction> {
         not_implemented(0x1F),
         not_implemented(0x20),
         Instruction::new(0x21, "LD HL,d16", 3, 12, |cpu, _| {
-            cpu.hl = cpu.immediate16(0);
+            cpu.hl = cpu.get_immediate16(0);
         }),
         not_implemented(0x22),
         not_implemented(0x23),
@@ -72,7 +74,7 @@ pub fn load_instructions() -> Vec<Instruction> {
         not_implemented(0x2F),
         not_implemented(0x30),
         Instruction::new(0x31, "LD SP,d16", 3, 12, |cpu, _| {
-            cpu.sp = cpu.immediate16(0);
+            cpu.sp = cpu.get_immediate16(0);
         }),
         Instruction::new(0x32, "LD (HL-),A", 1, 8, |cpu, _| {
             cpu.set_memory8(cpu.hl, cpu.a());
@@ -90,7 +92,7 @@ pub fn load_instructions() -> Vec<Instruction> {
         not_implemented(0x3C),
         not_implemented(0x3D),
         Instruction::new(0x3E, "LD A,d8", 2, 8, |cpu, _| {
-            cpu.set_a(cpu.immediate8(0));
+            cpu.set_a(cpu.get_immediate8(0));
         }),
         not_implemented(0x3F),
         not_implemented(0x40),
