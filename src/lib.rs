@@ -77,12 +77,48 @@ impl LR35902 {
         (self.bc & 0xFF) as u8
     }
 
+    pub fn d(&self) -> u8 {
+        ((self.de >> 8) & 0xFF) as u8
+    }
+
+    pub fn e(&self) -> u8 {
+        (self.de & 0xFF) as u8
+    }
+
     pub fn h(&self) -> u8 {
         ((self.hl >> 8) & 0xFF) as u8
     }
 
+    pub fn l(&self) -> u8 {
+        (self.hl & 0xFF) as u8
+    }
+
     pub fn set_a(&mut self, value: u8) {
         self.af = (self.af & 0xFF) | ((value as u16) << 8);
+    }
+
+    pub fn set_b(&mut self, value: u8) {
+        self.bc = (self.bc & 0xFF) | ((value as u16) << 8);
+    }
+
+    pub fn set_c(&mut self, value: u8) {
+        self.bc = (self.bc & 0xFF00) | ((value as u16));
+    }
+
+    pub fn set_d(&mut self, value: u8) {
+        self.de = (self.de & 0xFF) | ((value as u16) << 8);
+    }
+
+    pub fn set_e(&mut self, value: u8) {
+        self.de = (self.de & 0xFF00) | ((value as u16));
+    }
+
+    pub fn set_h(&mut self, value: u8) {
+        self.hl = (self.hl & 0xFF) | ((value as u16) << 8);
+    }
+
+    pub fn set_l(&mut self, value: u8) {
+        self.hl = (self.hl & 0xFF00) | ((value as u16));
     }
 
     fn set_memory8(&mut self, index: u16, value: u8) {
@@ -132,6 +168,97 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_a() {
+        let mut cpu = LR35902::new();
+
+        assert_eq!(cpu.a(), 0);
+        assert_eq!(cpu.af, 0);
+
+        cpu.set_a(5);
+        assert_eq!(cpu.a(), 5);
+        assert_eq!(cpu.af, 5<<8);
+
+    }
+
+    #[test]
+    fn test_b() {
+        let mut cpu = LR35902::new();
+
+        assert_eq!(cpu.b(), 0);
+        assert_eq!(cpu.bc, 0);
+
+        cpu.set_b(5);
+        assert_eq!(cpu.b(), 5);
+        assert_eq!(cpu.bc, 5<<8);
+
+    }
+
+    #[test]
+    fn test_c() {
+        let mut cpu = LR35902::new();
+
+        assert_eq!(cpu.c(), 0);
+        assert_eq!(cpu.bc, 0);
+
+        cpu.set_c(5);
+        assert_eq!(cpu.c(), 5);
+        assert_eq!(cpu.bc, 5);
+
+    }
+
+    #[test]
+    fn test_h() {
+        let mut cpu = LR35902::new();
+
+        assert_eq!(cpu.h(), 0);
+        assert_eq!(cpu.hl, 0);
+
+        cpu.set_h(5);
+        assert_eq!(cpu.h(), 5);
+        assert_eq!(cpu.hl, 5<<8);
+
+    }
+
+    #[test]
+    fn test_l() {
+        let mut cpu = LR35902::new();
+
+        assert_eq!(cpu.l(), 0);
+        assert_eq!(cpu.hl, 0);
+
+        cpu.set_l(5);
+        assert_eq!(cpu.l(), 5);
+        assert_eq!(cpu.hl, 5);
+
+    }
+
+    #[test]
+    fn test_d() {
+        let mut cpu = LR35902::new();
+
+        assert_eq!(cpu.d(), 0);
+        assert_eq!(cpu.de, 0);
+
+        cpu.set_d(5);
+        assert_eq!(cpu.d(), 5);
+        assert_eq!(cpu.de, 5<<8);
+
+    }
+
+    #[test]
+    fn test_e() {
+        let mut cpu = LR35902::new();
+
+        assert_eq!(cpu.e(), 0);
+        assert_eq!(cpu.de, 0);
+
+        cpu.set_e(5);
+        assert_eq!(cpu.e(), 5);
+        assert_eq!(cpu.de, 5);
+
+    }
+
+    #[test]
     fn test_immediate8() {
         let mut cpu = LR35902::new();
         let mut bootrom = [0; 256];
@@ -154,4 +281,15 @@ mod tests {
 
         assert_eq!(cpu.get_immediate16(0), 3 * 256 + 2);
     }
+
+    #[test]
+    fn test_memory() {
+        let mut cpu = LR35902::new();
+
+        assert_eq!(cpu.memory8(10), 0);
+        cpu.set_memory8(10, 255);
+        assert_eq!(cpu.memory8(10), 255);
+    }
+
+
 }
