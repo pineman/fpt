@@ -12,6 +12,7 @@ pub struct Instruction {
 }
 
 impl Instruction {
+    // Arguments in the same order as https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
     fn new(
         opcode: u8,
         mnemonic: &str,
