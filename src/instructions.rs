@@ -1,14 +1,14 @@
 use crate::Instruction;
 
 fn not_implemented(opcode: u8) -> Instruction {
-    Instruction::new(opcode, 4, 1, |_, opcode| {
+    Instruction::new(opcode, "", 1, 4, |_, opcode| {
         println!("not-implemented: {}", opcode);
         unimplemented!();
     })
 }
 
 fn not_implemented_cb(opcode: u8) -> Instruction {
-    Instruction::new(opcode, 4, 1, |_, opcode| {
+    Instruction::new(opcode, "", 1, 4, |_, opcode| {
         println!("not-implemented cb: {}", opcode);
         unimplemented!();
     })
@@ -16,545 +16,545 @@ fn not_implemented_cb(opcode: u8) -> Instruction {
 
 pub fn load_instructions() -> Vec<Instruction> {
     vec![
-        Instruction::new(0, 4, 1, |_, _| {}), //0 nop
-        Instruction::new(1, 12, 3, |cpu, _| {
+        Instruction::new(0x0, "NOP", 1, 4, |_, _| {}),
+        Instruction::new(0x1, "LD BC,d16", 3, 12, |cpu, _| {
             cpu.bc = cpu.immediate16(0);
-        }), //1 LD BC,d16
-        not_implemented(2),                   //2
-        not_implemented(3),                   //3
-        not_implemented(4),                   //4
-        not_implemented(5),                   //5
-        not_implemented(6),                   //6
-        not_implemented(7),                   //7
-        not_implemented(8),                   //8
-        not_implemented(9),                   //9
-        not_implemented(10),                  //10
-        not_implemented(11),                  //11
-        not_implemented(12),                  //12
-        not_implemented(13),                  //13
-        not_implemented(14),                  //14
-        not_implemented(15),                  //15
-        not_implemented(16),                  //16
-        not_implemented(17),                  //17
-        not_implemented(18),                  //18
-        not_implemented(19),                  //19
-        not_implemented(20),                  //20
-        not_implemented(21),                  //21
-        not_implemented(22),                  //22
-        not_implemented(23),                  //23
-        not_implemented(24),                  //24
-        not_implemented(25),                  //25
-        not_implemented(26),                  //26
-        not_implemented(27),                  //27
-        not_implemented(28),                  //28
-        not_implemented(29),                  //29
-        not_implemented(30),                  //30
-        not_implemented(31),                  //31
-        not_implemented(32),                  //32
-        Instruction::new(33, 12, 3, |cpu, _| {
+        }),
+        not_implemented(0x2),
+        not_implemented(0x3),
+        not_implemented(0x4),
+        not_implemented(0x5),
+        not_implemented(0x6),
+        not_implemented(0x7),
+        not_implemented(0x8),
+        not_implemented(0x9),
+        not_implemented(0xA),
+        not_implemented(0xB),
+        not_implemented(0xC),
+        not_implemented(0xD),
+        not_implemented(0xE),
+        not_implemented(0xF),
+        not_implemented(0x10),
+        Instruction::new(0x11, "LD DE,d16", 3, 12, |cpu, _| {
+            cpu.de = cpu.immediate16(0);
+        }),
+        not_implemented(0x12),
+        not_implemented(0x13),
+        not_implemented(0x14),
+        not_implemented(0x15),
+        not_implemented(0x16),
+        not_implemented(0x17),
+        not_implemented(0x18),
+        not_implemented(0x19),
+        not_implemented(0x1A),
+        not_implemented(0x1B),
+        not_implemented(0x1C),
+        not_implemented(0x1D),
+        not_implemented(0x1E),
+        not_implemented(0x1F),
+        not_implemented(0x20),
+        Instruction::new(0x21, "LD HL,d16", 3, 12, |cpu, _| {
             cpu.hl = cpu.immediate16(0);
-        }), //33 LD HL,d16
-        not_implemented(34),                  //34
-        not_implemented(35),                  //35
-        not_implemented(36),                  //36
-        not_implemented(37),                  //37
-        not_implemented(38),                  //38
-        not_implemented(39),                  //39
-        not_implemented(40),                  //40
-        not_implemented(41),                  //41
-        not_implemented(42),                  //42
-        not_implemented(43),                  //43
-        not_implemented(44),                  //44
-        not_implemented(45),                  //45
-        not_implemented(46),                  //46
-        not_implemented(47),                  //47
-        not_implemented(48),                  //48
-        Instruction::new(49, 12, 3, |cpu, _| {
+        }),
+        not_implemented(0x22),
+        not_implemented(0x23),
+        not_implemented(0x24),
+        not_implemented(0x25),
+        not_implemented(0x26),
+        not_implemented(0x27),
+        not_implemented(0x28),
+        not_implemented(0x29),
+        not_implemented(0x2A),
+        not_implemented(0x2B),
+        not_implemented(0x2C),
+        not_implemented(0x2D),
+        not_implemented(0x2E),
+        not_implemented(0x2F),
+        not_implemented(0x30),
+        Instruction::new(0x31, "LD SP,d16", 3, 12, |cpu, _| {
             cpu.sp = cpu.immediate16(0);
-        }), //49 LD SP,d16
-        Instruction::new(50, 8, 1, |cpu, _| {
+        }),
+        Instruction::new(0x32, "LD (HL-),A", 1, 8, |cpu, _| {
             cpu.set_memory8(cpu.hl, cpu.a());
             cpu.hl -= 1;
-        }), //50 LD (HL-),A
-        not_implemented(51),                  //51
-        not_implemented(52),                  //52
-        not_implemented(53),                  //53
-        not_implemented(54),                  //54
-        not_implemented(55),                  //55
-        not_implemented(56),                  //56
-        not_implemented(57),                  //57
-        not_implemented(58),                  //58
-        not_implemented(59),                  //59
-        not_implemented(60),                  //60
-        not_implemented(61),                  //61
-        Instruction::new(62, 8, 2, |cpu, _| {
+        }),
+        not_implemented(0x33),
+        not_implemented(0x34),
+        not_implemented(0x35),
+        not_implemented(0x36),
+        not_implemented(0x37),
+        not_implemented(0x38),
+        not_implemented(0x39),
+        not_implemented(0x3A),
+        not_implemented(0x3B),
+        not_implemented(0x3C),
+        not_implemented(0x3D),
+        Instruction::new(0x3E, "LD A,d8", 2, 8, |cpu, _| {
             cpu.set_a(cpu.immediate8(0));
-        }), //62 LD A,d8
-        not_implemented(63),                  //63
-        not_implemented(64),                  //64
-        not_implemented(65),                  //65
-        not_implemented(66),                  //66
-        not_implemented(67),                  //67
-        not_implemented(68),                  //68
-        not_implemented(69),                  //69
-        not_implemented(70),                  //70
-        not_implemented(71),                  //71
-        not_implemented(72),                  //72
-        not_implemented(73),                  //73
-        not_implemented(74),                  //74
-        not_implemented(75),                  //75
-        not_implemented(76),                  //76
-        not_implemented(77),                  //77
-        not_implemented(78),                  //78
-        not_implemented(79),                  //79
-        not_implemented(80),                  //80
-        not_implemented(81),                  //81
-        not_implemented(82),                  //82
-        not_implemented(83),                  //83
-        not_implemented(84),                  //84
-        not_implemented(85),                  //85
-        not_implemented(86),                  //86
-        not_implemented(87),                  //87
-        not_implemented(88),                  //88
-        not_implemented(89),                  //89
-        not_implemented(90),                  //90
-        not_implemented(91),                  //91
-        not_implemented(92),                  //92
-        not_implemented(93),                  //93
-        not_implemented(94),                  //94
-        not_implemented(95),                  //95
-        not_implemented(96),                  //96
-        not_implemented(97),                  //97
-        not_implemented(98),                  //98
-        not_implemented(99),                  //99
-        not_implemented(100),                 //100
-        not_implemented(101),                 //101
-        not_implemented(102),                 //102
-        not_implemented(103),                 //103
-        not_implemented(104),                 //104
-        not_implemented(105),                 //105
-        not_implemented(106),                 //106
-        not_implemented(107),                 //107
-        not_implemented(108),                 //108
-        not_implemented(109),                 //109
-        not_implemented(110),                 //110
-        not_implemented(111),                 //111
-        not_implemented(112),                 //112
-        not_implemented(113),                 //113
-        not_implemented(114),                 //114
-        not_implemented(115),                 //115
-        not_implemented(116),                 //116
-        not_implemented(117),                 //117
-        not_implemented(118),                 //118
-        not_implemented(119),                 //119
-        not_implemented(120),                 //120
-        not_implemented(121),                 //121
-        not_implemented(122),                 //122
-        not_implemented(123),                 //123
-        not_implemented(124),                 //124
-        not_implemented(125),                 //125
-        not_implemented(126),                 //126
-        not_implemented(127),                 //127
-        Instruction::new(128, 4, 1, |cpu, _| {
+        }),
+        not_implemented(0x3F),
+        not_implemented(0x40),
+        not_implemented(0x41),
+        not_implemented(0x42),
+        not_implemented(0x43),
+        not_implemented(0x44),
+        not_implemented(0x45),
+        not_implemented(0x46),
+        not_implemented(0x47),
+        not_implemented(0x48),
+        not_implemented(0x49),
+        not_implemented(0x4A),
+        not_implemented(0x4B),
+        not_implemented(0x4C),
+        not_implemented(0x4D),
+        not_implemented(0x4E),
+        not_implemented(0x4F),
+        not_implemented(0x50),
+        not_implemented(0x51),
+        not_implemented(0x52),
+        not_implemented(0x53),
+        not_implemented(0x54),
+        not_implemented(0x55),
+        not_implemented(0x56),
+        not_implemented(0x57),
+        not_implemented(0x58),
+        not_implemented(0x59),
+        not_implemented(0x5A),
+        not_implemented(0x5B),
+        not_implemented(0x5C),
+        not_implemented(0x5D),
+        not_implemented(0x5E),
+        not_implemented(0x5F),
+        not_implemented(0x60),
+        not_implemented(0x61),
+        not_implemented(0x62),
+        not_implemented(0x63),
+        not_implemented(0x64),
+        not_implemented(0x65),
+        not_implemented(0x66),
+        not_implemented(0x67),
+        not_implemented(0x68),
+        not_implemented(0x69),
+        not_implemented(0x6A),
+        not_implemented(0x6B),
+        not_implemented(0x6C),
+        not_implemented(0x6D),
+        not_implemented(0x6E),
+        not_implemented(0x6F),
+        not_implemented(0x70),
+        not_implemented(0x71),
+        not_implemented(0x72),
+        not_implemented(0x73),
+        not_implemented(0x74),
+        not_implemented(0x75),
+        not_implemented(0x76),
+        not_implemented(0x77),
+        not_implemented(0x78),
+        not_implemented(0x79),
+        not_implemented(0x7A),
+        not_implemented(0x7B),
+        not_implemented(0x7C),
+        not_implemented(0x7D),
+        not_implemented(0x7E),
+        not_implemented(0x7F),
+        Instruction::new(0x80, "ADD A,B", 1, 4, |cpu, _| {
             cpu.set_a(cpu.a() + cpu.b());
-        }), //175 XOR A
-        not_implemented(129),                 //129
-        not_implemented(130),                 //130
-        not_implemented(131),                 //131
-        not_implemented(132),                 //132
-        not_implemented(133),                 //133
-        not_implemented(134),                 //134
-        not_implemented(135),                 //135
-        not_implemented(136),                 //136
-        not_implemented(137),                 //137
-        not_implemented(138),                 //138
-        not_implemented(139),                 //139
-        not_implemented(140),                 //140
-        not_implemented(141),                 //141
-        not_implemented(142),                 //142
-        not_implemented(143),                 //143
-        not_implemented(144),                 //144
-        not_implemented(145),                 //145
-        not_implemented(146),                 //146
-        not_implemented(147),                 //147
-        not_implemented(148),                 //148
-        not_implemented(149),                 //149
-        not_implemented(150),                 //150
-        not_implemented(151),                 //151
-        not_implemented(152),                 //152
-        not_implemented(153),                 //153
-        not_implemented(154),                 //154
-        not_implemented(155),                 //155
-        not_implemented(156),                 //156
-        not_implemented(157),                 //157
-        not_implemented(158),                 //158
-        not_implemented(159),                 //159
-        not_implemented(160),                 //160
-        not_implemented(161),                 //161
-        not_implemented(162),                 //162
-        not_implemented(163),                 //163
-        not_implemented(164),                 //164
-        not_implemented(165),                 //165
-        not_implemented(166),                 //166
-        not_implemented(167),                 //167
-        not_implemented(168),                 //168
-        not_implemented(169),                 //169
-        not_implemented(170),                 //170
-        not_implemented(171),                 //171
-        not_implemented(172),                 //172
-        not_implemented(173),                 //173
-        not_implemented(174),                 //174
-        Instruction::new(175, 4, 1, |cpu, _| {
+        }),
+        not_implemented(0x81),
+        not_implemented(0x82),
+        not_implemented(0x83),
+        not_implemented(0x84),
+        not_implemented(0x85),
+        not_implemented(0x86),
+        not_implemented(0x87),
+        not_implemented(0x88),
+        not_implemented(0x89),
+        not_implemented(0x8A),
+        not_implemented(0x8B),
+        not_implemented(0x8C),
+        not_implemented(0x8D),
+        not_implemented(0x8E),
+        not_implemented(0x8F),
+        not_implemented(0x90),
+        not_implemented(0x91),
+        not_implemented(0x92),
+        not_implemented(0x93),
+        not_implemented(0x94),
+        not_implemented(0x95),
+        not_implemented(0x96),
+        not_implemented(0x97),
+        not_implemented(0x98),
+        not_implemented(0x99),
+        not_implemented(0x9A),
+        not_implemented(0x9B),
+        not_implemented(0x9C),
+        not_implemented(0x9D),
+        not_implemented(0x9E),
+        not_implemented(0x9F),
+        not_implemented(0xA0),
+        not_implemented(0xA1),
+        not_implemented(0xA2),
+        not_implemented(0xA3),
+        not_implemented(0xA4),
+        not_implemented(0xA5),
+        not_implemented(0xA6),
+        not_implemented(0xA7),
+        not_implemented(0xA8),
+        not_implemented(0xA9),
+        not_implemented(0xAA),
+        not_implemented(0xAB),
+        not_implemented(0xAC),
+        not_implemented(0xAD),
+        not_implemented(0xAE),
+        Instruction::new(0xAF, "XOR A", 1, 4, |cpu, _| {
             cpu.set_a(cpu.a() ^ cpu.a());
-        }), //175 XOR A
-        not_implemented(176),                 //176
-        not_implemented(177),                 //177
-        not_implemented(178),                 //178
-        not_implemented(179),                 //179
-        not_implemented(180),                 //180
-        not_implemented(181),                 //181
-        not_implemented(182),                 //182
-        not_implemented(183),                 //183
-        not_implemented(184),                 //184
-        not_implemented(185),                 //185
-        not_implemented(186),                 //186
-        not_implemented(187),                 //187
-        not_implemented(188),                 //188
-        not_implemented(189),                 //189
-        not_implemented(190),                 //190
-        not_implemented(191),                 //191
-        not_implemented(192),                 //192
-        not_implemented(193),                 //193
-        not_implemented(194),                 //194
-        not_implemented(195),                 //195
-        not_implemented(196),                 //196
-        not_implemented(197),                 //197
-        not_implemented(198),                 //198
-        not_implemented(199),                 //199
-        not_implemented(200),                 //200
-        not_implemented(201),                 //201
-        not_implemented(202),                 //202
-        Instruction::new(1, 4, 1, |cpu, _| {
+        }),
+        not_implemented(0xB0),
+        not_implemented(0xB1),
+        not_implemented(0xB2),
+        not_implemented(0xB3),
+        not_implemented(0xB4),
+        not_implemented(0xB5),
+        not_implemented(0xB6),
+        not_implemented(0xB7),
+        not_implemented(0xB8),
+        not_implemented(0xB9),
+        not_implemented(0xBA),
+        not_implemented(0xBB),
+        not_implemented(0xBC),
+        not_implemented(0xBD),
+        not_implemented(0xBE),
+        not_implemented(0xBF),
+        not_implemented(0xC0),
+        not_implemented(0xC1),
+        not_implemented(0xC2),
+        not_implemented(0xC3),
+        not_implemented(0xC4),
+        not_implemented(0xC5),
+        not_implemented(0xC6),
+        not_implemented(0xC7),
+        not_implemented(0xC8),
+        not_implemented(0xC9),
+        not_implemented(0xCA),
+        Instruction::new(0xCB, "PREFIX CB", 1, 4, |cpu, _| {
             let instruction = cpu.cb_instructions[cpu.memory8(cpu.pc + 1) as usize].clone();
             (instruction.function)(cpu, dbg!(instruction.opcode));
             cpu.pc += instruction.size as u16 + 1;
-        }), //203 PREFIX CB
-        not_implemented(204),                 //204
-        not_implemented(205),                 //205
-        not_implemented(206),                 //206
-        not_implemented(207),                 //207
-        not_implemented(208),                 //208
-        not_implemented(209),                 //209
-        not_implemented(210),                 //210
-        not_implemented(211),                 //211
-        not_implemented(212),                 //212
-        not_implemented(213),                 //213
-        not_implemented(214),                 //214
-        not_implemented(215),                 //215
-        not_implemented(216),                 //216
-        not_implemented(217),                 //217
-        not_implemented(218),                 //218
-        not_implemented(219),                 //219
-        not_implemented(220),                 //220
-        not_implemented(221),                 //221
-        not_implemented(222),                 //222
-        not_implemented(223),                 //223
-        not_implemented(224),                 //224
-        not_implemented(225),                 //225
-        Instruction::new(226, 8, 2, |cpu, _| {
+        }),
+        not_implemented(0xCC),
+        not_implemented(0xCD),
+        not_implemented(0xCE),
+        not_implemented(0xCF),
+        not_implemented(0xD0),
+        not_implemented(0xD1),
+        not_implemented(0xD2),
+        not_implemented(0xD3),
+        not_implemented(0xD4),
+        not_implemented(0xD5),
+        not_implemented(0xD6),
+        not_implemented(0xD7),
+        not_implemented(0xD8),
+        not_implemented(0xD9),
+        not_implemented(0xDA),
+        not_implemented(0xDB),
+        not_implemented(0xDC),
+        not_implemented(0xDD),
+        not_implemented(0xDE),
+        not_implemented(0xDF),
+        not_implemented(0xE0),
+        not_implemented(0xE1),
+        Instruction::new(0xE2, "LD (C),A", 2, 8, |cpu, _| {
             cpu.set_memory8(cpu.c().into(), cpu.a());
-        }), //175 XOR A
-        not_implemented(227),                 //227
-        not_implemented(228),                 //228
-        not_implemented(229),                 //229
-        not_implemented(230),                 //230
-        not_implemented(231),                 //231
-        not_implemented(232),                 //232
-        not_implemented(233),                 //233
-        not_implemented(234),                 //234
-        not_implemented(235),                 //235
-        not_implemented(236),                 //236
-        not_implemented(237),                 //237
-        not_implemented(238),                 //238
-        not_implemented(239),                 //239
-        not_implemented(240),                 //240
-        not_implemented(241),                 //241
-        not_implemented(242),                 //242
-        not_implemented(243),                 //243
-        not_implemented(244),                 //244
-        not_implemented(245),                 //245
-        not_implemented(246),                 //246
-        not_implemented(247),                 //247
-        not_implemented(248),                 //248
-        not_implemented(249),                 //249
-        not_implemented(250),                 //250
-        not_implemented(251),                 //251
-        not_implemented(252),                 //252
-        not_implemented(253),                 //253
-        not_implemented(254),                 //254
-        not_implemented(255),                 //255
+        }),
+        not_implemented(0xE3),
+        not_implemented(0xE4),
+        not_implemented(0xE5),
+        not_implemented(0xE6),
+        not_implemented(0xE7),
+        not_implemented(0xE8),
+        not_implemented(0xE9),
+        not_implemented(0xEA),
+        not_implemented(0xEB),
+        not_implemented(0xEC),
+        not_implemented(0xED),
+        not_implemented(0xEE),
+        not_implemented(0xEF),
+        not_implemented(0xF0),
+        not_implemented(0xF1),
+        not_implemented(0xF2),
+        not_implemented(0xF3),
+        not_implemented(0xF4),
+        not_implemented(0xF5),
+        not_implemented(0xF6),
+        not_implemented(0xF7),
+        not_implemented(0xF8),
+        not_implemented(0xF9),
+        not_implemented(0xFA),
+        not_implemented(0xFB),
+        not_implemented(0xFC),
+        not_implemented(0xFD),
+        not_implemented(0xFE),
+        not_implemented(0xFF),
     ]
 }
 
 pub fn cb_instructions() -> Vec<Instruction> {
     vec![
-        not_implemented_cb(0),   //0
-        not_implemented_cb(1),   //1
-        not_implemented_cb(2),   //2
-        not_implemented_cb(3),   //3
-        not_implemented_cb(4),   //4
-        not_implemented_cb(5),   //5
-        not_implemented_cb(6),   //6
-        not_implemented_cb(7),   //7
-        not_implemented_cb(8),   //8
-        not_implemented_cb(9),   //9
-        not_implemented_cb(10),  //10
-        not_implemented_cb(11),  //11
-        not_implemented_cb(12),  //12
-        not_implemented_cb(13),  //13
-        not_implemented_cb(14),  //14
-        not_implemented_cb(15),  //15
-        not_implemented_cb(16),  //16
-        not_implemented_cb(17),  //17
-        not_implemented_cb(18),  //18
-        not_implemented_cb(19),  //19
-        not_implemented_cb(20),  //20
-        not_implemented_cb(21),  //21
-        not_implemented_cb(22),  //22
-        not_implemented_cb(23),  //23
-        not_implemented_cb(24),  //24
-        not_implemented_cb(25),  //25
-        not_implemented_cb(26),  //26
-        not_implemented_cb(27),  //27
-        not_implemented_cb(28),  //28
-        not_implemented_cb(29),  //29
-        not_implemented_cb(30),  //30
-        not_implemented_cb(31),  //31
-        not_implemented_cb(32),  //32
-        not_implemented_cb(33),  //33
-        not_implemented_cb(34),  //34
-        not_implemented_cb(35),  //35
-        not_implemented_cb(36),  //36
-        not_implemented_cb(37),  //37
-        not_implemented_cb(38),  //38
-        not_implemented_cb(39),  //39
-        not_implemented_cb(40),  //40
-        not_implemented_cb(41),  //41
-        not_implemented_cb(42),  //42
-        not_implemented_cb(43),  //43
-        not_implemented_cb(44),  //44
-        not_implemented_cb(45),  //45
-        not_implemented_cb(46),  //46
-        not_implemented_cb(47),  //47
-        not_implemented_cb(48),  //48
-        not_implemented_cb(49),  //49
-        not_implemented_cb(50),  //50
-        not_implemented_cb(51),  //51
-        not_implemented_cb(52),  //52
-        not_implemented_cb(53),  //53
-        not_implemented_cb(54),  //54
-        not_implemented_cb(55),  //55
-        not_implemented_cb(56),  //56
-        not_implemented_cb(57),  //57
-        not_implemented_cb(58),  //58
-        not_implemented_cb(59),  //59
-        not_implemented_cb(60),  //60
-        not_implemented_cb(61),  //61
-        not_implemented_cb(62),  //62
-        not_implemented_cb(63),  //63
-        not_implemented_cb(64),  //64
-        not_implemented_cb(65),  //65
-        not_implemented_cb(66),  //66
-        not_implemented_cb(67),  //67
-        not_implemented_cb(68),  //68
-        not_implemented_cb(69),  //69
-        not_implemented_cb(70),  //70
-        not_implemented_cb(71),  //71
-        not_implemented_cb(72),  //72
-        not_implemented_cb(73),  //73
-        not_implemented_cb(74),  //74
-        not_implemented_cb(75),  //75
-        not_implemented_cb(76),  //76
-        not_implemented_cb(77),  //77
-        not_implemented_cb(78),  //78
-        not_implemented_cb(79),  //79
-        not_implemented_cb(80),  //80
-        not_implemented_cb(81),  //81
-        not_implemented_cb(82),  //82
-        not_implemented_cb(83),  //83
-        not_implemented_cb(84),  //84
-        not_implemented_cb(85),  //85
-        not_implemented_cb(86),  //86
-        not_implemented_cb(87),  //87
-        not_implemented_cb(88),  //88
-        not_implemented_cb(89),  //89
-        not_implemented_cb(90),  //90
-        not_implemented_cb(91),  //91
-        not_implemented_cb(92),  //92
-        not_implemented_cb(93),  //93
-        not_implemented_cb(94),  //94
-        not_implemented_cb(95),  //95
-        not_implemented_cb(96),  //96
-        not_implemented_cb(97),  //97
-        not_implemented_cb(98),  //98
-        not_implemented_cb(99),  //99
-        not_implemented_cb(100), //100
-        not_implemented_cb(101), //101
-        not_implemented_cb(102), //102
-        not_implemented_cb(103), //103
-        not_implemented_cb(104), //104
-        not_implemented_cb(105), //105
-        not_implemented_cb(106), //106
-        not_implemented_cb(107), //107
-        not_implemented_cb(108), //108
-        not_implemented_cb(109), //109
-        not_implemented_cb(110), //110
-        not_implemented_cb(111), //111
-        not_implemented_cb(112), //112
-        not_implemented_cb(113), //113
-        not_implemented_cb(114), //114
-        not_implemented_cb(115), //115
-        not_implemented_cb(116), //116
-        not_implemented_cb(117), //117
-        not_implemented_cb(118), //118
-        not_implemented_cb(119), //119
-        not_implemented_cb(120), //120
-        not_implemented_cb(121), //121
-        not_implemented_cb(122), //122
-        not_implemented_cb(123), //123
-        Instruction::new(124, 2, 8, |cpu, _| {
-            cpu.set_a((cpu.h() >> 7) & 1);
-        }), // 124 BIT 7,H
-        not_implemented_cb(125), //125
-        not_implemented_cb(126), //126
-        not_implemented_cb(127), //127
-        not_implemented_cb(128), //128
-        not_implemented_cb(129), //129
-        not_implemented_cb(130), //130
-        not_implemented_cb(131), //131
-        not_implemented_cb(132), //132
-        not_implemented_cb(133), //133
-        not_implemented_cb(134), //134
-        not_implemented_cb(135), //135
-        not_implemented_cb(136), //136
-        not_implemented_cb(137), //137
-        not_implemented_cb(138), //138
-        not_implemented_cb(139), //139
-        not_implemented_cb(140), //140
-        not_implemented_cb(141), //141
-        not_implemented_cb(142), //142
-        not_implemented_cb(143), //143
-        not_implemented_cb(144), //144
-        not_implemented_cb(145), //145
-        not_implemented_cb(146), //146
-        not_implemented_cb(147), //147
-        not_implemented_cb(148), //148
-        not_implemented_cb(149), //149
-        not_implemented_cb(150), //150
-        not_implemented_cb(151), //151
-        not_implemented_cb(152), //152
-        not_implemented_cb(153), //153
-        not_implemented_cb(154), //154
-        not_implemented_cb(155), //155
-        not_implemented_cb(156), //156
-        not_implemented_cb(157), //157
-        not_implemented_cb(158), //158
-        not_implemented_cb(159), //159
-        not_implemented_cb(160), //160
-        not_implemented_cb(161), //161
-        not_implemented_cb(162), //162
-        not_implemented_cb(163), //163
-        not_implemented_cb(164), //164
-        not_implemented_cb(165), //165
-        not_implemented_cb(166), //166
-        not_implemented_cb(167), //167
-        not_implemented_cb(168), //168
-        not_implemented_cb(169), //169
-        not_implemented_cb(170), //170
-        not_implemented_cb(171), //171
-        not_implemented_cb(172), //172
-        not_implemented_cb(173), //173
-        not_implemented_cb(174), //174
-        not_implemented_cb(175), //175
-        not_implemented_cb(176), //176
-        not_implemented_cb(177), //177
-        not_implemented_cb(178), //178
-        not_implemented_cb(179), //179
-        not_implemented_cb(180), //180
-        not_implemented_cb(181), //181
-        not_implemented_cb(182), //182
-        not_implemented_cb(183), //183
-        not_implemented_cb(184), //184
-        not_implemented_cb(185), //185
-        not_implemented_cb(186), //186
-        not_implemented_cb(187), //187
-        not_implemented_cb(188), //188
-        not_implemented_cb(189), //189
-        not_implemented_cb(190), //190
-        not_implemented_cb(191), //191
-        not_implemented_cb(192), //192
-        not_implemented_cb(193), //193
-        not_implemented_cb(194), //194
-        not_implemented_cb(195), //195
-        not_implemented_cb(196), //196
-        not_implemented_cb(197), //197
-        not_implemented_cb(198), //198
-        not_implemented_cb(199), //199
-        not_implemented_cb(200), //200
-        not_implemented_cb(201), //201
-        not_implemented_cb(202), //202
-        not_implemented_cb(203), //203
-        not_implemented_cb(204), //204
-        not_implemented_cb(205), //205
-        not_implemented_cb(206), //206
-        not_implemented_cb(207), //207
-        not_implemented_cb(208), //208
-        not_implemented_cb(209), //209
-        not_implemented_cb(210), //210
-        not_implemented_cb(211), //211
-        not_implemented_cb(212), //212
-        not_implemented_cb(213), //213
-        not_implemented_cb(214), //214
-        not_implemented_cb(215), //215
-        not_implemented_cb(216), //216
-        not_implemented_cb(217), //217
-        not_implemented_cb(218), //218
-        not_implemented_cb(219), //219
-        not_implemented_cb(220), //220
-        not_implemented_cb(221), //221
-        not_implemented_cb(222), //222
-        not_implemented_cb(223), //223
-        not_implemented_cb(224), //224
-        not_implemented_cb(225), //225
-        not_implemented_cb(226), //226
-        not_implemented_cb(227), //227
-        not_implemented_cb(228), //228
-        not_implemented_cb(229), //229
-        not_implemented_cb(230), //230
-        not_implemented_cb(231), //231
-        not_implemented_cb(232), //232
-        not_implemented_cb(233), //233
-        not_implemented_cb(234), //234
-        not_implemented_cb(235), //235
-        not_implemented_cb(236), //236
-        not_implemented_cb(237), //237
-        not_implemented_cb(238), //238
-        not_implemented_cb(239), //239
-        not_implemented_cb(240), //240
-        not_implemented_cb(241), //241
-        not_implemented_cb(242), //242
-        not_implemented_cb(243), //243
-        not_implemented_cb(244), //244
-        not_implemented_cb(245), //245
-        not_implemented_cb(246), //246
-        not_implemented_cb(247), //247
-        not_implemented_cb(248), //248
-        not_implemented_cb(249), //249
-        not_implemented_cb(250), //250
-        not_implemented_cb(251), //251
-        not_implemented_cb(252), //252
-        not_implemented_cb(253), //253
-        not_implemented_cb(254), //254
-        not_implemented_cb(255), //255
+        not_implemented_cb(0x0),
+        not_implemented_cb(0x1),
+        not_implemented_cb(0x2),
+        not_implemented_cb(0x3),
+        not_implemented_cb(0x4),
+        not_implemented_cb(0x5),
+        not_implemented_cb(0x6),
+        not_implemented_cb(0x7),
+        not_implemented_cb(0x8),
+        not_implemented_cb(0x9),
+        not_implemented_cb(0xA),
+        not_implemented_cb(0xB),
+        not_implemented_cb(0xC),
+        not_implemented_cb(0xD),
+        not_implemented_cb(0xE),
+        not_implemented_cb(0xF),
+        not_implemented_cb(0x10),
+        not_implemented_cb(0x11),
+        not_implemented_cb(0x12),
+        not_implemented_cb(0x13),
+        not_implemented_cb(0x14),
+        not_implemented_cb(0x15),
+        not_implemented_cb(0x16),
+        not_implemented_cb(0x17),
+        not_implemented_cb(0x18),
+        not_implemented_cb(0x19),
+        not_implemented_cb(0x1A),
+        not_implemented_cb(0x1B),
+        not_implemented_cb(0x1C),
+        not_implemented_cb(0x1D),
+        not_implemented_cb(0x1E),
+        not_implemented_cb(0x1F),
+        not_implemented_cb(0x20),
+        not_implemented_cb(0x21),
+        not_implemented_cb(0x22),
+        not_implemented_cb(0x23),
+        not_implemented_cb(0x24),
+        not_implemented_cb(0x25),
+        not_implemented_cb(0x26),
+        not_implemented_cb(0x27),
+        not_implemented_cb(0x28),
+        not_implemented_cb(0x29),
+        not_implemented_cb(0x2A),
+        not_implemented_cb(0x2B),
+        not_implemented_cb(0x2C),
+        not_implemented_cb(0x2D),
+        not_implemented_cb(0x2E),
+        not_implemented_cb(0x2F),
+        not_implemented_cb(0x30),
+        not_implemented_cb(0x31),
+        not_implemented_cb(0x32),
+        not_implemented_cb(0x33),
+        not_implemented_cb(0x34),
+        not_implemented_cb(0x35),
+        not_implemented_cb(0x36),
+        not_implemented_cb(0x37),
+        not_implemented_cb(0x38),
+        not_implemented_cb(0x39),
+        not_implemented_cb(0x3A),
+        not_implemented_cb(0x3B),
+        not_implemented_cb(0x3C),
+        not_implemented_cb(0x3D),
+        not_implemented_cb(0x3E),
+        not_implemented_cb(0x3F),
+        not_implemented_cb(0x40),
+        not_implemented_cb(0x41),
+        not_implemented_cb(0x42),
+        not_implemented_cb(0x43),
+        not_implemented_cb(0x44),
+        not_implemented_cb(0x45),
+        not_implemented_cb(0x46),
+        not_implemented_cb(0x47),
+        not_implemented_cb(0x48),
+        not_implemented_cb(0x49),
+        not_implemented_cb(0x4A),
+        not_implemented_cb(0x4B),
+        not_implemented_cb(0x4C),
+        not_implemented_cb(0x4D),
+        not_implemented_cb(0x4E),
+        not_implemented_cb(0x4F),
+        not_implemented_cb(0x50),
+        not_implemented_cb(0x51),
+        not_implemented_cb(0x52),
+        not_implemented_cb(0x53),
+        not_implemented_cb(0x54),
+        not_implemented_cb(0x55),
+        not_implemented_cb(0x56),
+        not_implemented_cb(0x57),
+        not_implemented_cb(0x58),
+        not_implemented_cb(0x59),
+        not_implemented_cb(0x5A),
+        not_implemented_cb(0x5B),
+        not_implemented_cb(0x5C),
+        not_implemented_cb(0x5D),
+        not_implemented_cb(0x5E),
+        not_implemented_cb(0x5F),
+        not_implemented_cb(0x60),
+        not_implemented_cb(0x61),
+        not_implemented_cb(0x62),
+        not_implemented_cb(0x63),
+        not_implemented_cb(0x64),
+        not_implemented_cb(0x65),
+        not_implemented_cb(0x66),
+        not_implemented_cb(0x67),
+        not_implemented_cb(0x68),
+        not_implemented_cb(0x69),
+        not_implemented_cb(0x6A),
+        not_implemented_cb(0x6B),
+        not_implemented_cb(0x6C),
+        not_implemented_cb(0x6D),
+        not_implemented_cb(0x6E),
+        not_implemented_cb(0x6F),
+        not_implemented_cb(0x70),
+        not_implemented_cb(0x71),
+        not_implemented_cb(0x72),
+        not_implemented_cb(0x73),
+        not_implemented_cb(0x74),
+        not_implemented_cb(0x75),
+        not_implemented_cb(0x76),
+        not_implemented_cb(0x77),
+        not_implemented_cb(0x78),
+        not_implemented_cb(0x79),
+        not_implemented_cb(0x7A),
+        not_implemented_cb(0x7B),
+        not_implemented_cb(0x7C),
+        not_implemented_cb(0x7D),
+        not_implemented_cb(0x7E),
+        not_implemented_cb(0x7F),
+        not_implemented_cb(0x80),
+        not_implemented_cb(0x81),
+        not_implemented_cb(0x82),
+        not_implemented_cb(0x83),
+        not_implemented_cb(0x84),
+        not_implemented_cb(0x85),
+        not_implemented_cb(0x86),
+        not_implemented_cb(0x87),
+        not_implemented_cb(0x88),
+        not_implemented_cb(0x89),
+        not_implemented_cb(0x8A),
+        not_implemented_cb(0x8B),
+        not_implemented_cb(0x8C),
+        not_implemented_cb(0x8D),
+        not_implemented_cb(0x8E),
+        not_implemented_cb(0x8F),
+        not_implemented_cb(0x90),
+        not_implemented_cb(0x91),
+        not_implemented_cb(0x92),
+        not_implemented_cb(0x93),
+        not_implemented_cb(0x94),
+        not_implemented_cb(0x95),
+        not_implemented_cb(0x96),
+        not_implemented_cb(0x97),
+        not_implemented_cb(0x98),
+        not_implemented_cb(0x99),
+        not_implemented_cb(0x9A),
+        not_implemented_cb(0x9B),
+        not_implemented_cb(0x9C),
+        not_implemented_cb(0x9D),
+        not_implemented_cb(0x9E),
+        not_implemented_cb(0x9F),
+        not_implemented_cb(0xA0),
+        not_implemented_cb(0xA1),
+        not_implemented_cb(0xA2),
+        not_implemented_cb(0xA3),
+        not_implemented_cb(0xA4),
+        not_implemented_cb(0xA5),
+        not_implemented_cb(0xA6),
+        not_implemented_cb(0xA7),
+        not_implemented_cb(0xA8),
+        not_implemented_cb(0xA9),
+        not_implemented_cb(0xAA),
+        not_implemented_cb(0xAB),
+        not_implemented_cb(0xAC),
+        not_implemented_cb(0xAD),
+        not_implemented_cb(0xAE),
+        not_implemented_cb(0xAF),
+        not_implemented_cb(0xB0),
+        not_implemented_cb(0xB1),
+        not_implemented_cb(0xB2),
+        not_implemented_cb(0xB3),
+        not_implemented_cb(0xB4),
+        not_implemented_cb(0xB5),
+        not_implemented_cb(0xB6),
+        not_implemented_cb(0xB7),
+        not_implemented_cb(0xB8),
+        not_implemented_cb(0xB9),
+        not_implemented_cb(0xBA),
+        not_implemented_cb(0xBB),
+        not_implemented_cb(0xBC),
+        not_implemented_cb(0xBD),
+        not_implemented_cb(0xBE),
+        not_implemented_cb(0xBF),
+        not_implemented_cb(0xC0),
+        not_implemented_cb(0xC1),
+        not_implemented_cb(0xC2),
+        not_implemented_cb(0xC3),
+        not_implemented_cb(0xC4),
+        not_implemented_cb(0xC5),
+        not_implemented_cb(0xC6),
+        not_implemented_cb(0xC7),
+        not_implemented_cb(0xC8),
+        not_implemented_cb(0xC9),
+        not_implemented_cb(0xCA),
+        not_implemented_cb(0xCB),
+        not_implemented_cb(0xCC),
+        not_implemented_cb(0xCD),
+        not_implemented_cb(0xCE),
+        not_implemented_cb(0xCF),
+        not_implemented_cb(0xD0),
+        not_implemented_cb(0xD1),
+        not_implemented_cb(0xD2),
+        not_implemented_cb(0xD3),
+        not_implemented_cb(0xD4),
+        not_implemented_cb(0xD5),
+        not_implemented_cb(0xD6),
+        not_implemented_cb(0xD7),
+        not_implemented_cb(0xD8),
+        not_implemented_cb(0xD9),
+        not_implemented_cb(0xDA),
+        not_implemented_cb(0xDB),
+        not_implemented_cb(0xDC),
+        not_implemented_cb(0xDD),
+        not_implemented_cb(0xDE),
+        not_implemented_cb(0xDF),
+        not_implemented_cb(0xE0),
+        not_implemented_cb(0xE1),
+        not_implemented_cb(0xE2),
+        not_implemented_cb(0xE3),
+        not_implemented_cb(0xE4),
+        not_implemented_cb(0xE5),
+        not_implemented_cb(0xE6),
+        not_implemented_cb(0xE7),
+        not_implemented_cb(0xE8),
+        not_implemented_cb(0xE9),
+        not_implemented_cb(0xEA),
+        not_implemented_cb(0xEB),
+        not_implemented_cb(0xEC),
+        not_implemented_cb(0xED),
+        not_implemented_cb(0xEE),
+        not_implemented_cb(0xEF),
+        not_implemented_cb(0xF0),
+        not_implemented_cb(0xF1),
+        not_implemented_cb(0xF2),
+        not_implemented_cb(0xF3),
+        not_implemented_cb(0xF4),
+        not_implemented_cb(0xF5),
+        not_implemented_cb(0xF6),
+        not_implemented_cb(0xF7),
+        not_implemented_cb(0xF8),
+        not_implemented_cb(0xF9),
+        not_implemented_cb(0xFA),
+        not_implemented_cb(0xFB),
+        not_implemented_cb(0xFC),
+        not_implemented_cb(0xFD),
+        not_implemented_cb(0xFE),
+        not_implemented_cb(0xFF),
     ]
 }

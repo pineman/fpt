@@ -5,17 +5,26 @@ pub mod instructions;
 #[derive(Debug, Clone)]
 pub struct Instruction {
     opcode: u8,
-    clocks: u8,
+    mnemonic: String,
     size: u8,
+    cycles: u8,
     function: fn(&mut LR35902, opcode: u8),
 }
 
 impl Instruction {
-    fn new(opcode: u8, clocks: u8, size: u8, function: fn(&mut LR35902, opcode: u8)) -> Self {
+    fn new(
+        opcode: u8,
+        mnemonic: &str,
+        size: u8,
+        cycles: u8,
+        function: fn(&mut LR35902, opcode: u8),
+    ) -> Self {
+        let mnemonic = mnemonic.to_string();
         Self {
             opcode,
-            clocks,
+            mnemonic,
             size,
+            cycles,
             function,
         }
     }
@@ -94,7 +103,7 @@ impl LR35902 {
 
     /// load 16 bit immediate at position pc + 1 + pos
     pub fn immediate16(&self, pos: u8) -> u16 {
-        ((self.immediate8(pos) as u16) << 8) + self.immediate8(pos + 1) as u16
+        ((self.immediate8(pos + 1) as u16) << 8) + self.immediate8(pos) as u16
     }
 
     pub fn load_instructions(&mut self, instructions: Vec<Instruction>) {
@@ -106,13 +115,13 @@ impl LR35902 {
     }
 
     pub fn step(&mut self) {
-        let opcode = dbg!(self.mem[self.pc as usize]);
-
+        let opcode = self.mem[self.pc as usize];
         let instruction = self.instructions[opcode as usize].clone();
+        println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
         let f = instruction.function;
         f(self, instruction.opcode);
         self.pc += instruction.size as u16;
-        thread::sleep(Duration::from_micros((instruction.clocks / 4) as u64));
+        thread::sleep(Duration::from_micros((instruction.cycles / 4) as u64));
     }
 }
 
@@ -141,6 +150,6 @@ mod tests {
         bootrom[2] = 3;
         cpu.load_bootrom(&bootrom);
 
-        assert_eq!(cpu.immediate16(0), 2 * 256 + 3);
+        assert_eq!(cpu.immediate16(0), 3 * 256 + 2);
     }
 }
