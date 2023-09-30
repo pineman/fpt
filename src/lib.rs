@@ -66,23 +66,23 @@ impl LR35902 {
     }
 
     pub fn a(&self) -> u8 {
-        return ((self.af >> 8) & 0xFF) as u8;
+        ((self.af >> 8) & 0xFF) as u8
     }
 
     pub fn b(&self) -> u8 {
-        return ((self.bc >> 8) & 0xFF) as u8;
+        ((self.bc >> 8) & 0xFF) as u8
     }
 
     pub fn c(&self) -> u8 {
-        return (self.bc & 0xFF) as u8;
+        (self.bc & 0xFF) as u8
     }
 
     pub fn h(&self) -> u8 {
-        return ((self.hl >> 8) & 0xFF) as u8;
+        ((self.hl >> 8) & 0xFF) as u8
     }
 
     pub fn set_a(&mut self, value: u8) {
-        self.af = (self.af & 0xFF) | ((value as u16) << 8) as u16;
+        self.af = (self.af & 0xFF) | ((value as u16) << 8);
     }
 
     fn set_memory8(&mut self, index: u16, value: u8) {
