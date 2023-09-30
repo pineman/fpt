@@ -96,14 +96,15 @@ impl LR35902 {
         self.mem[..256].clone_from_slice(bootrom);
     }
 
-    /// load 8 bit immediate at position pc + 1 + pos
-    fn immediate8(&self, pos: u8) -> u8 {
+    /// get 8 bit immediate at position pc + 1 + pos
+    fn get_immediate8(&self, pos: u8) -> u8 {
         self.mem[(self.pc as usize) + (pos as usize) + 1]
     }
 
-    /// load 16 bit immediate at position pc + 1 + pos
-    pub fn immediate16(&self, pos: u8) -> u16 {
-        ((self.immediate8(pos + 1) as u16) << 8) + self.immediate8(pos) as u16
+    /// get 16 bit immediate at position pc + 1 + pos
+    pub fn get_immediate16(&self, pos: u8) -> u16 {
+        // little-endian: the first byte in memory is the LSB
+        ((self.get_immediate8(pos + 1) as u16) << 8) + self.get_immediate8(pos) as u16
     }
 
     pub fn load_instructions(&mut self, instructions: Vec<Instruction>) {
@@ -138,7 +139,7 @@ mod tests {
         bootrom[2] = 3;
         cpu.load_bootrom(&bootrom);
 
-        assert_eq!(cpu.immediate8(0), 2);
+        assert_eq!(cpu.get_immediate8(0), 2);
     }
 
     #[test]
@@ -150,6 +151,6 @@ mod tests {
         bootrom[2] = 3;
         cpu.load_bootrom(&bootrom);
 
-        assert_eq!(cpu.immediate16(0), 3 * 256 + 2);
+        assert_eq!(cpu.get_immediate16(0), 3 * 256 + 2);
     }
 }
