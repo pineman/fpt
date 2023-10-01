@@ -1,6 +1,6 @@
 use crate::lr35902::LR35902;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Instruction {
     pub opcode: u8,
     pub mnemonic: String,

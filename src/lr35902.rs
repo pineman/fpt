@@ -15,6 +15,13 @@ pub struct LR35902 {
     cb_instructions: Vec<Instruction>,
 }
 
+impl Default for LR35902 {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[allow(dead_code)]
 impl LR35902 {
     pub fn new() -> Self {
         let mut m = Self {
