@@ -12,6 +12,7 @@ pub struct LR35902 {
     sp: u16,
     pc: u16,
     mem: [u8; 65536],
+    next_cb: bool,
     instructions: Vec<Instruction>,
     cb_instructions: Vec<Instruction>,
 }
@@ -33,6 +34,7 @@ impl LR35902 {
             sp: 0,
             pc: 0,
             mem: [0; 65536],
+            next_cb: false,
             instructions: instructions(),
             cb_instructions: cb_instructions(),
         };
@@ -66,6 +68,51 @@ impl LR35902 {
 
     fn l(&self) -> u8 {
         (self.hl & 0xFF) as u8
+    }
+
+    fn z_flag(&self) -> bool {
+        self.af & 0b10000000 == 0b10000000
+    }
+    fn n_flag(&self) -> bool {
+        self.af & 0b01000000 == 0b01000000
+    }
+    fn h_flag(&self) -> bool {
+        self.af & 0b00100000 == 0b00100000
+    }
+    fn c_flag(&self) -> bool {
+        self.af & 0b00010000 == 0b00010000
+    }
+
+    fn set_z_flag(&mut self, value: bool) {
+        if value {
+            self.af = self.af | 0b10000000;
+        } else {
+            self.af = self.af & 0b01111111;
+        }
+    }
+
+    fn set_n_flag(&mut self, value: bool) {
+        if value {
+            self.af = self.af | 0b01000000;
+        } else {
+            self.af = self.af & 0b10111111;
+        }
+    }
+
+    fn set_h_flag(&mut self, value: bool) {
+        if value {
+            self.af = self.af | 0b00100000;
+        } else {
+            self.af = self.af & 0b11011111;
+        }
+    }
+
+    fn set_c_flag(&mut self, value: bool) {
+        if value {
+            self.af = self.af | 0b00010000;
+        } else {
+            self.af = self.af & 0b11101111;
+        }
     }
 
     fn set_a(&mut self, value: u8) {
@@ -120,12 +167,29 @@ impl LR35902 {
     }
 
     pub fn step(&mut self) {
-        let opcode = self.mem[self.pc as usize];
-        let instruction = self.instructions[opcode as usize].clone();
+        let instruction = self.get_instruction();
         println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
-        self.execute(instruction.clone());
+        self.run_instruction(instruction.clone());
         self.pc += instruction.size as u16;
         thread::sleep(Duration::from_micros((instruction.cycles / 4) as u64));
+    }
+
+    fn get_instruction(&mut self) -> Instruction {
+        let opcode = self.mem[self.pc as usize];
+        if self.next_cb {
+            self.cb_instructions[opcode as usize].clone()
+        } else {
+            self.instructions[opcode as usize].clone()
+        }
+    }
+
+    fn run_instruction(&mut self, instruction: Instruction) {
+        // TODO: this function could return the pc offset for jumps
+        if self.next_cb {
+            self.execute_cb(instruction.clone())
+        } else {
+            self.execute(instruction.clone())
+        }
     }
 
     fn execute(&mut self, instruction: Instruction) {
@@ -142,11 +206,7 @@ impl LR35902 {
             0x3E => self.set_a(self.get_immediate8(0)),
             0x80 => self.set_a(self.a() + self.b()),
             0xAF => self.set_a(self.a() ^ self.b()),
-            0xCB => {
-                let cb = self.cb_instructions[self.memory8(self.pc + 1) as usize].clone();
-                println!("{:#02X} {}", cb.opcode, cb.mnemonic);
-                self.execute_cb(cb)
-            },
+            0xCB => self.next_cb = true,
             0xE2 => self.set_memory8(self.c().into(), self.a()),
             _ => {
                 unimplemented!()
@@ -155,7 +215,9 @@ impl LR35902 {
     }
 
     fn execute_cb(&mut self, instruction: Instruction) {
+        self.next_cb = false;
         match instruction.opcode {
+            0x7C => {}
             _ => {
                 unimplemented!()
             }
