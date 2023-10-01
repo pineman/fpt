@@ -1,7 +1,7 @@
 use std::{thread, time::Duration};
 
 mod instructions;
-use instructions::{cb_instructions, instructions, Instruction};
+use instructions::{instructions, Instruction, InstructionKind};
 
 use crate::bitwise;
 
@@ -16,7 +16,6 @@ pub struct LR35902 {
     mem: [u8; 65536],
     next_cb: bool,
     instructions: Vec<Instruction>,
-    cb_instructions: Vec<Instruction>,
 }
 
 impl Default for LR35902 {
@@ -38,7 +37,6 @@ impl LR35902 {
             mem: [0; 65536],
             next_cb: false,
             instructions: instructions(),
-            cb_instructions: cb_instructions(),
         };
         m.load_bootrom(include_bytes!("../dmg0.bin"));
         m
@@ -153,45 +151,25 @@ impl LR35902 {
     }
 
     pub fn step(&mut self) {
-        let instruction = self.get_instruction();
-        println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
-        self.run_instruction(instruction.clone());
-        self.inc_pc(instruction.clone());
-        thread::sleep(Duration::from_micros((instruction.cycles / 4) as u64));
-        // TODO: measure time and panic if cycle time exceeded
-    }
-
-    fn inc_pc(&mut self, instruction: Instruction) {
+        let mut opcode = self.mem[self.pc as usize] as u16;
         if self.next_cb {
-            self.pc += 1;
-        } else {
+            opcode += 0x100;
+            self.next_cb = false;
+        }
+        let instruction = self.instructions[opcode as usize].clone();
+        println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
+        self.execute(instruction.clone());
+        if instruction.kind != InstructionKind::Jump {
             self.pc += instruction.size as u16;
         }
-    }
-
-    fn get_instruction(&mut self) -> Instruction {
-        let opcode = self.mem[self.pc as usize];
-        if self.next_cb {
-            self.cb_instructions[opcode as usize].clone()
-        } else {
-            self.instructions[opcode as usize].clone()
-        }
-    }
-
-    fn run_instruction(&mut self, instruction: Instruction) {
-        // TODO: this function could return the pc offset for jumps
-        if self.next_cb {
-            self.execute_cb(instruction.clone())
-        } else {
-            self.execute(instruction.clone())
-        }
+        thread::sleep(Duration::from_micros((instruction.cycles / 4) as u64));
+        // TODO: measure time and panic if cycle time exceeded
     }
 
     fn execute(&mut self, instruction: Instruction) {
         match instruction.opcode {
             0x0 => {
                 // NOP
-                unimplemented!()
             }
             0x1 => {
                 // LD BC,d16
@@ -704,7 +682,13 @@ impl LR35902 {
             }
             0x80 => {
                 // ADD A,B
-                self.set_a(self.a() + self.b());
+                let result = self.a() + self.b();
+                self.set_a(result);
+                self.set_z_flag(result == 0);
+                self.set_n_flag(false);
+
+                self.set_h_flag(true);
+                self.set_c_flag(true);
             }
             0x81 => {
                 // ADD A,C
@@ -1214,509 +1198,503 @@ impl LR35902 {
                 // RST 38H
                 unimplemented!()
             }
-        }
-    }
-
-    fn execute_cb(&mut self, instruction: Instruction) {
-        self.next_cb = false;
-        match instruction.opcode {
-            0x0 => {
+            0x100 => {
                 // RLC B
                 unimplemented!()
             }
-            0x1 => {
+            0x101 => {
                 // RLC C
                 unimplemented!()
             }
-            0x2 => {
+            0x102 => {
                 // RLC D
                 unimplemented!()
             }
-            0x3 => {
+            0x103 => {
                 // RLC E
                 unimplemented!()
             }
-            0x4 => {
+            0x104 => {
                 // RLC H
                 unimplemented!()
             }
-            0x5 => {
+            0x105 => {
                 // RLC L
                 unimplemented!()
             }
-            0x6 => {
+            0x106 => {
                 // RLC (HL)
                 unimplemented!()
             }
-            0x7 => {
+            0x107 => {
                 // RLC A
                 unimplemented!()
             }
-            0x8 => {
+            0x108 => {
                 // RRC B
                 unimplemented!()
             }
-            0x9 => {
+            0x109 => {
                 // RRC C
                 unimplemented!()
             }
-            0xA => {
+            0x10A => {
                 // RRC D
                 unimplemented!()
             }
-            0xB => {
+            0x10B => {
                 // RRC E
                 unimplemented!()
             }
-            0xC => {
+            0x10C => {
                 // RRC H
                 unimplemented!()
             }
-            0xD => {
+            0x10D => {
                 // RRC L
                 unimplemented!()
             }
-            0xE => {
+            0x10E => {
                 // RRC (HL)
                 unimplemented!()
             }
-            0xF => {
+            0x10F => {
                 // RRC A
                 unimplemented!()
             }
-            0x10 => {
+            0x110 => {
                 // RL B
                 unimplemented!()
             }
-            0x11 => {
+            0x111 => {
                 // RL C
                 unimplemented!()
             }
-            0x12 => {
+            0x112 => {
                 // RL D
                 unimplemented!()
             }
-            0x13 => {
+            0x113 => {
                 // RL E
                 unimplemented!()
             }
-            0x14 => {
+            0x114 => {
                 // RL H
                 unimplemented!()
             }
-            0x15 => {
+            0x115 => {
                 // RL L
                 unimplemented!()
             }
-            0x16 => {
+            0x116 => {
                 // RL (HL)
                 unimplemented!()
             }
-            0x17 => {
+            0x117 => {
                 // RL A
                 unimplemented!()
             }
-            0x18 => {
+            0x118 => {
                 // RR B
                 unimplemented!()
             }
-            0x19 => {
+            0x119 => {
                 // RR C
                 unimplemented!()
             }
-            0x1A => {
+            0x11A => {
                 // RR D
                 unimplemented!()
             }
-            0x1B => {
+            0x11B => {
                 // RR E
                 unimplemented!()
             }
-            0x1C => {
+            0x11C => {
                 // RR H
                 unimplemented!()
             }
-            0x1D => {
+            0x11D => {
                 // RR L
                 unimplemented!()
             }
-            0x1E => {
+            0x11E => {
                 // RR (HL)
                 unimplemented!()
             }
-            0x1F => {
+            0x11F => {
                 // RR A
                 unimplemented!()
             }
-            0x20 => {
+            0x120 => {
                 // SLA B
                 unimplemented!()
             }
-            0x21 => {
+            0x121 => {
                 // SLA C
                 unimplemented!()
             }
-            0x22 => {
+            0x122 => {
                 // SLA D
                 unimplemented!()
             }
-            0x23 => {
+            0x123 => {
                 // SLA E
                 unimplemented!()
             }
-            0x24 => {
+            0x124 => {
                 // SLA H
                 unimplemented!()
             }
-            0x25 => {
+            0x125 => {
                 // SLA L
                 unimplemented!()
             }
-            0x26 => {
+            0x126 => {
                 // SLA (HL)
                 unimplemented!()
             }
-            0x27 => {
+            0x127 => {
                 // SLA A
                 unimplemented!()
             }
-            0x28 => {
+            0x128 => {
                 // SRA B
                 unimplemented!()
             }
-            0x29 => {
+            0x129 => {
                 // SRA C
                 unimplemented!()
             }
-            0x2A => {
+            0x12A => {
                 // SRA D
                 unimplemented!()
             }
-            0x2B => {
+            0x12B => {
                 // SRA E
                 unimplemented!()
             }
-            0x2C => {
+            0x12C => {
                 // SRA H
                 unimplemented!()
             }
-            0x2D => {
+            0x12D => {
                 // SRA L
                 unimplemented!()
             }
-            0x2E => {
+            0x12E => {
                 // SRA (HL)
                 unimplemented!()
             }
-            0x2F => {
+            0x12F => {
                 // SRA A
                 unimplemented!()
             }
-            0x30 => {
+            0x130 => {
                 // SWAP B
                 unimplemented!()
             }
-            0x31 => {
+            0x131 => {
                 // SWAP C
                 unimplemented!()
             }
-            0x32 => {
+            0x132 => {
                 // SWAP D
                 unimplemented!()
             }
-            0x33 => {
+            0x133 => {
                 // SWAP E
                 unimplemented!()
             }
-            0x34 => {
+            0x134 => {
                 // SWAP H
                 unimplemented!()
             }
-            0x35 => {
+            0x135 => {
                 // SWAP L
                 unimplemented!()
             }
-            0x36 => {
+            0x136 => {
                 // SWAP (HL)
                 unimplemented!()
             }
-            0x37 => {
+            0x137 => {
                 // SWAP A
                 unimplemented!()
             }
-            0x38 => {
+            0x138 => {
                 // SRL B
                 unimplemented!()
             }
-            0x39 => {
+            0x139 => {
                 // SRL C
                 unimplemented!()
             }
-            0x3A => {
+            0x13A => {
                 // SRL D
                 unimplemented!()
             }
-            0x3B => {
+            0x13B => {
                 // SRL E
                 unimplemented!()
             }
-            0x3C => {
+            0x13C => {
                 // SRL H
                 unimplemented!()
             }
-            0x3D => {
+            0x13D => {
                 // SRL L
                 unimplemented!()
             }
-            0x3E => {
+            0x13E => {
                 // SRL (HL)
                 unimplemented!()
             }
-            0x3F => {
+            0x13F => {
                 // SRL A
                 unimplemented!()
             }
-            0x40 => {
+            0x140 => {
                 // BIT 0,B
                 unimplemented!()
             }
-            0x41 => {
+            0x141 => {
                 // BIT 0,C
                 unimplemented!()
             }
-            0x42 => {
+            0x142 => {
                 // BIT 0,D
                 unimplemented!()
             }
-            0x43 => {
+            0x143 => {
                 // BIT 0,E
                 unimplemented!()
             }
-            0x44 => {
+            0x144 => {
                 // BIT 0,H
                 unimplemented!()
             }
-            0x45 => {
+            0x145 => {
                 // BIT 0,L
                 unimplemented!()
             }
-            0x46 => {
+            0x146 => {
                 // BIT 0,(HL)
                 unimplemented!()
             }
-            0x47 => {
+            0x147 => {
                 // BIT 0,A
                 unimplemented!()
             }
-            0x48 => {
+            0x148 => {
                 // BIT 1,B
                 unimplemented!()
             }
-            0x49 => {
+            0x149 => {
                 // BIT 1,C
                 unimplemented!()
             }
-            0x4A => {
+            0x14A => {
                 // BIT 1,D
                 unimplemented!()
             }
-            0x4B => {
+            0x14B => {
                 // BIT 1,E
                 unimplemented!()
             }
-            0x4C => {
+            0x14C => {
                 // BIT 1,H
                 unimplemented!()
             }
-            0x4D => {
+            0x14D => {
                 // BIT 1,L
                 unimplemented!()
             }
-            0x4E => {
+            0x14E => {
                 // BIT 1,(HL)
                 unimplemented!()
             }
-            0x4F => {
+            0x14F => {
                 // BIT 1,A
                 unimplemented!()
             }
-            0x50 => {
+            0x150 => {
                 // BIT 2,B
                 unimplemented!()
             }
-            0x51 => {
+            0x151 => {
                 // BIT 2,C
                 unimplemented!()
             }
-            0x52 => {
+            0x152 => {
                 // BIT 2,D
                 unimplemented!()
             }
-            0x53 => {
+            0x153 => {
                 // BIT 2,E
                 unimplemented!()
             }
-            0x54 => {
+            0x154 => {
                 // BIT 2,H
                 unimplemented!()
             }
-            0x55 => {
+            0x155 => {
                 // BIT 2,L
                 unimplemented!()
             }
-            0x56 => {
+            0x156 => {
                 // BIT 2,(HL)
                 unimplemented!()
             }
-            0x57 => {
+            0x157 => {
                 // BIT 2,A
                 unimplemented!()
             }
-            0x58 => {
+            0x158 => {
                 // BIT 3,B
                 unimplemented!()
             }
-            0x59 => {
+            0x159 => {
                 // BIT 3,C
                 unimplemented!()
             }
-            0x5A => {
+            0x15A => {
                 // BIT 3,D
                 unimplemented!()
             }
-            0x5B => {
+            0x15B => {
                 // BIT 3,E
                 unimplemented!()
             }
-            0x5C => {
+            0x15C => {
                 // BIT 3,H
                 unimplemented!()
             }
-            0x5D => {
+            0x15D => {
                 // BIT 3,L
                 unimplemented!()
             }
-            0x5E => {
+            0x15E => {
                 // BIT 3,(HL)
                 unimplemented!()
             }
-            0x5F => {
+            0x15F => {
                 // BIT 3,A
                 unimplemented!()
             }
-            0x60 => {
+            0x160 => {
                 // BIT 4,B
                 unimplemented!()
             }
-            0x61 => {
+            0x161 => {
                 // BIT 4,C
                 unimplemented!()
             }
-            0x62 => {
+            0x162 => {
                 // BIT 4,D
                 unimplemented!()
             }
-            0x63 => {
+            0x163 => {
                 // BIT 4,E
                 unimplemented!()
             }
-            0x64 => {
+            0x164 => {
                 // BIT 4,H
                 unimplemented!()
             }
-            0x65 => {
+            0x165 => {
                 // BIT 4,L
                 unimplemented!()
             }
-            0x66 => {
+            0x166 => {
                 // BIT 4,(HL)
                 unimplemented!()
             }
-            0x67 => {
+            0x167 => {
                 // BIT 4,A
                 unimplemented!()
             }
-            0x68 => {
+            0x168 => {
                 // BIT 5,B
                 unimplemented!()
             }
-            0x69 => {
+            0x169 => {
                 // BIT 5,C
                 unimplemented!()
             }
-            0x6A => {
+            0x16A => {
                 // BIT 5,D
                 unimplemented!()
             }
-            0x6B => {
+            0x16B => {
                 // BIT 5,E
                 unimplemented!()
             }
-            0x6C => {
+            0x16C => {
                 // BIT 5,H
                 unimplemented!()
             }
-            0x6D => {
+            0x16D => {
                 // BIT 5,L
                 unimplemented!()
             }
-            0x6E => {
+            0x16E => {
                 // BIT 5,(HL)
                 unimplemented!()
             }
-            0x6F => {
+            0x16F => {
                 // BIT 5,A
                 unimplemented!()
             }
-            0x70 => {
+            0x170 => {
                 // BIT 6,B
                 unimplemented!()
             }
-            0x71 => {
+            0x171 => {
                 // BIT 6,C
                 unimplemented!()
             }
-            0x72 => {
+            0x172 => {
                 // BIT 6,D
                 unimplemented!()
             }
-            0x73 => {
+            0x173 => {
                 // BIT 6,E
                 unimplemented!()
             }
-            0x74 => {
+            0x174 => {
                 // BIT 6,H
                 unimplemented!()
             }
-            0x75 => {
+            0x175 => {
                 // BIT 6,L
                 unimplemented!()
             }
-            0x76 => {
+            0x176 => {
                 // BIT 6,(HL)
                 unimplemented!()
             }
-            0x77 => {
+            0x177 => {
                 // BIT 6,A
                 unimplemented!()
             }
-            0x78 => {
+            0x178 => {
                 // BIT 7,B
                 unimplemented!()
             }
-            0x79 => {
+            0x179 => {
                 // BIT 7,C
                 unimplemented!()
             }
-            0x7A => {
+            0x17A => {
                 // BIT 7,D
                 unimplemented!()
             }
-            0x7B => {
+            0x17B => {
                 // BIT 7,E
                 unimplemented!()
             }
-            0x7C => {
+            0x17C => {
                 // BIT 7,H
                 // TODO: use hl directly
                 if self.h() & 0b10000000 == 0 {
@@ -1725,528 +1703,531 @@ impl LR35902 {
                 self.set_n_flag(false);
                 self.set_h_flag(false);
             }
-            0x7D => {
+            0x17D => {
                 // BIT 7,L
                 unimplemented!()
             }
-            0x7E => {
+            0x17E => {
                 // BIT 7,(HL)
                 unimplemented!()
             }
-            0x7F => {
+            0x17F => {
                 // BIT 7,A
                 unimplemented!()
             }
-            0x80 => {
+            0x180 => {
                 // RES 0,B
                 unimplemented!()
             }
-            0x81 => {
+            0x181 => {
                 // RES 0,C
                 unimplemented!()
             }
-            0x82 => {
+            0x182 => {
                 // RES 0,D
                 unimplemented!()
             }
-            0x83 => {
+            0x183 => {
                 // RES 0,E
                 unimplemented!()
             }
-            0x84 => {
+            0x184 => {
                 // RES 0,H
                 unimplemented!()
             }
-            0x85 => {
+            0x185 => {
                 // RES 0,L
                 unimplemented!()
             }
-            0x86 => {
+            0x186 => {
                 // RES 0,(HL)
                 unimplemented!()
             }
-            0x87 => {
+            0x187 => {
                 // RES 0,A
                 unimplemented!()
             }
-            0x88 => {
+            0x188 => {
                 // RES 1,B
                 unimplemented!()
             }
-            0x89 => {
+            0x189 => {
                 // RES 1,C
                 unimplemented!()
             }
-            0x8A => {
+            0x18A => {
                 // RES 1,D
                 unimplemented!()
             }
-            0x8B => {
+            0x18B => {
                 // RES 1,E
                 unimplemented!()
             }
-            0x8C => {
+            0x18C => {
                 // RES 1,H
                 unimplemented!()
             }
-            0x8D => {
+            0x18D => {
                 // RES 1,L
                 unimplemented!()
             }
-            0x8E => {
+            0x18E => {
                 // RES 1,(HL)
                 unimplemented!()
             }
-            0x8F => {
+            0x18F => {
                 // RES 1,A
                 unimplemented!()
             }
-            0x90 => {
+            0x190 => {
                 // RES 2,B
                 unimplemented!()
             }
-            0x91 => {
+            0x191 => {
                 // RES 2,C
                 unimplemented!()
             }
-            0x92 => {
+            0x192 => {
                 // RES 2,D
                 unimplemented!()
             }
-            0x93 => {
+            0x193 => {
                 // RES 2,E
                 unimplemented!()
             }
-            0x94 => {
+            0x194 => {
                 // RES 2,H
                 unimplemented!()
             }
-            0x95 => {
+            0x195 => {
                 // RES 2,L
                 unimplemented!()
             }
-            0x96 => {
+            0x196 => {
                 // RES 2,(HL)
                 unimplemented!()
             }
-            0x97 => {
+            0x197 => {
                 // RES 2,A
                 unimplemented!()
             }
-            0x98 => {
+            0x198 => {
                 // RES 3,B
                 unimplemented!()
             }
-            0x99 => {
+            0x199 => {
                 // RES 3,C
                 unimplemented!()
             }
-            0x9A => {
+            0x19A => {
                 // RES 3,D
                 unimplemented!()
             }
-            0x9B => {
+            0x19B => {
                 // RES 3,E
                 unimplemented!()
             }
-            0x9C => {
+            0x19C => {
                 // RES 3,H
                 unimplemented!()
             }
-            0x9D => {
+            0x19D => {
                 // RES 3,L
                 unimplemented!()
             }
-            0x9E => {
+            0x19E => {
                 // RES 3,(HL)
                 unimplemented!()
             }
-            0x9F => {
+            0x19F => {
                 // RES 3,A
                 unimplemented!()
             }
-            0xA0 => {
+            0x1A0 => {
                 // RES 4,B
                 unimplemented!()
             }
-            0xA1 => {
+            0x1A1 => {
                 // RES 4,C
                 unimplemented!()
             }
-            0xA2 => {
+            0x1A2 => {
                 // RES 4,D
                 unimplemented!()
             }
-            0xA3 => {
+            0x1A3 => {
                 // RES 4,E
                 unimplemented!()
             }
-            0xA4 => {
+            0x1A4 => {
                 // RES 4,H
                 unimplemented!()
             }
-            0xA5 => {
+            0x1A5 => {
                 // RES 4,L
                 unimplemented!()
             }
-            0xA6 => {
+            0x1A6 => {
                 // RES 4,(HL)
                 unimplemented!()
             }
-            0xA7 => {
+            0x1A7 => {
                 // RES 4,A
                 unimplemented!()
             }
-            0xA8 => {
+            0x1A8 => {
                 // RES 5,B
                 unimplemented!()
             }
-            0xA9 => {
+            0x1A9 => {
                 // RES 5,C
                 unimplemented!()
             }
-            0xAA => {
+            0x1AA => {
                 // RES 5,D
                 unimplemented!()
             }
-            0xAB => {
+            0x1AB => {
                 // RES 5,E
                 unimplemented!()
             }
-            0xAC => {
+            0x1AC => {
                 // RES 5,H
                 unimplemented!()
             }
-            0xAD => {
+            0x1AD => {
                 // RES 5,L
                 unimplemented!()
             }
-            0xAE => {
+            0x1AE => {
                 // RES 5,(HL)
                 unimplemented!()
             }
-            0xAF => {
+            0x1AF => {
                 // RES 5,A
                 unimplemented!()
             }
-            0xB0 => {
+            0x1B0 => {
                 // RES 6,B
                 unimplemented!()
             }
-            0xB1 => {
+            0x1B1 => {
                 // RES 6,C
                 unimplemented!()
             }
-            0xB2 => {
+            0x1B2 => {
                 // RES 6,D
                 unimplemented!()
             }
-            0xB3 => {
+            0x1B3 => {
                 // RES 6,E
                 unimplemented!()
             }
-            0xB4 => {
+            0x1B4 => {
                 // RES 6,H
                 unimplemented!()
             }
-            0xB5 => {
+            0x1B5 => {
                 // RES 6,L
                 unimplemented!()
             }
-            0xB6 => {
+            0x1B6 => {
                 // RES 6,(HL)
                 unimplemented!()
             }
-            0xB7 => {
+            0x1B7 => {
                 // RES 6,A
                 unimplemented!()
             }
-            0xB8 => {
+            0x1B8 => {
                 // RES 7,B
                 unimplemented!()
             }
-            0xB9 => {
+            0x1B9 => {
                 // RES 7,C
                 unimplemented!()
             }
-            0xBA => {
+            0x1BA => {
                 // RES 7,D
                 unimplemented!()
             }
-            0xBB => {
+            0x1BB => {
                 // RES 7,E
                 unimplemented!()
             }
-            0xBC => {
+            0x1BC => {
                 // RES 7,H
                 unimplemented!()
             }
-            0xBD => {
+            0x1BD => {
                 // RES 7,L
                 unimplemented!()
             }
-            0xBE => {
+            0x1BE => {
                 // RES 7,(HL)
                 unimplemented!()
             }
-            0xBF => {
+            0x1BF => {
                 // RES 7,A
                 unimplemented!()
             }
-            0xC0 => {
+            0x1C0 => {
                 // SET 0,B
                 unimplemented!()
             }
-            0xC1 => {
+            0x1C1 => {
                 // SET 0,C
                 unimplemented!()
             }
-            0xC2 => {
+            0x1C2 => {
                 // SET 0,D
                 unimplemented!()
             }
-            0xC3 => {
+            0x1C3 => {
                 // SET 0,E
                 unimplemented!()
             }
-            0xC4 => {
+            0x1C4 => {
                 // SET 0,H
                 unimplemented!()
             }
-            0xC5 => {
+            0x1C5 => {
                 // SET 0,L
                 unimplemented!()
             }
-            0xC6 => {
+            0x1C6 => {
                 // SET 0,(HL)
                 unimplemented!()
             }
-            0xC7 => {
+            0x1C7 => {
                 // SET 0,A
                 unimplemented!()
             }
-            0xC8 => {
+            0x1C8 => {
                 // SET 1,B
                 unimplemented!()
             }
-            0xC9 => {
+            0x1C9 => {
                 // SET 1,C
                 unimplemented!()
             }
-            0xCA => {
+            0x1CA => {
                 // SET 1,D
                 unimplemented!()
             }
-            0xCB => {
+            0x1CB => {
                 // SET 1,E
                 unimplemented!()
             }
-            0xCC => {
+            0x1CC => {
                 // SET 1,H
                 unimplemented!()
             }
-            0xCD => {
+            0x1CD => {
                 // SET 1,L
                 unimplemented!()
             }
-            0xCE => {
+            0x1CE => {
                 // SET 1,(HL)
                 unimplemented!()
             }
-            0xCF => {
+            0x1CF => {
                 // SET 1,A
                 unimplemented!()
             }
-            0xD0 => {
+            0x1D0 => {
                 // SET 2,B
                 unimplemented!()
             }
-            0xD1 => {
+            0x1D1 => {
                 // SET 2,C
                 unimplemented!()
             }
-            0xD2 => {
+            0x1D2 => {
                 // SET 2,D
                 unimplemented!()
             }
-            0xD3 => {
+            0x1D3 => {
                 // SET 2,E
                 unimplemented!()
             }
-            0xD4 => {
+            0x1D4 => {
                 // SET 2,H
                 unimplemented!()
             }
-            0xD5 => {
+            0x1D5 => {
                 // SET 2,L
                 unimplemented!()
             }
-            0xD6 => {
+            0x1D6 => {
                 // SET 2,(HL)
                 unimplemented!()
             }
-            0xD7 => {
+            0x1D7 => {
                 // SET 2,A
                 unimplemented!()
             }
-            0xD8 => {
+            0x1D8 => {
                 // SET 3,B
                 unimplemented!()
             }
-            0xD9 => {
+            0x1D9 => {
                 // SET 3,C
                 unimplemented!()
             }
-            0xDA => {
+            0x1DA => {
                 // SET 3,D
                 unimplemented!()
             }
-            0xDB => {
+            0x1DB => {
                 // SET 3,E
                 unimplemented!()
             }
-            0xDC => {
+            0x1DC => {
                 // SET 3,H
                 unimplemented!()
             }
-            0xDD => {
+            0x1DD => {
                 // SET 3,L
                 unimplemented!()
             }
-            0xDE => {
+            0x1DE => {
                 // SET 3,(HL)
                 unimplemented!()
             }
-            0xDF => {
+            0x1DF => {
                 // SET 3,A
                 unimplemented!()
             }
-            0xE0 => {
+            0x1E0 => {
                 // SET 4,B
                 unimplemented!()
             }
-            0xE1 => {
+            0x1E1 => {
                 // SET 4,C
                 unimplemented!()
             }
-            0xE2 => {
+            0x1E2 => {
                 // SET 4,D
                 unimplemented!()
             }
-            0xE3 => {
+            0x1E3 => {
                 // SET 4,E
                 unimplemented!()
             }
-            0xE4 => {
+            0x1E4 => {
                 // SET 4,H
                 unimplemented!()
             }
-            0xE5 => {
+            0x1E5 => {
                 // SET 4,L
                 unimplemented!()
             }
-            0xE6 => {
+            0x1E6 => {
                 // SET 4,(HL)
                 unimplemented!()
             }
-            0xE7 => {
+            0x1E7 => {
                 // SET 4,A
                 unimplemented!()
             }
-            0xE8 => {
+            0x1E8 => {
                 // SET 5,B
                 unimplemented!()
             }
-            0xE9 => {
+            0x1E9 => {
                 // SET 5,C
                 unimplemented!()
             }
-            0xEA => {
+            0x1EA => {
                 // SET 5,D
                 unimplemented!()
             }
-            0xEB => {
+            0x1EB => {
                 // SET 5,E
                 unimplemented!()
             }
-            0xEC => {
+            0x1EC => {
                 // SET 5,H
                 unimplemented!()
             }
-            0xED => {
+            0x1ED => {
                 // SET 5,L
                 unimplemented!()
             }
-            0xEE => {
+            0x1EE => {
                 // SET 5,(HL)
                 unimplemented!()
             }
-            0xEF => {
+            0x1EF => {
                 // SET 5,A
                 unimplemented!()
             }
-            0xF0 => {
+            0x1F0 => {
                 // SET 6,B
                 unimplemented!()
             }
-            0xF1 => {
+            0x1F1 => {
                 // SET 6,C
                 unimplemented!()
             }
-            0xF2 => {
+            0x1F2 => {
                 // SET 6,D
                 unimplemented!()
             }
-            0xF3 => {
+            0x1F3 => {
                 // SET 6,E
                 unimplemented!()
             }
-            0xF4 => {
+            0x1F4 => {
                 // SET 6,H
                 unimplemented!()
             }
-            0xF5 => {
+            0x1F5 => {
                 // SET 6,L
                 unimplemented!()
             }
-            0xF6 => {
+            0x1F6 => {
                 // SET 6,(HL)
                 unimplemented!()
             }
-            0xF7 => {
+            0x1F7 => {
                 // SET 6,A
                 unimplemented!()
             }
-            0xF8 => {
+            0x1F8 => {
                 // SET 7,B
                 unimplemented!()
             }
-            0xF9 => {
+            0x1F9 => {
                 // SET 7,C
                 unimplemented!()
             }
-            0xFA => {
+            0x1FA => {
                 // SET 7,D
                 unimplemented!()
             }
-            0xFB => {
+            0x1FB => {
                 // SET 7,E
                 unimplemented!()
             }
-            0xFC => {
+            0x1FC => {
                 // SET 7,H
                 unimplemented!()
             }
-            0xFD => {
+            0x1FD => {
                 // SET 7,L
                 unimplemented!()
             }
-            0xFE => {
+            0x1FE => {
                 // SET 7,(HL)
                 unimplemented!()
             }
-            0xFF => {
+            0x1FF => {
                 // SET 7,A
+                unimplemented!()
+            }
+            _ => {
                 unimplemented!()
             }
         }
