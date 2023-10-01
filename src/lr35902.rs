@@ -3,6 +3,8 @@ use std::{thread, time::Duration};
 mod instructions;
 use instructions::{cb_instructions, instructions, Instruction};
 
+use crate::bitwise;
+
 #[allow(dead_code)]
 pub struct LR35902 {
     af: u16,
@@ -43,104 +45,88 @@ impl LR35902 {
     }
 
     fn a(&self) -> u8 {
-        ((self.af >> 8) & 0xFF) as u8
+        bitwise::get_byte16::<1>(self.af)
     }
 
     fn b(&self) -> u8 {
-        ((self.bc >> 8) & 0xFF) as u8
+        bitwise::get_byte16::<1>(self.bc)
     }
 
     fn c(&self) -> u8 {
-        (self.bc & 0xFF) as u8
+        bitwise::get_byte16::<0>(self.bc)
     }
 
     fn d(&self) -> u8 {
-        ((self.de >> 8) & 0xFF) as u8
+        bitwise::get_byte16::<1>(self.de)
     }
 
     fn e(&self) -> u8 {
-        (self.de & 0xFF) as u8
+        bitwise::get_byte16::<0>(self.de)
     }
 
     fn h(&self) -> u8 {
-        ((self.hl >> 8) & 0xFF) as u8
+        bitwise::get_byte16::<1>(self.hl)
     }
 
     fn l(&self) -> u8 {
-        (self.hl & 0xFF) as u8
+        bitwise::get_byte16::<0>(self.hl)
     }
 
     fn z_flag(&self) -> bool {
-        self.af & 0b10000000 == 0b10000000
+        bitwise::test_bit16::<8>(self.af)
     }
     fn n_flag(&self) -> bool {
-        self.af & 0b01000000 == 0b01000000
+        bitwise::test_bit16::<7>(self.af)
     }
     fn h_flag(&self) -> bool {
-        self.af & 0b00100000 == 0b00100000
+        bitwise::test_bit16::<6>(self.af)
     }
     fn c_flag(&self) -> bool {
-        self.af & 0b00010000 == 0b00010000
+        bitwise::test_bit16::<5>(self.af)
     }
 
     fn set_z_flag(&mut self, value: bool) {
-        if value {
-            self.af = self.af | 0b10000000;
-        } else {
-            self.af = self.af & 0b01111111;
-        }
+        self.af = bitwise::set_bit16::<8>(self.af, value);
     }
 
     fn set_n_flag(&mut self, value: bool) {
-        if value {
-            self.af = self.af | 0b01000000;
-        } else {
-            self.af = self.af & 0b10111111;
-        }
+        self.af = bitwise::set_bit16::<7>(self.af, value);
     }
 
     fn set_h_flag(&mut self, value: bool) {
-        if value {
-            self.af = self.af | 0b00100000;
-        } else {
-            self.af = self.af & 0b11011111;
-        }
+        self.af = bitwise::set_bit16::<6>(self.af, value);
     }
 
     fn set_c_flag(&mut self, value: bool) {
-        if value {
-            self.af = self.af | 0b00010000;
-        } else {
-            self.af = self.af & 0b11101111;
-        }
+        self.af = bitwise::set_bit16::<5>(self.af, value);
     }
 
     fn set_a(&mut self, value: u8) {
-        self.af = (self.af & 0xFF) | ((value as u16) << 8);
+        self.af = bitwise::set_byte16::<1>(self.af, value);
     }
 
     fn set_b(&mut self, value: u8) {
-        self.bc = (self.bc & 0xFF) | ((value as u16) << 8);
+        self.bc = bitwise::set_byte16::<1>(self.bc, value);
     }
 
     fn set_c(&mut self, value: u8) {
-        self.bc = (self.bc & 0xFF00) | (value as u16);
+        self.bc = bitwise::set_byte16::<0>(self.bc, value);
     }
 
     fn set_d(&mut self, value: u8) {
-        self.de = (self.de & 0xFF) | ((value as u16) << 8);
+        self.de = bitwise::set_byte16::<1>(self.de, value);
     }
 
     fn set_e(&mut self, value: u8) {
-        self.de = (self.de & 0xFF00) | (value as u16);
+        self.de = bitwise::set_byte16::<0>(self.de, value);
     }
 
     fn set_h(&mut self, value: u8) {
-        self.hl = (self.hl & 0xFF) | ((value as u16) << 8);
+        self.hl = bitwise::set_byte16::<1>(self.hl, value);
     }
 
     fn set_l(&mut self, value: u8) {
-        self.hl = (self.hl & 0xFF00) | (value as u16);
+        self.hl = bitwise::set_byte16::<0>(self.hl, value);
     }
 
     fn set_memory8(&mut self, index: u16, value: u8) {
