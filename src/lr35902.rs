@@ -3,6 +3,7 @@ use std::{thread, time::Duration};
 mod instructions;
 use instructions::{cb_instructions, instructions, Instruction};
 
+#[allow(dead_code)]
 pub struct LR35902 {
     af: u16,
     bc: u16,
@@ -122,10 +123,43 @@ impl LR35902 {
         let opcode = self.mem[self.pc as usize];
         let instruction = self.instructions[opcode as usize].clone();
         println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
-        let f = instruction.function;
-        f(self, instruction.opcode);
+        self.execute(instruction.clone());
         self.pc += instruction.size as u16;
         thread::sleep(Duration::from_micros((instruction.cycles / 4) as u64));
+    }
+
+    fn execute(&mut self, instruction: Instruction) {
+        match instruction.opcode {
+            0x0 => {}
+            0x1 => self.bc = self.get_immediate16(0),
+            0x11 => self.de = self.get_immediate16(0),
+            0x21 => self.hl = self.get_immediate16(0),
+            0x31 => self.sp = self.get_immediate16(0),
+            0x32 => {
+                self.set_memory8(self.hl, self.a());
+                self.hl -= 1
+            }
+            0x3E => self.set_a(self.get_immediate8(0)),
+            0x80 => self.set_a(self.a() + self.b()),
+            0xAF => self.set_a(self.a() ^ self.b()),
+            0xCB => {
+                let cb = self.cb_instructions[self.memory8(self.pc + 1) as usize].clone();
+                println!("{:#02X} {}", cb.opcode, cb.mnemonic);
+                self.execute_cb(cb)
+            },
+            0xE2 => self.set_memory8(self.c().into(), self.a()),
+            _ => {
+                unimplemented!()
+            }
+        }
+    }
+
+    fn execute_cb(&mut self, instruction: Instruction) {
+        match instruction.opcode {
+            _ => {
+                unimplemented!()
+            }
+        }
     }
 }
 
