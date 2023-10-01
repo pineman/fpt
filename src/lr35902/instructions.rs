@@ -1,4 +1,33 @@
-use crate::Instruction;
+use crate::lr35902::LR35902;
+
+#[derive(Debug, Clone)]
+pub struct Instruction {
+    pub opcode: u8,
+    pub mnemonic: String,
+    pub size: u8,
+    pub cycles: u8,
+    pub function: fn(&mut LR35902, opcode: u8),
+}
+
+impl Instruction {
+    // Arguments in the same order as https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
+    fn new(
+        opcode: u8,
+        mnemonic: &str,
+        size: u8,
+        cycles: u8,
+        function: fn(&mut LR35902, opcode: u8),
+    ) -> Self {
+        let mnemonic = mnemonic.to_string();
+        Self {
+            opcode,
+            mnemonic,
+            size,
+            cycles,
+            function,
+        }
+    }
+}
 
 fn not_implemented(opcode: u8) -> Instruction {
     Instruction::new(opcode, "", 1, 4, |_, opcode| {
@@ -14,7 +43,7 @@ fn not_implemented_cb(opcode: u8) -> Instruction {
     })
 }
 
-pub fn load_instructions() -> Vec<Instruction> {
+pub fn instructions() -> Vec<Instruction> {
     vec![
         Instruction::new(0x0, "NOP", 1, 4, |_, _| {}),
         Instruction::new(0x1, "LD BC,d16", 3, 12, |cpu, _| {
