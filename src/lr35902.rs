@@ -1,11 +1,13 @@
+use std::fmt;
 use std::{thread, time::Duration};
 
-mod instructions;
+pub mod instructions;
 use instructions::{instructions, Instruction, InstructionKind};
 
 use crate::bitwise;
 
 #[allow(dead_code)]
+#[derive(PartialEq)]
 pub struct LR35902 {
     af: u16,
     bc: u16,
@@ -16,17 +18,11 @@ pub struct LR35902 {
     mem: [u8; 65536],
     next_cb: bool,
     instructions: Vec<Instruction>,
+    clock_cycles: u64,
 }
 
 impl Default for LR35902 {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-#[allow(dead_code)]
-impl LR35902 {
-    pub fn new() -> Self {
         let mut m = Self {
             af: 0,
             bc: 0,
@@ -37,21 +33,66 @@ impl LR35902 {
             mem: [0; 65536],
             next_cb: false,
             instructions: instructions(),
+            clock_cycles: 0,
         };
         m.load_bootrom(include_bytes!("../dmg0.bin"));
         m
+    }
+}
+
+impl fmt::Debug for LR35902 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("LR35902")
+            .field("af", &self.af)
+            .field("bc", &self.bc)
+            .field("de", &self.de)
+            .field("hl", &self.hl)
+            .field("sp", &self.sp)
+            .field("pc", &self.pc)
+            .field("clock_cycles", &self.clock_cycles)
+            .finish()
+    }
+}
+
+#[allow(dead_code)]
+impl LR35902 {
+    pub fn new() -> Self {
+        Self {
+            af: 0,
+            bc: 0,
+            de: 0,
+            hl: 0,
+            sp: 0,
+            pc: 0,
+            mem: [0; 65536],
+            next_cb: false,
+            instructions: instructions(),
+            clock_cycles: 0,
+        }
     }
 
     fn a(&self) -> u8 {
         bitwise::get_byte16::<1>(self.af)
     }
-
+    
     fn b(&self) -> u8 {
         bitwise::get_byte16::<1>(self.bc)
     }
 
     fn c(&self) -> u8 {
         bitwise::get_byte16::<0>(self.bc)
+    }
+
+    fn set_b(&mut self, value: u8) {
+        self.bc = bitwise::set_byte16::<1>(self.bc, value);
+    }
+
+    fn set_c(&mut self, value: u8) {
+        self.bc = bitwise::set_byte16::<0>(self.bc, value);
+    }
+
+    pub fn set_bc(&mut self, bc: u16) {
+        self.bc = bc;
     }
 
     fn d(&self) -> u8 {
@@ -103,13 +144,6 @@ impl LR35902 {
         self.af = bitwise::set_byte16::<1>(self.af, value);
     }
 
-    fn set_b(&mut self, value: u8) {
-        self.bc = bitwise::set_byte16::<1>(self.bc, value);
-    }
-
-    fn set_c(&mut self, value: u8) {
-        self.bc = bitwise::set_byte16::<0>(self.bc, value);
-    }
 
     fn set_d(&mut self, value: u8) {
         self.de = bitwise::set_byte16::<1>(self.de, value);
@@ -127,7 +161,11 @@ impl LR35902 {
         self.hl = bitwise::set_byte16::<0>(self.hl, value);
     }
 
-    fn set_memory8(&mut self, index: u16, value: u8) {
+    pub fn set_pc(&mut self, pc: u16) {
+        self.pc = pc;
+    }
+
+    pub fn set_memory8(&mut self, index: u16, value: u8) {
         self.mem[index as usize] = value;
     }
 
@@ -137,6 +175,10 @@ impl LR35902 {
 
     fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
         self.mem[..256].clone_from_slice(bootrom);
+    }
+
+    pub fn set_clock_cycles(&mut self, clock_cycles: u64) {
+        self.clock_cycles = clock_cycles;
     }
 
     /// get 8 bit immediate at position pc + 1 + pos
@@ -163,6 +205,7 @@ impl LR35902 {
             self.pc += instruction.size as u16;
         }
         thread::sleep(Duration::from_micros((instruction.cycles / 4) as u64));
+        self.clock_cycles += instruction.cycles as u64;
         // TODO: measure time and panic if cycle time exceeded
     }
 
@@ -2240,7 +2283,7 @@ mod tests {
 
     #[test]
     fn test_a() {
-        let mut cpu = LR35902::new();
+        let mut cpu = LR35902::default();
 
         assert_eq!(cpu.a(), 0);
         assert_eq!(cpu.af, 0);
@@ -2252,7 +2295,7 @@ mod tests {
 
     #[test]
     fn test_b() {
-        let mut cpu = LR35902::new();
+        let mut cpu = LR35902::default();
 
         assert_eq!(cpu.b(), 0);
         assert_eq!(cpu.bc, 0);
@@ -2264,7 +2307,7 @@ mod tests {
 
     #[test]
     fn test_c() {
-        let mut cpu = LR35902::new();
+        let mut cpu = LR35902::default();
 
         assert_eq!(cpu.c(), 0);
         assert_eq!(cpu.bc, 0);
@@ -2276,7 +2319,7 @@ mod tests {
 
     #[test]
     fn test_h() {
-        let mut cpu = LR35902::new();
+        let mut cpu = LR35902::default();
 
         assert_eq!(cpu.h(), 0);
         assert_eq!(cpu.hl, 0);
@@ -2288,7 +2331,7 @@ mod tests {
 
     #[test]
     fn test_l() {
-        let mut cpu = LR35902::new();
+        let mut cpu = LR35902::default();
 
         assert_eq!(cpu.l(), 0);
         assert_eq!(cpu.hl, 0);
@@ -2300,7 +2343,7 @@ mod tests {
 
     #[test]
     fn test_d() {
-        let mut cpu = LR35902::new();
+        let mut cpu = LR35902::default();
 
         assert_eq!(cpu.d(), 0);
         assert_eq!(cpu.de, 0);
@@ -2312,7 +2355,7 @@ mod tests {
 
     #[test]
     fn test_e() {
-        let mut cpu = LR35902::new();
+        let mut cpu = LR35902::default();
 
         assert_eq!(cpu.e(), 0);
         assert_eq!(cpu.de, 0);
@@ -2324,7 +2367,7 @@ mod tests {
 
     #[test]
     fn test_immediate8() {
-        let mut cpu = LR35902::new();
+        let mut cpu = LR35902::default();
         let mut bootrom = [0; 256];
         bootrom[0] = 1;
         bootrom[1] = 2;
@@ -2336,7 +2379,7 @@ mod tests {
 
     #[test]
     fn test_immediate16() {
-        let mut cpu = LR35902::new();
+        let mut cpu = LR35902::default();
         let mut bootrom = [0; 256];
         bootrom[0] = 1;
         bootrom[1] = 2;
@@ -2348,7 +2391,7 @@ mod tests {
 
     #[test]
     fn test_memory() {
-        let mut cpu = LR35902::new();
+        let mut cpu = LR35902::default();
 
         cpu.set_memory8(10, 255);
         assert_eq!(cpu.memory8(10), 255);
