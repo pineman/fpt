@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Instruction {
     pub opcode: u16,
     pub mnemonic: String,
@@ -8,7 +8,7 @@ pub struct Instruction {
     pub kind: InstructionKind,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum InstructionKind {
     Control,
     Jump,
