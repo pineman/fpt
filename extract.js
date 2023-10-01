@@ -33,7 +33,7 @@ ops(false).forEach((x, i) => instruction(x, i));
 ops(true).forEach((x, i) => instruction(x, i));
 
 const match = (x, i) => {
-  console.log(`0x${i.toString(16).toUpperCase()} => unimplemented!(),`);
+  console.log(`0x${i.toString(16).toUpperCase()} => {\n// ${x[0]}\nunimplemented!()}`);
 }
 
 ops(false).forEach((x, i) => match(x, i));
