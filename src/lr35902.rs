@@ -74,7 +74,7 @@ impl LR35902 {
     fn a(&self) -> u8 {
         bitwise::get_byte16::<1>(self.af)
     }
-    
+
     fn b(&self) -> u8 {
         bitwise::get_byte16::<1>(self.bc)
     }
@@ -143,7 +143,6 @@ impl LR35902 {
     fn set_a(&mut self, value: u8) {
         self.af = bitwise::set_byte16::<1>(self.af, value);
     }
-
 
     fn set_d(&mut self, value: u8) {
         self.de = bitwise::set_byte16::<1>(self.de, value);

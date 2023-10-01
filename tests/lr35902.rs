@@ -58,6 +58,11 @@ impl LR35902Builder {
         self
     }
 
+    pub fn with_memory_byte(mut self, index: usize, value: u8) -> LR35902Builder {
+        self.mem[index] = value;
+        self
+    }
+
     pub fn build(self) -> LR35902 {
         let mut lr35902 = LR35902::new();
 
@@ -74,27 +79,28 @@ impl LR35902Builder {
 
 #[test]
 fn test_instr_0x000_nop() {
-    let mut sut = LR35902Builder::new().build();
+    let builder = LR35902Builder::new().with_memory_byte(0, 0);
+    let mut sut = builder.clone().build();
     sut.step();
 
-    let expected = LR35902Builder::new()
-        .with_pc(1)
-        .with_clock_cycles(4)
-        .build();
+    let expected = builder.with_pc(1).with_clock_cycles(4).build();
 
     assert_eq!(sut, expected);
 }
 
 #[test]
-fn test_instr_0x001_load_bc_d16() {
-    let mut builder = LR35902Builder::new().with_memory(vec![0x1, 0x2]);
+fn test_instr_0x001_ld_bc_d16() {
+    let builder = LR35902Builder::new()
+        .with_memory_byte(0, 1) // instruction ld bc from imediate16
+        .with_memory_byte(1, 2) // lsb of imediate16
+        .with_memory_byte(2, 1); // msb of imediate16
     let mut sut = builder.clone().build();
 
     sut.step();
 
     let expected = builder
         .with_pc(3)
-        .with_bc(2)
+        .with_bc(0x0102)
         .with_clock_cycles(12)
         .build();
 
