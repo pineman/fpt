@@ -151,19 +151,19 @@ impl LR35902 {
     }
 
     fn set_z_flag(&mut self, value: bool) {
-        self.af = bw::set_bit16::<8>(self.af, value);
-    }
-
-    fn set_n_flag(&mut self, value: bool) {
         self.af = bw::set_bit16::<7>(self.af, value);
     }
 
-    fn set_h_flag(&mut self, value: bool) {
+    fn set_n_flag(&mut self, value: bool) {
         self.af = bw::set_bit16::<6>(self.af, value);
     }
 
-    fn set_c_flag(&mut self, value: bool) {
+    fn set_h_flag(&mut self, value: bool) {
         self.af = bw::set_bit16::<5>(self.af, value);
+    }
+
+    fn set_c_flag(&mut self, value: bool) {
+        self.af = bw::set_bit16::<4>(self.af, value);
     }
 
     pub fn set_pc(&mut self, pc: u16) {
