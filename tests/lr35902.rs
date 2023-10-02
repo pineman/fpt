@@ -16,6 +16,7 @@ struct LR35902Builder {
     clock_cycles: u64,
 }
 
+//TODO: build with flags
 #[allow(dead_code)]
 impl LR35902Builder {
     pub fn new() -> Self {
@@ -91,12 +92,17 @@ fn test_instr_0x000_nop() {
 
 #[test]
 fn test_instr_0x001_ld_bc_d16() {
+    // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, 0x1) // instruction ld bc from immediate16
+        .with_memory_byte(0x0000, 0x1) // instruction LD BC i16
         .with_memory_byte(0x0001, 2) // lsb of immediate16
         .with_memory_byte(0x0002, 1); // msb of immediate16
     let mut sut = builder.clone().build();
+
+    // When
     sut.step();
+
+    // Then
     let expected = builder
         .with_pc(3)
         .with_bc(0x0102) // (1 << 8) + 2 == 0x0102
@@ -108,12 +114,18 @@ fn test_instr_0x001_ld_bc_d16() {
 #[test]
 fn test_instr_0x080_add_a_b() {
     println!("{:?}", Backtrace::capture());
+
+    // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, 0x80)
+        .with_memory_byte(0x0000, 0x80) // instruction ADD AF, BC
         .with_af(0xfe00)
         .with_bc(0x0100);
     let mut sut = builder.clone().build();
+
+    // When
     sut.step();
+
+    // Then
     let expected = builder
         .with_pc(1)
         .with_af((0xff << 8) + (0b0000 << 4))
@@ -123,7 +135,7 @@ fn test_instr_0x080_add_a_b() {
     assert_eq!(sut, expected);
 
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, 0x80)
+        .with_memory_byte(0x0000, 0x80) //
         .with_af(0x0f00)
         .with_bc(0x0100);
     let mut sut = builder.clone().build();
