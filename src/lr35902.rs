@@ -4,9 +4,8 @@ use std::{thread, time::Duration};
 pub mod instructions;
 use instructions::{instructions, Instruction, InstructionKind};
 
-use crate::bitwise;
+use crate::bitwise as bw;
 
-#[allow(dead_code)]
 #[derive(PartialEq)]
 pub struct LR35902 {
     af: u16,
@@ -72,92 +71,99 @@ impl LR35902 {
     }
 
     fn a(&self) -> u8 {
-        bitwise::get_byte16::<1>(self.af)
+        bw::get_byte16::<1>(self.af)
     }
 
     fn b(&self) -> u8 {
-        bitwise::get_byte16::<1>(self.bc)
+        bw::get_byte16::<1>(self.bc)
     }
 
     fn c(&self) -> u8 {
-        bitwise::get_byte16::<0>(self.bc)
+        bw::get_byte16::<0>(self.bc)
+    }
+
+    fn d(&self) -> u8 {
+        bw::get_byte16::<1>(self.de)
+    }
+
+    fn e(&self) -> u8 {
+        bw::get_byte16::<0>(self.de)
+    }
+
+    fn h(&self) -> u8 {
+        bw::get_byte16::<1>(self.hl)
+    }
+
+    fn l(&self) -> u8 {
+        bw::get_byte16::<0>(self.hl)
+    }
+
+    fn z_flag(&self) -> bool {
+        bw::test_bit16::<8>(self.af)
+    }
+
+    fn n_flag(&self) -> bool {
+        bw::test_bit16::<7>(self.af)
+    }
+
+    fn h_flag(&self) -> bool {
+        bw::test_bit16::<6>(self.af)
+    }
+
+    fn c_flag(&self) -> bool {
+        bw::test_bit16::<5>(self.af)
+    }
+
+    fn set_a(&mut self, value: u8) {
+        self.af = bw::set_byte16::<1>(self.af, value);
+    }
+
+    pub fn set_af(&mut self, af: u16) {
+        self.af = af;
     }
 
     fn set_b(&mut self, value: u8) {
-        self.bc = bitwise::set_byte16::<1>(self.bc, value);
+        self.bc = bw::set_byte16::<1>(self.bc, value);
     }
 
     fn set_c(&mut self, value: u8) {
-        self.bc = bitwise::set_byte16::<0>(self.bc, value);
+        self.bc = bw::set_byte16::<0>(self.bc, value);
     }
 
     pub fn set_bc(&mut self, bc: u16) {
         self.bc = bc;
     }
 
-    fn d(&self) -> u8 {
-        bitwise::get_byte16::<1>(self.de)
-    }
-
-    fn e(&self) -> u8 {
-        bitwise::get_byte16::<0>(self.de)
-    }
-
-    fn h(&self) -> u8 {
-        bitwise::get_byte16::<1>(self.hl)
-    }
-
-    fn l(&self) -> u8 {
-        bitwise::get_byte16::<0>(self.hl)
-    }
-
-    fn z_flag(&self) -> bool {
-        bitwise::test_bit16::<8>(self.af)
-    }
-    fn n_flag(&self) -> bool {
-        bitwise::test_bit16::<7>(self.af)
-    }
-    fn h_flag(&self) -> bool {
-        bitwise::test_bit16::<6>(self.af)
-    }
-    fn c_flag(&self) -> bool {
-        bitwise::test_bit16::<5>(self.af)
-    }
-
-    fn set_z_flag(&mut self, value: bool) {
-        self.af = bitwise::set_bit16::<8>(self.af, value);
-    }
-
-    fn set_n_flag(&mut self, value: bool) {
-        self.af = bitwise::set_bit16::<7>(self.af, value);
-    }
-
-    fn set_h_flag(&mut self, value: bool) {
-        self.af = bitwise::set_bit16::<6>(self.af, value);
-    }
-
-    fn set_c_flag(&mut self, value: bool) {
-        self.af = bitwise::set_bit16::<5>(self.af, value);
-    }
-
-    fn set_a(&mut self, value: u8) {
-        self.af = bitwise::set_byte16::<1>(self.af, value);
-    }
-
     fn set_d(&mut self, value: u8) {
-        self.de = bitwise::set_byte16::<1>(self.de, value);
+        self.de = bw::set_byte16::<1>(self.de, value);
     }
 
     fn set_e(&mut self, value: u8) {
-        self.de = bitwise::set_byte16::<0>(self.de, value);
+        self.de = bw::set_byte16::<0>(self.de, value);
     }
 
     fn set_h(&mut self, value: u8) {
-        self.hl = bitwise::set_byte16::<1>(self.hl, value);
+        self.hl = bw::set_byte16::<1>(self.hl, value);
     }
 
     fn set_l(&mut self, value: u8) {
-        self.hl = bitwise::set_byte16::<0>(self.hl, value);
+        self.hl = bw::set_byte16::<0>(self.hl, value);
+    }
+
+    fn set_z_flag(&mut self, value: bool) {
+        self.af = bw::set_bit16::<8>(self.af, value);
+    }
+
+    fn set_n_flag(&mut self, value: bool) {
+        self.af = bw::set_bit16::<7>(self.af, value);
+    }
+
+    fn set_h_flag(&mut self, value: bool) {
+        self.af = bw::set_bit16::<6>(self.af, value);
+    }
+
+    fn set_c_flag(&mut self, value: bool) {
+        self.af = bw::set_bit16::<5>(self.af, value);
     }
 
     pub fn set_pc(&mut self, pc: u16) {
@@ -1061,7 +1067,7 @@ impl LR35902 {
                 unimplemented!()
             }
             0xD3 => {
-                // NOTHING
+                // Not implemented
                 unimplemented!()
             }
             0xD4 => {
@@ -1093,7 +1099,7 @@ impl LR35902 {
                 unimplemented!()
             }
             0xDB => {
-                // NOTHING
+                // Not implemented
                 unimplemented!()
             }
             0xDC => {
@@ -1101,7 +1107,7 @@ impl LR35902 {
                 unimplemented!()
             }
             0xDD => {
-                // NOTHING
+                // Not implemented
                 unimplemented!()
             }
             0xDE => {
@@ -1125,11 +1131,11 @@ impl LR35902 {
                 self.set_memory8(self.c().into(), self.a());
             }
             0xE3 => {
-                // NOTHING
+                // Not implemented
                 unimplemented!()
             }
             0xE4 => {
-                // NOTHING
+                // Not implemented
                 unimplemented!()
             }
             0xE5 => {
@@ -1157,15 +1163,15 @@ impl LR35902 {
                 unimplemented!()
             }
             0xEB => {
-                // NOTHING
+                // Not implemented
                 unimplemented!()
             }
             0xEC => {
-                // NOTHING
+                // Not implemented
                 unimplemented!()
             }
             0xED => {
-                // NOTHING
+                // Not implemented
                 unimplemented!()
             }
             0xEE => {
@@ -1193,7 +1199,7 @@ impl LR35902 {
                 unimplemented!()
             }
             0xF4 => {
-                // NOTHING
+                // Not implemented
                 unimplemented!()
             }
             0xF5 => {
@@ -1225,11 +1231,11 @@ impl LR35902 {
                 unimplemented!()
             }
             0xFC => {
-                // NOTHING
+                // Not implemented
                 unimplemented!()
             }
             0xFD => {
-                // NOTHING
+                // Not implemented
                 unimplemented!()
             }
             0xFE => {
