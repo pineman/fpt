@@ -194,7 +194,7 @@ impl LR35902 {
             opcode += 0x100;
             self.next_cb = false;
         }
-        let instruction = INSTRUCTIONS[opcode as usize].clone();
+        let instruction = INSTRUCTIONS[opcode as usize];
         println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
         println!("{:?}", self);
         self.execute(instruction);
