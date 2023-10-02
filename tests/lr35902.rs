@@ -216,7 +216,7 @@ fn test_add(a: u16, b: u16, r: u16, f: u16) {
 
 #[test]
 fn test_instr_0x080_add_a_b() {
-    test_add(0xfe, 0x01, 0xff, 0b0000);
-    test_add(0x0f, 0x01, 0x10, 0b0010);
-    test_add(0xff, 0x01, 0x00, 0b1011);
+    test_add(0xfe, 0x01, 0xff, 0b0000); // no flags
+    test_add(0x0f, 0x01, 0x10, 0b0010); // half carry
+    test_add(0xff, 0x01, 0x00, 0b1011); // zero, half carry and carry
 }
