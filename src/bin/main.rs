@@ -1,3 +1,5 @@
+use std::thread;
+
 use fpt::lr35902::LR35902;
 
 use winit::{
@@ -7,9 +9,19 @@ use winit::{
 };
 
 fn main() {
-    let mut lr35902 = LR35902::new();
+    let the_thing = thread::spawn(|| {
+        let mut lr35902 = LR35902::new();
+        loop {
+            lr35902.step();
+        }
+    });
 
-    let event_loop = EventLoop::new();
+    the_loop();
+    the_thing.join().unwrap();
+}
+
+fn the_loop() {
+    let event_loop: EventLoop<()> = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     event_loop.run(move |event, _, control_flow| {
