@@ -9,11 +9,10 @@ use winit::{
 };
 
 fn main() {
-    let the_thing = thread::spawn(|| {
-        let mut lr35902 = LR35902::new();
-        loop {
-            lr35902.step();
-        }
+    let mut lr = LR35902::new();
+
+    let the_thing = thread::spawn(move || loop {
+        lr.step();
     });
 
     the_loop();
