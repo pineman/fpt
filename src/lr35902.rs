@@ -22,7 +22,7 @@ pub struct LR35902 {
 
 impl Default for LR35902 {
     fn default() -> Self {
-        let mut m = Self {
+        Self {
             af: 0,
             bc: 0,
             de: 0,
@@ -33,9 +33,7 @@ impl Default for LR35902 {
             next_cb: false,
             instructions: instructions(),
             clock_cycles: 0,
-        };
-        m.load_bootrom(include_bytes!("../dmg0.bin"));
-        m
+        }
     }
 }
 
@@ -57,7 +55,7 @@ impl fmt::Debug for LR35902 {
 #[allow(dead_code)]
 impl LR35902 {
     pub fn new() -> Self {
-        Self {
+        let mut m = Self {
             af: 0,
             bc: 0,
             de: 0,
@@ -68,7 +66,9 @@ impl LR35902 {
             next_cb: false,
             instructions: instructions(),
             clock_cycles: 0,
-        }
+        };
+        m.load_bootrom(include_bytes!("../dmg0.bin"));
+        m
     }
 
     fn a(&self) -> u8 {
