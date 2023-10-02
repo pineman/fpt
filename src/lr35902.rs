@@ -39,16 +39,7 @@ impl Default for LR35902 {
 
 impl fmt::Debug for LR35902 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("LR35902")
-            .field("af", &self.af)
-            .field("bc", &self.bc)
-            .field("de", &self.de)
-            .field("hl", &self.hl)
-            .field("sp", &self.sp)
-            .field("pc", &self.pc)
-            .field("clock_cycles", &self.clock_cycles)
-            .finish()
-        //write!(f, "LR35902 {{ af: {:#06X}, bc: {:#06X}, de: {:#06X}, hl: {:#06X}, sp: {:#06X}, pc: {:#06X}, clock_cycles: {} }} ", self.af, self.bc, self.de, self.hl, self.sp, self.pc, self.clock_cycles)
+        write!(f, "LR35902 {{ af: {:#06X}, bc: {:#06X}, de: {:#06X}, hl: {:#06X}, sp: {:#06X}, pc: {:#06X}, clock_cycles: {} }} ", self.af, self.bc, self.de, self.hl, self.sp, self.pc, self.clock_cycles)
     }
 }
 
