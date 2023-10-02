@@ -87,13 +87,14 @@ fn test_instr_0x000_nop() {
     assert_eq!(sut, expected);
 }
 
-#[test]
-fn test_instr_0x001_ld_bc_d16() {
+#[rstest]
+#[case(2,1,0x0102)]
+fn test_instr_0x001_ld_bc_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: u16) {
     // Given
     let builder = LR35902Builder::new()
         .with_memory_byte(0x0000, 0x1) // instruction LD BC,d16
-        .with_memory_byte(0x0001, 2) // lsb of immediate16
-        .with_memory_byte(0x0002, 1); // msb of immediate16
+        .with_memory_byte(0x0001, lsb) // lsb of immediate16
+        .with_memory_byte(0x0002, msb); // msb of immediate16
     let mut sut = builder.clone().build();
 
     // When
@@ -102,19 +103,20 @@ fn test_instr_0x001_ld_bc_d16() {
     // Then
     let expected = builder
         .with_pc(3)
-        .with_bc(0x0102) // (1 << 8) + 2 == 0x0102
+        .with_bc(result) // (1 << 8) + 2 == 0x0102
         .with_clock_cycles(12)
         .build();
     assert_eq!(sut, expected);
 }
 
-#[test]
-fn test_instr_0x011_ld_de_d16() {
+#[rstest]
+#[case(2,1,0x0102)]
+fn test_instr_0x011_ld_de_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: u16) {
     // Given
     let builder = LR35902Builder::new()
         .with_memory_byte(0x0000, 0x11) // instruction LD DE,d16
-        .with_memory_byte(0x0001, 2) // lsb of immediate16
-        .with_memory_byte(0x0002, 1); // msb of immediate16
+        .with_memory_byte(0x0001, lsb) // lsb of immediate16
+        .with_memory_byte(0x0002, msb); // msb of immediate16
     let mut sut = builder.clone().build();
 
     // When
@@ -123,7 +125,7 @@ fn test_instr_0x011_ld_de_d16() {
     // Then
     let expected = builder
         .with_pc(3)
-        .with_de(0x0102) // (1 << 8) + 2 == 0x0102
+        .with_de(result) // (1 << 8) + 2 == 0x0102
         .with_clock_cycles(12)
         .build();
     assert_eq!(sut, expected);
