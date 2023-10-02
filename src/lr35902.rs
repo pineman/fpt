@@ -466,27 +466,27 @@ impl LR35902 {
             }
             0x40 => {
                 // LD B,B
-                unimplemented!()
+                self.set_b(self.b());
             }
             0x41 => {
                 // LD B,C
-                unimplemented!()
+                self.set_b(self.b());
             }
             0x42 => {
                 // LD B,D
-                unimplemented!()
+                self.set_b(self.d());
             }
             0x43 => {
                 // LD B,E
-                unimplemented!()
+                self.set_b(self.e());
             }
             0x44 => {
                 // LD B,H
-                unimplemented!()
+                self.set_b(self.h());
             }
             0x45 => {
                 // LD B,L
-                unimplemented!()
+                self.set_b(self.l());
             }
             0x46 => {
                 // LD B,(HL)
@@ -494,31 +494,31 @@ impl LR35902 {
             }
             0x47 => {
                 // LD B,A
-                unimplemented!()
+                self.set_b(self.a());
             }
             0x48 => {
                 // LD C,B
-                unimplemented!()
+                self.set_c(self.b());
             }
             0x49 => {
                 // LD C,C
-                unimplemented!()
+                self.set_c(self.c());
             }
             0x4A => {
                 // LD C,D
-                unimplemented!()
+                self.set_c(self.d());
             }
             0x4B => {
                 // LD C,E
-                unimplemented!()
+                self.set_c(self.e());
             }
             0x4C => {
                 // LD C,H
-                unimplemented!()
+                self.set_c(self.h());
             }
             0x4D => {
                 // LD C,L
-                unimplemented!()
+                self.set_c(self.l());
             }
             0x4E => {
                 // LD C,(HL)
@@ -526,31 +526,32 @@ impl LR35902 {
             }
             0x4F => {
                 // LD C,A
-                unimplemented!()
+                self.set_c(self.a());
             }
             0x50 => {
                 // LD D,B
-                unimplemented!()
+                self.set_d(self.b());
             }
             0x51 => {
                 // LD D,C
+                self.set_d(self.c());
                 unimplemented!()
             }
             0x52 => {
                 // LD D,D
-                unimplemented!()
+                self.set_d(self.d());
             }
             0x53 => {
                 // LD D,E
-                unimplemented!()
+                self.set_d(self.e());
             }
             0x54 => {
                 // LD D,H
-                unimplemented!()
+                self.set_d(self.h());
             }
             0x55 => {
                 // LD D,L
-                unimplemented!()
+                self.set_d(self.l());
             }
             0x56 => {
                 // LD D,(HL)
@@ -558,31 +559,31 @@ impl LR35902 {
             }
             0x57 => {
                 // LD D,A
-                unimplemented!()
+                self.set_d(self.a());
             }
             0x58 => {
                 // LD E,B
-                unimplemented!()
+                self.set_e(self.b());
             }
             0x59 => {
                 // LD E,C
-                unimplemented!()
+                self.set_e(self.c());
             }
             0x5A => {
                 // LD E,D
-                unimplemented!()
+                self.set_e(self.d());
             }
             0x5B => {
                 // LD E,E
-                unimplemented!()
+                self.set_e(self.e());
             }
             0x5C => {
                 // LD E,H
-                unimplemented!()
+                self.set_e(self.h());
             }
             0x5D => {
                 // LD E,L
-                unimplemented!()
+                self.set_e(self.l());
             }
             0x5E => {
                 // LD E,(HL)
@@ -590,31 +591,31 @@ impl LR35902 {
             }
             0x5F => {
                 // LD E,A
-                unimplemented!()
+                self.set_e(self.a());
             }
             0x60 => {
                 // LD H,B
-                unimplemented!()
+                self.set_h(self.b());
             }
             0x61 => {
                 // LD H,C
-                unimplemented!()
+                self.set_h(self.c());
             }
             0x62 => {
                 // LD H,D
-                unimplemented!()
+                self.set_h(self.d());
             }
             0x63 => {
                 // LD H,E
-                unimplemented!()
+                self.set_h(self.e());
             }
             0x64 => {
                 // LD H,H
-                unimplemented!()
+                self.set_h(self.h());
             }
             0x65 => {
                 // LD H,L
-                unimplemented!()
+                self.set_h(self.l());
             }
             0x66 => {
                 // LD H,(HL)
@@ -622,31 +623,31 @@ impl LR35902 {
             }
             0x67 => {
                 // LD H,A
-                unimplemented!()
+                self.set_h(self.a());
             }
             0x68 => {
                 // LD L,B
-                unimplemented!()
+                self.set_l(self.b());
             }
             0x69 => {
                 // LD L,C
-                unimplemented!()
+                self.set_l(self.c());
             }
             0x6A => {
                 // LD L,D
-                unimplemented!()
+                self.set_l(self.d());
             }
             0x6B => {
                 // LD L,E
-                unimplemented!()
+                self.set_l(self.e());
             }
             0x6C => {
                 // LD L,H
-                unimplemented!()
+                self.set_l(self.h());
             }
             0x6D => {
                 // LD L,L
-                unimplemented!()
+                self.set_l(self.l());
             }
             0x6E => {
                 // LD L,(HL)
@@ -654,7 +655,7 @@ impl LR35902 {
             }
             0x6F => {
                 // LD L,A
-                unimplemented!()
+                self.set_l(self.a());
             }
             0x70 => {
                 // LD (HL),B
@@ -690,27 +691,27 @@ impl LR35902 {
             }
             0x78 => {
                 // LD A,B
-                unimplemented!()
+                self.set_a(self.b());
             }
             0x79 => {
                 // LD A,C
-                unimplemented!()
+                self.set_a(self.c());
             }
             0x7A => {
                 // LD A,D
-                unimplemented!()
+                self.set_a(self.d());
             }
             0x7B => {
                 // LD A,E
-                unimplemented!()
+                self.set_a(self.e());
             }
             0x7C => {
                 // LD A,H
-                unimplemented!()
+                self.set_a(self.h());
             }
             0x7D => {
                 // LD A,L
-                unimplemented!()
+                self.set_a(self.l());
             }
             0x7E => {
                 // LD A,(HL)
@@ -718,7 +719,7 @@ impl LR35902 {
             }
             0x7F => {
                 // LD A,A
-                unimplemented!()
+                self.set_a(self.a());
             }
             0x80 => {
                 // ADD A,B
