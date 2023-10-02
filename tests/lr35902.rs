@@ -67,6 +67,7 @@ impl LR35902Builder {
     pub fn build(self) -> LR35902 {
         let mut lr35902 = LR35902::new();
 
+        lr35902.set_af(self.af);
         lr35902.set_bc(self.bc);
         lr35902.set_pc(self.pc);
         lr35902.set_clock_cycles(self.clock_cycles);
@@ -101,4 +102,49 @@ fn test_instr_0x001_ld_bc_d16() {
         .with_clock_cycles(12)
         .build();
     assert_eq!(sut, expected);
+}
+
+#[test]
+fn test_instr_0x080_add_a_b() {
+    let builder = LR35902Builder::new()
+        .with_memory_byte(0x0000, 0x80)
+        .with_af(0xfe00)
+        .with_bc(0x0100);
+    let mut sut = builder.clone().build();
+    sut.step();
+    let expected = builder
+        .with_pc(1)
+        .with_af((0xff << 8) + (0b0000 << 4))
+        .with_bc(0x0100)
+        .with_clock_cycles(4)
+        .build();
+    assert_eq!(sut, expected);
+
+    let builder = LR35902Builder::new()
+        .with_memory_byte(0x0000, 0x80)
+        .with_af(0x0f00)
+        .with_bc(0x0100);
+    let mut sut = builder.clone().build();
+    sut.step();
+    let expected = builder
+        .with_pc(1)
+        .with_af((0x10 << 8) + (0b0010 << 4))
+        .with_bc(0x0100)
+        .with_clock_cycles(4)
+        .build();
+    assert_eq!(sut, expected);
+
+    // let builder = LR35902Builder::new()
+    //     .with_memory_byte(0x0000, 0x80)
+    //     .with_af(0xff00)
+    //     .with_bc(0x0100);
+    // let mut sut = builder.clone().build();
+    // sut.step();
+    // let expected = builder
+    //     .with_pc(1)
+    //     .with_af((0x00 << 8) + (0b1011 << 4))
+    //     .with_bc(0x0100)
+    //     .with_clock_cycles(4)
+    //     .build();
+    // assert_eq!(sut, expected);
 }

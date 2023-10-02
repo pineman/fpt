@@ -50,6 +50,7 @@ impl fmt::Debug for LR35902 {
             .field("pc", &self.pc)
             .field("clock_cycles", &self.clock_cycles)
             .finish()
+        //write!(f, "LR35902 {{ af: {:#06X}, bc: {:#06X}, de: {:#06X}, hl: {:#06X}, sp: {:#06X}, pc: {:#06X}, clock_cycles: {} }} ", self.af, self.bc, self.de, self.hl, self.sp, self.pc, self.clock_cycles)
     }
 }
 
@@ -730,13 +731,12 @@ impl LR35902 {
             }
             0x80 => {
                 // ADD A,B
-                let result = self.a() + self.b();
-                self.set_a(result);
+                let (result, overflow) = self.a().overflowing_add(self.b());
                 self.set_z_flag(result == 0);
                 self.set_n_flag(false);
-
-                self.set_h_flag(true);
-                self.set_c_flag(true);
+                self.set_h_flag(((self.a() & 0b1111) + (self.b() & 0b1111)) > 0b1111);
+                self.set_c_flag(overflow);
+                self.set_a(result);
             }
             0x81 => {
                 // ADD A,C
