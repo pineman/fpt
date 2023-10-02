@@ -1,3 +1,4 @@
+use std::backtrace::Backtrace;
 use fpt::lr35902::LR35902;
 
 #[derive(Clone)]
@@ -106,6 +107,7 @@ fn test_instr_0x001_ld_bc_d16() {
 
 #[test]
 fn test_instr_0x080_add_a_b() {
+    println!("{:?}", Backtrace::capture());
     let builder = LR35902Builder::new()
         .with_memory_byte(0x0000, 0x80)
         .with_af(0xfe00)
