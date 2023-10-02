@@ -1,2 +1,2 @@
-pub mod bitwise;
+mod bitwise;
 pub mod lr35902;
