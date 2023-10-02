@@ -82,9 +82,14 @@ impl LR35902Builder {
 
 #[test]
 fn test_instr_0x000_nop() {
+    // Given
     let builder = LR35902Builder::new().with_memory_byte(0, 0);
     let mut sut = builder.clone().build();
+
+    // When
     sut.step();
+
+    // Then
     let expected = builder.with_pc(1).with_clock_cycles(4).build();
     assert_eq!(sut, expected);
 }
