@@ -82,9 +82,7 @@ impl LR35902Builder {
 fn test_instr_0x000_nop() {
     let builder = LR35902Builder::new().with_memory_byte(0, 0);
     let mut sut = builder.clone().build();
-
     sut.step();
-
     let expected = builder.with_pc(1).with_clock_cycles(4).build();
     assert_eq!(sut, expected);
 }
@@ -96,9 +94,7 @@ fn test_instr_0x001_ld_bc_d16() {
         .with_memory_byte(0x0001, 2) // lsb of immediate16
         .with_memory_byte(0x0002, 1); // msb of immediate16
     let mut sut = builder.clone().build();
-
     sut.step();
-
     let expected = builder
         .with_pc(3)
         .with_bc(0x0102) // (1 << 8) + 2 == 0x0102
