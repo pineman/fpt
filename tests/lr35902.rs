@@ -1,17 +1,17 @@
+use rstest::rstest;
+
 use fpt::lr35902::LR35902;
 
 #[derive(Clone)]
-#[allow(dead_code)]
 struct LR35902Builder {
     lr35902: LR35902,
 }
 
 //TODO: build with flags
-#[allow(dead_code)]
 impl LR35902Builder {
     pub fn new() -> Self {
         Self {
-            lr35902: LR35902::new(),
+            lr35902: LR35902::default(),
         }
     }
 
@@ -76,7 +76,7 @@ impl LR35902Builder {
 #[test]
 fn test_instr_0x000_nop() {
     // Given
-    let builder = LR35902Builder::new().with_memory_byte(0, 0);
+    let builder = LR35902Builder::new().with_memory_byte(0x0000, 0x0);
     let mut sut = builder.clone().build();
 
     // When
@@ -129,13 +129,14 @@ fn test_instr_0x011_ld_de_d16() {
     assert_eq!(sut, expected);
 }
 
-#[test]
-fn test_instr_0x021_ld_hl_d16() {
+#[rstest]
+#[case(0x2, 0x1, 0x0102)]
+fn test_instr_0x021_ld_hl_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: u16) {
     // Given
     let builder = LR35902Builder::new()
         .with_memory_byte(0x0000, 0x21) // instruction LD HL,d16
-        .with_memory_byte(0x0001, 2) // lsb of immediate16
-        .with_memory_byte(0x0002, 1); // msb of immediate16
+        .with_memory_byte(0x0001, lsb) // lsb of immediate16
+        .with_memory_byte(0x0002, msb); // msb of immediate16
     let mut sut = builder.clone().build();
 
     // When
@@ -144,19 +145,21 @@ fn test_instr_0x021_ld_hl_d16() {
     // Then
     let expected = builder
         .with_pc(3)
-        .with_hl(0x0102) // (1 << 8) + 2 == 0x0102
+        .with_hl(result) // (1 << 8) + 2 == 0x0102
         .with_clock_cycles(12)
         .build();
     assert_eq!(sut, expected);
 }
 
-#[test]
-fn test_instr_0x031_ld_sp_d16() {
+#[rstest]
+#[case(0x2, 0x1, 0x0102)]
+#[case(0xFF, 0xFF, 0xFFFF)]
+fn test_instr_0x031_ld_sp_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: u16) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, 0x31) // instruction LD HL,d16
-        .with_memory_byte(0x0001, 2) // lsb of immediate16
-        .with_memory_byte(0x0002, 1); // msb of immediate16
+        .with_memory_byte(0x0000, 0x31) // instruction LD SP,d16
+        .with_memory_byte(0x0001, lsb) // lsb of immediate16
+        .with_memory_byte(0x0002, msb); // msb of immediate16
     let mut sut = builder.clone().build();
 
     // When
@@ -165,19 +168,21 @@ fn test_instr_0x031_ld_sp_d16() {
     // Then
     let expected = builder
         .with_pc(3)
-        .with_sp(0x0102) // (1 << 8) + 2 == 0x0102
+        .with_sp(result) // (msb << 8) + lsb == 0x0102
         .with_clock_cycles(12)
         .build();
     assert_eq!(sut, expected);
 }
 
-#[test]
-fn test_instr_0x032_ld_hld_a() {
+#[rstest]
+#[case(0x10, 0x100)]
+#[case(0xFF, 0x1)]
+fn test_instr_0x032_ld_hld_a(#[case] a: u8, #[case] hl: u16) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, 0x32) // instruction LD HL,d16
-        .with_a(0x10)
-        .with_hl(0x100);
+        .with_memory_byte(0x0000, 0x32) // instruction LD (HL-), a
+        .with_a(a)
+        .with_hl(hl);
     let mut sut = builder.clone().build();
 
     // When
@@ -186,14 +191,18 @@ fn test_instr_0x032_ld_hld_a() {
     // Then
     let expected = builder
         .with_pc(1)
-        .with_hl(0xFF) // hl gets decremented
+        .with_hl(hl - 1) // hl gets decremented
         .with_clock_cycles(8)
-        .with_memory_byte(0x100, 0x10)
+        .with_memory_byte(hl, a)
         .build();
     assert_eq!(sut, expected);
 }
 
-fn test_add(a: u16, b: u16, r: u16, f: u16) {
+#[rstest]
+#[case(0xfe, 0x01, 0xff, 0b0000)] // no flags
+#[case(0x0f, 0x01, 0x10, 0b0010)] // half carry
+#[case(0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
+fn test_add(#[case] a: u16, #[case] b: u16, #[case] r: u16, #[case] f: u16) {
     // Given
     let builder = LR35902Builder::new()
         .with_memory_byte(0x0000, 0x80) // instruction ADD AF, BC
@@ -212,11 +221,4 @@ fn test_add(a: u16, b: u16, r: u16, f: u16) {
         .with_clock_cycles(4)
         .build();
     assert_eq!(sut, expected);
-}
-
-#[test]
-fn test_instr_0x080_add_a_b() {
-    test_add(0xfe, 0x01, 0xff, 0b0000); // no flags
-    test_add(0x0f, 0x01, 0x10, 0b0010); // half carry
-    test_add(0xff, 0x01, 0x00, 0b1011); // zero, half carry and carry
 }

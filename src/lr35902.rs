@@ -44,17 +44,7 @@ impl fmt::Debug for LR35902 {
 #[allow(dead_code)]
 impl LR35902 {
     pub fn new() -> Self {
-        let mut m = Self {
-            af: 0,
-            bc: 0,
-            de: 0,
-            hl: 0,
-            sp: 0,
-            pc: 0,
-            mem: [0; 65536],
-            next_cb: false,
-            clock_cycles: 0,
-        };
+        let mut m = Self::default();
         m.load_bootrom(include_bytes!("../dmg0.bin"));
         m
     }
@@ -206,7 +196,8 @@ impl LR35902 {
         }
         let instruction = INSTRUCTIONS[opcode as usize].clone();
         println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
-        self.execute(instruction.clone());
+        println!("{:?}", self);
+        self.execute(instruction);
         if instruction.kind != InstructionKind::Jump {
             self.pc += instruction.size as u16;
         }
