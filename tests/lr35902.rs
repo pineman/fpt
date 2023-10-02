@@ -1,4 +1,3 @@
-use std::backtrace::Backtrace;
 use fpt::lr35902::LR35902;
 
 #[derive(Clone)]
@@ -111,15 +110,12 @@ fn test_instr_0x001_ld_bc_d16() {
     assert_eq!(sut, expected);
 }
 
-#[test]
-fn test_instr_0x080_add_a_b() {
-    println!("{:?}", Backtrace::capture());
-
+fn test_add(a: u16, b: u16, r: u16, f: u16) {
     // Given
     let builder = LR35902Builder::new()
         .with_memory_byte(0x0000, 0x80) // instruction ADD AF, BC
-        .with_af(0xfe00)
-        .with_bc(0x0100);
+        .with_af(a << 8)
+        .with_bc(b << 8);
     let mut sut = builder.clone().build();
 
     // When
@@ -128,37 +124,16 @@ fn test_instr_0x080_add_a_b() {
     // Then
     let expected = builder
         .with_pc(1)
-        .with_af((0xff << 8) + (0b0000 << 4))
-        .with_bc(0x0100)
+        .with_af((r << 8) + (f << 4))
+        .with_bc(b << 8)
         .with_clock_cycles(4)
         .build();
     assert_eq!(sut, expected);
+}
 
-    let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, 0x80) //
-        .with_af(0x0f00)
-        .with_bc(0x0100);
-    let mut sut = builder.clone().build();
-    sut.step();
-    let expected = builder
-        .with_pc(1)
-        .with_af((0x10 << 8) + (0b0010 << 4))
-        .with_bc(0x0100)
-        .with_clock_cycles(4)
-        .build();
-    assert_eq!(sut, expected);
-
-    // let builder = LR35902Builder::new()
-    //     .with_memory_byte(0x0000, 0x80)
-    //     .with_af(0xff00)
-    //     .with_bc(0x0100);
-    // let mut sut = builder.clone().build();
-    // sut.step();
-    // let expected = builder
-    //     .with_pc(1)
-    //     .with_af((0x00 << 8) + (0b1011 << 4))
-    //     .with_bc(0x0100)
-    //     .with_clock_cycles(4)
-    //     .build();
-    // assert_eq!(sut, expected);
+#[test]
+fn test_instr_0x080_add_a_b() {
+    test_add(0xfe, 0x01, 0xff, 0b0000);
+    test_add(0x0f, 0x01, 0x10, 0b0010);
+    test_add(0xff, 0x01, 0x00, 0b1011);
 }
