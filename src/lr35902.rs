@@ -924,7 +924,12 @@ impl LR35902 {
             }
             0xAF => {
                 // XOR A
-                self.set_a(self.a() ^ self.b());
+                let result = self.a() ^ self.b();
+                self.set_a(result);
+                self.set_z_flag(result == 0);
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_c_flag(false);
             }
             0xB0 => {
                 // OR B
