@@ -2,11 +2,11 @@ use std::fmt;
 use std::{thread, time::Duration};
 
 pub mod instructions;
-use instructions::{instructions, Instruction, InstructionKind};
+use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use crate::bitwise as bw;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct LR35902 {
     af: u16,
     bc: u16,
@@ -16,46 +16,11 @@ pub struct LR35902 {
     pc: u16,
     mem: [u8; 65536],
     next_cb: bool,
-    instructions: Vec<Instruction>,
     clock_cycles: u64,
 }
 
 impl Default for LR35902 {
     fn default() -> Self {
-        let mut m = Self {
-            af: 0,
-            bc: 0,
-            de: 0,
-            hl: 0,
-            sp: 0,
-            pc: 0,
-            mem: [0; 65536],
-            next_cb: false,
-            instructions: instructions(),
-            clock_cycles: 0,
-        };
-        m.load_bootrom(include_bytes!("../dmg0.bin"));
-        m
-    }
-}
-
-impl fmt::Debug for LR35902 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("LR35902")
-            .field("af", &self.af)
-            .field("bc", &self.bc)
-            .field("de", &self.de)
-            .field("hl", &self.hl)
-            .field("sp", &self.sp)
-            .field("pc", &self.pc)
-            .field("clock_cycles", &self.clock_cycles)
-            .finish()
-    }
-}
-
-#[allow(dead_code)]
-impl LR35902 {
-    pub fn new() -> Self {
         Self {
             af: 0,
             bc: 0,
@@ -65,9 +30,23 @@ impl LR35902 {
             pc: 0,
             mem: [0; 65536],
             next_cb: false,
-            instructions: instructions(),
             clock_cycles: 0,
         }
+    }
+}
+
+impl fmt::Debug for LR35902 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "LR35902 {{ af: {:#06X}, bc: {:#06X}, de: {:#06X}, hl: {:#06X}, sp: {:#06X}, pc: {:#06X}, clock_cycles: {} }} ", self.af, self.bc, self.de, self.hl, self.sp, self.pc, self.clock_cycles)
+    }
+}
+
+#[allow(dead_code)]
+impl LR35902 {
+    pub fn new() -> Self {
+        let mut m = Self::default();
+        m.load_bootrom(include_bytes!("../dmg0.bin"));
+        m
     }
 
     fn a(&self) -> u8 {
@@ -114,7 +93,7 @@ impl LR35902 {
         bw::test_bit16::<5>(self.af)
     }
 
-    fn set_a(&mut self, value: u8) {
+    pub fn set_a(&mut self, value: u8) {
         self.af = bw::set_byte16::<1>(self.af, value);
     }
 
@@ -142,6 +121,10 @@ impl LR35902 {
         self.de = bw::set_byte16::<0>(self.de, value);
     }
 
+    pub fn set_de(&mut self, de: u16) {
+        self.de = de;
+    }
+
     fn set_h(&mut self, value: u8) {
         self.hl = bw::set_byte16::<1>(self.hl, value);
     }
@@ -150,20 +133,28 @@ impl LR35902 {
         self.hl = bw::set_byte16::<0>(self.hl, value);
     }
 
-    fn set_z_flag(&mut self, value: bool) {
-        self.af = bw::set_bit16::<8>(self.af, value);
+    pub fn set_hl(&mut self, hl: u16) {
+        self.hl = hl;
     }
 
-    fn set_n_flag(&mut self, value: bool) {
+    fn set_z_flag(&mut self, value: bool) {
         self.af = bw::set_bit16::<7>(self.af, value);
     }
 
-    fn set_h_flag(&mut self, value: bool) {
+    fn set_n_flag(&mut self, value: bool) {
         self.af = bw::set_bit16::<6>(self.af, value);
     }
 
-    fn set_c_flag(&mut self, value: bool) {
+    fn set_h_flag(&mut self, value: bool) {
         self.af = bw::set_bit16::<5>(self.af, value);
+    }
+
+    fn set_c_flag(&mut self, value: bool) {
+        self.af = bw::set_bit16::<4>(self.af, value);
+    }
+
+    pub fn set_sp(&mut self, sp: u16) {
+        self.sp = sp;
     }
 
     pub fn set_pc(&mut self, pc: u16) {
@@ -203,9 +194,10 @@ impl LR35902 {
             opcode += 0x100;
             self.next_cb = false;
         }
-        let instruction = self.instructions[opcode as usize].clone();
+        let instruction = INSTRUCTIONS[opcode as usize];
         println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
-        self.execute(instruction.clone());
+        println!("{:?}", self);
+        self.execute(instruction);
         if instruction.kind != InstructionKind::Jump {
             self.pc += instruction.size as u16;
         }
@@ -730,13 +722,12 @@ impl LR35902 {
             }
             0x80 => {
                 // ADD A,B
-                let result = self.a() + self.b();
-                self.set_a(result);
+                let (result, overflow) = self.a().overflowing_add(self.b());
                 self.set_z_flag(result == 0);
                 self.set_n_flag(false);
-
-                self.set_h_flag(true);
-                self.set_c_flag(true);
+                self.set_h_flag(((self.a() & 0b1111) + (self.b() & 0b1111)) > 0b1111);
+                self.set_c_flag(overflow);
+                self.set_a(result);
             }
             0x81 => {
                 // ADD A,C
@@ -924,7 +915,12 @@ impl LR35902 {
             }
             0xAF => {
                 // XOR A
-                self.set_a(self.a() ^ self.b());
+                let result = self.a() ^ self.b();
+                self.set_z_flag(result == 0);
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_c_flag(false);
+                self.set_a(result);
             }
             0xB0 => {
                 // OR B
@@ -1744,12 +1740,11 @@ impl LR35902 {
             }
             0x17C => {
                 // BIT 7,H
-                // TODO: use hl directly
-                if self.h() & 0b10000000 == 0 {
+                if !bw::test_bit16::<8>(self.hl) {
                     self.set_z_flag(true);
                 }
                 self.set_n_flag(false);
-                self.set_h_flag(false);
+                self.set_h_flag(true);
             }
             0x17D => {
                 // BIT 7,L
