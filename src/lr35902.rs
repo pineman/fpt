@@ -1749,12 +1749,11 @@ impl LR35902 {
             }
             0x17C => {
                 // BIT 7,H
-                // TODO: use hl directly
-                if self.h() & 0b10000000 == 0 {
+                if !bw::test_bit16::<8>(self.hl) {
                     self.set_z_flag(true);
                 }
                 self.set_n_flag(false);
-                self.set_h_flag(false);
+                self.set_h_flag(true);
             }
             0x17D => {
                 // BIT 7,L
