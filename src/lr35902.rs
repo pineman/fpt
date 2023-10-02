@@ -2,10 +2,9 @@ use std::fmt;
 use std::{thread, time::Duration};
 
 pub mod instructions;
-use instructions::{Instruction, InstructionKind};
+use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use crate::bitwise as bw;
-use crate::lr35902::instructions::INSTRUCTIONS;
 
 #[derive(PartialEq)]
 pub struct LR35902 {
@@ -914,11 +913,11 @@ impl LR35902 {
             0xAF => {
                 // XOR A
                 let result = self.a() ^ self.b();
-                self.set_a(result);
                 self.set_z_flag(result == 0);
                 self.set_n_flag(false);
                 self.set_h_flag(false);
                 self.set_c_flag(false);
+                self.set_a(result);
             }
             0xB0 => {
                 // OR B

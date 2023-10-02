@@ -93,7 +93,7 @@ fn test_instr_0x000_nop() {
 fn test_instr_0x001_ld_bc_d16() {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, 0x1) // instruction LD BC i16
+        .with_memory_byte(0x0000, 0x1) // instruction LD BC,d16
         .with_memory_byte(0x0001, 2) // lsb of immediate16
         .with_memory_byte(0x0002, 1); // msb of immediate16
     let mut sut = builder.clone().build();
