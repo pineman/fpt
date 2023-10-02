@@ -15,7 +15,7 @@ impl LR35902Builder {
         }
     }
 
-    pub fn with_register(mut self, register: &str, value: u8) -> Self {
+    pub fn with_reg8(self, register: &str, value: u8) -> Self {
         match register {
             "b" => self.with_b(value),
             "c" => self.with_c(value),
@@ -27,10 +27,30 @@ impl LR35902Builder {
             _ => panic!(),
         }
     }
-    pub fn with_af(mut self, af: u16) -> Self {
-        self.lr35902.set_af(af);
+
+    // pub fn with_reg16(self, register: &str, value: u16) -> Self {
+    //     match register {
+    //         "bc" => self.with_bc(value),
+    //         "de" => self.with_de(value),
+    //         "hl" => self.with_hl(value),
+    //         _ => panic!(),
+    //     }
+    // }
+
+    pub fn with_a(mut self, a: u8) -> Self {
+        self.lr35902.set_a(a);
         self
     }
+
+    pub fn with_f(mut self, f: u8) -> Self {
+        self.lr35902.set_f(f);
+        self
+    }
+
+    // pub fn with_af(mut self, af: u16) -> Self {
+    //     self.lr35902.set_af(af);
+    //     self
+    // }
 
     pub fn with_b(mut self, b: u8) -> Self {
         self.lr35902.set_b(b);
@@ -42,13 +62,23 @@ impl LR35902Builder {
         self
     }
 
+    pub fn with_bc(mut self, bc: u16) -> Self {
+        self.lr35902.set_bc(bc);
+        self
+    }
+
     pub fn with_d(mut self, d: u8) -> Self {
         self.lr35902.set_d(d);
         self
     }
 
     pub fn with_e(mut self, e: u8) -> Self {
-        self.lr35902.set_d(e);
+        self.lr35902.set_e(e);
+        self
+    }
+
+    pub fn with_de(mut self, de: u16) -> Self {
+        self.lr35902.set_de(de);
         self
     }
 
@@ -59,21 +89,6 @@ impl LR35902Builder {
 
     pub fn with_l(mut self, l: u8) -> Self {
         self.lr35902.set_l(l);
-        self
-    }
-
-    pub fn with_a(mut self, a: u8) -> Self {
-        self.lr35902.set_a(a);
-        self
-    }
-
-    pub fn with_bc(mut self, bc: u16) -> Self {
-        self.lr35902.set_bc(bc);
-        self
-    }
-
-    pub fn with_de(mut self, de: u16) -> Self {
-        self.lr35902.set_de(de);
         self
     }
 
@@ -106,7 +121,7 @@ impl LR35902Builder {
     //}
 
     pub fn with_memory_byte(mut self, index: u16, value: u8) -> LR35902Builder {
-        self.lr35902.set_memory8(index, value);
+        self.lr35902.set_mem8(index, value);
         self
     }
 
@@ -243,58 +258,59 @@ fn test_instr_0x032_ld_hld_a(#[case] a: u8, #[case] hl: u16) {
 }
 
 #[rstest]
-#[case(0x40, "b", "b", 0x01)] //  1 
-#[case(0x40, "b", "b", 0xFF)] //  2 
+#[case(0x40, "b", "b", 0x01)] //  1
+#[case(0x40, "b", "b", 0xFF)] //  2
 #[case(0x41, "b", "c", 0x01)] //  3
 #[case(0x41, "b", "c", 0xFF)] //  4
 #[case(0x42, "b", "d", 0x01)] //  5
 #[case(0x42, "b", "d", 0xFF)] //  6
-//#[case(0x43, "b", "e", 0x01)] //  7 
+//#[case(0x43, "b", "e", 0x01)] //  7
 //#[case(0x43, "b", "e", 0xFF)] //  8
 #[case(0x44, "b", "h", 0x01)] //  9
-#[case(0x44, "b", "h", 0xFF)] // 10 
+#[case(0x44, "b", "h", 0xFF)] // 10
 #[case(0x45, "b", "l", 0x01)] // 11
 #[case(0x45, "b", "l", 0xFF)] // 12
 #[case(0x47, "b", "a", 0x01)] // 13
 #[case(0x47, "b", "a", 0xFF)] // 14
 #[case(0x48, "c", "b", 0x01)] // 13
 #[case(0x48, "c", "b", 0xFF)] // 14
-#[case(0x49, "c", "c", 0x01)] // 15 
-#[case(0x49, "c", "c", 0xFF)] // 16 
+#[case(0x49, "c", "c", 0x01)] // 15
+#[case(0x49, "c", "c", 0xFF)] // 16
 #[case(0x4A, "c", "d", 0x01)] // 17
 #[case(0x4A, "c", "d", 0xFF)] // 18
 //#[case(0x4B, "c", "e", 0x01)] // 19
 //#[case(0x4B, "c", "e", 0xFF)] // 20
 #[case(0x4C, "c", "h", 0x01)] // 21
-#[case(0x4C, "c", "h", 0xFF)] // 22 
+#[case(0x4C, "c", "h", 0xFF)] // 22
 #[case(0x4D, "c", "l", 0x01)] // 23
 #[case(0x4D, "c", "l", 0xFF)] // 24
 #[case(0x4F, "c", "a", 0x01)] // 25
 #[case(0x4F, "c", "a", 0xFF)] // 26
 #[case(0x50, "d", "b", 0x01)] // 27
-#[case(0x50, "d", "b", 0xFF)] // 28
-//#[case(0x51, "d", "c", 0x01)] // 29 
-//#[case(0x51, "d", "c", 0xFF)] // 30 
+#[case(0x50, "d", "b", 0xFF)]
+// 28
+//#[case(0x51, "d", "c", 0x01)] // 29
+//#[case(0x51, "d", "c", 0xFF)] // 30
 //#[case(0x52, "d", "d", 0x01)] // 31
 //#[case(0x52, "d", "d", 0xFF)] // 32
 //#[case(0x53, "d", "e", 0x01)] // 33
 //#[case(0x53, "d", "e", 0xFF)] // 34
 #[case(0x54, "d", "h", 0x01)] // 35
-#[case(0x54, "d", "h", 0xFF)] // 36 
+#[case(0x54, "d", "h", 0xFF)] // 36
 #[case(0x55, "d", "l", 0x01)] // 37
 #[case(0x55, "d", "l", 0xFF)] // 38
 #[case(0x57, "d", "a", 0x01)] // 39
 #[case(0x57, "d", "a", 0xFF)] // 40
 fn test_load_8_bit_reg_to_8_bit_reg(
-    #[case] instr: u8,
+    #[case] opcode: u8,
     #[case] dst_reg: &str,
     #[case] src_reg: &str,
     #[case] value: u8,
 ) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, instr) // instruction LD (HL-), a
-        .with_register(src_reg, value);
+        .with_memory_byte(0x0000, opcode)
+        .with_reg8(src_reg, value);
     let mut sut = builder.clone().build();
 
     // When
@@ -304,21 +320,33 @@ fn test_load_8_bit_reg_to_8_bit_reg(
     let expected = builder
         .with_pc(1)
         .with_clock_cycles(4)
-        .with_register(dst_reg, value) // hl gets decremented
+        .with_reg8(dst_reg, value) // hl gets decremented
         .build();
     assert_eq!(sut, expected);
 }
 
 #[rstest]
-#[case(0xfe, 0x01, 0xff, 0b0000)] // no flags
-#[case(0x0f, 0x01, 0x10, 0b0010)] // half carry
-#[case(0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
-fn test_add(#[case] a: u16, #[case] b: u16, #[case] r: u16, #[case] f: u16) {
+#[case(0x80, "b", 0xfe, 0x01, 0xff, 0b0000)] // no flags
+#[case(0x80, "b", 0x0f, 0x01, 0x10, 0b0010)] // half carry
+#[case(0x80, "b", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x81, "c", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x82, "d", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x83, "e", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x84, "h", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x85, "l", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
+fn test_add8(
+    #[case] opcode: u8,
+    #[case] src_reg: &str,
+    #[case] a: u8,
+    #[case] y: u8,
+    #[case] r: u8,
+    #[case] f: u8,
+) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, 0x80) // instruction ADD AF, BC
-        .with_af(a << 8)
-        .with_bc(b << 8);
+        .with_memory_byte(0x0000, opcode)
+        .with_a(a)
+        .with_reg8(src_reg, y);
     let mut sut = builder.clone().build();
 
     // When
@@ -327,8 +355,9 @@ fn test_add(#[case] a: u16, #[case] b: u16, #[case] r: u16, #[case] f: u16) {
     // Then
     let expected = builder
         .with_pc(1)
-        .with_af((r << 8) + (f << 4))
-        .with_bc(b << 8)
+        .with_a(r)
+        .with_f(f << 4)
+        .with_reg8(src_reg, y)
         .with_clock_cycles(4)
         .build();
     assert_eq!(sut, expected);
