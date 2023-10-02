@@ -7,7 +7,6 @@ struct LR35902Builder {
     lr35902: LR35902,
 }
 
-//TODO: build with flags
 impl LR35902Builder {
     pub fn new() -> Self {
         Self {
