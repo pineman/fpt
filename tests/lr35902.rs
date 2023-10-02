@@ -55,13 +55,13 @@ impl LR35902Builder {
         self
     }
 
-    pub fn with_memory(mut self, memory: Vec<u8>) -> LR35902Builder {
-        for (i, value) in memory.iter().enumerate() {
-            self.lr35902.set_memory8(i as u16, *value);
-        }
+    //pub fn with_memory(mut self, memory: Vec<u8>) -> LR35902Builder {
+    //    for (i, value) in memory.iter().enumerate() {
+    //        self.lr35902.set_memory8(i as u16, *value);
+    //    }
 
-        self
-    }
+    //    self
+    //}
 
     pub fn with_memory_byte(mut self, index: u16, value: u8) -> LR35902Builder {
         self.lr35902.set_memory8(index, value);
