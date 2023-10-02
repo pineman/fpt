@@ -51,7 +51,7 @@ const ops = (cb) => {
 }
 
 const instruction = (x, i) => {
-  console.log(`Instruction::new(0x${x[4]?'1':''}${i.toString(16).padStart(2,'0').toUpperCase()}, "${x[0]}", ${x[1]}, ${x[2]}, ${x[3]}, ${x[5]}),`);
+  console.log(`Instruction { opcode: 0x${x[4]?'1':''}${i.toString(16).padStart(2,'0').toUpperCase()}, mnemonic: "${x[0]}", size: ${x[1]}, cycles: ${x[2]}, cycles_not_taken: ${x[3]}, kind: ${x[5]} },`);
 }
 
 ops(false).forEach((x, i) => instruction(x, i));

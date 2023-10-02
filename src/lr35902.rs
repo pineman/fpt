@@ -2,9 +2,10 @@ use std::fmt;
 use std::{thread, time::Duration};
 
 pub mod instructions;
-use instructions::{instructions, Instruction, InstructionKind};
+use instructions::{Instruction, InstructionKind};
 
 use crate::bitwise as bw;
+use crate::lr35902::instructions::INSTRUCTIONS;
 
 #[derive(PartialEq)]
 pub struct LR35902 {
@@ -16,7 +17,6 @@ pub struct LR35902 {
     pc: u16,
     mem: [u8; 65536],
     next_cb: bool,
-    instructions: Vec<Instruction>,
     clock_cycles: u64,
 }
 
@@ -31,7 +31,6 @@ impl Default for LR35902 {
             pc: 0,
             mem: [0; 65536],
             next_cb: false,
-            instructions: instructions(),
             clock_cycles: 0,
         }
     }
@@ -55,7 +54,6 @@ impl LR35902 {
             pc: 0,
             mem: [0; 65536],
             next_cb: false,
-            instructions: instructions(),
             clock_cycles: 0,
         };
         m.load_bootrom(include_bytes!("../dmg0.bin"));
@@ -195,7 +193,7 @@ impl LR35902 {
             opcode += 0x100;
             self.next_cb = false;
         }
-        let instruction = self.instructions[opcode as usize].clone();
+        let instruction = INSTRUCTIONS[opcode as usize].clone();
         println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
         self.execute(instruction.clone());
         if instruction.kind != InstructionKind::Jump {
