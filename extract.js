@@ -27,7 +27,7 @@ const ops = (cb) => {
 				break;
 		}
     if (x.innerHTML === '&nbsp;') {
-      return ['NOTHING', 0, 0, 0, cb, 'InstructionKind::Control'];
+      return ['NOT IMPLEMENTED', 0, 0, 0, cb, 'InstructionKind::Control'];
     }
     x = x.innerText.split('\n');
     if (/[A-Z]/.test(x[0][0])) {

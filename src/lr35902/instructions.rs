@@ -1710,7 +1710,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xD3,
-        mnemonic: "NOTHING",
+        mnemonic: "NOT IMPLEMENTED",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
@@ -1774,7 +1774,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xDB,
-        mnemonic: "NOTHING",
+        mnemonic: "NOT IMPLEMENTED",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
@@ -1790,7 +1790,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xDD,
-        mnemonic: "NOTHING",
+        mnemonic: "NOT IMPLEMENTED",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
@@ -1838,7 +1838,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xE3,
-        mnemonic: "NOTHING",
+        mnemonic: "NOT IMPLEMENTED",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
@@ -1846,7 +1846,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xE4,
-        mnemonic: "NOTHING",
+        mnemonic: "NOT IMPLEMENTED",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
@@ -1902,7 +1902,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xEB,
-        mnemonic: "NOTHING",
+        mnemonic: "NOT IMPLEMENTED",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
@@ -1910,7 +1910,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xEC,
-        mnemonic: "NOTHING",
+        mnemonic: "NOT IMPLEMENTED",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
@@ -1918,7 +1918,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xED,
-        mnemonic: "NOTHING",
+        mnemonic: "NOT IMPLEMENTED",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
@@ -1974,7 +1974,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xF4,
-        mnemonic: "NOTHING",
+        mnemonic: "NOT IMPLEMENTED",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
@@ -2038,7 +2038,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xFC,
-        mnemonic: "NOTHING",
+        mnemonic: "NOT IMPLEMENTED",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
@@ -2046,7 +2046,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xFD,
-        mnemonic: "NOTHING",
+        mnemonic: "NOT IMPLEMENTED",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
