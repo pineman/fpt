@@ -41,7 +41,6 @@ impl fmt::Debug for LR35902 {
     }
 }
 
-#[allow(dead_code)]
 impl LR35902 {
     pub fn new() -> Self {
         let mut m = Self::default();
@@ -49,145 +48,168 @@ impl LR35902 {
         m
     }
 
-    fn a(&self) -> u8 {
+    pub fn f(&self) -> u8 {
+        bw::get_byte16::<0>(self.af)
+    }
+
+    pub fn set_f(&mut self, value: u8) {
+        self.af = bw::set_byte16::<0>(self.af, value);
+    }
+
+    pub fn a(&self) -> u8 {
         bw::get_byte16::<1>(self.af)
-    }
-
-    fn b(&self) -> u8 {
-        bw::get_byte16::<1>(self.bc)
-    }
-
-    fn c(&self) -> u8 {
-        bw::get_byte16::<0>(self.bc)
-    }
-
-    fn d(&self) -> u8 {
-        bw::get_byte16::<1>(self.de)
-    }
-
-    fn e(&self) -> u8 {
-        bw::get_byte16::<0>(self.de)
-    }
-
-    fn h(&self) -> u8 {
-        bw::get_byte16::<1>(self.hl)
-    }
-
-    fn l(&self) -> u8 {
-        bw::get_byte16::<0>(self.hl)
-    }
-
-    fn z_flag(&self) -> bool {
-        bw::test_bit16::<8>(self.af)
-    }
-
-    fn n_flag(&self) -> bool {
-        bw::test_bit16::<7>(self.af)
-    }
-
-    fn h_flag(&self) -> bool {
-        bw::test_bit16::<6>(self.af)
-    }
-
-    fn c_flag(&self) -> bool {
-        bw::test_bit16::<5>(self.af)
     }
 
     pub fn set_a(&mut self, value: u8) {
         self.af = bw::set_byte16::<1>(self.af, value);
     }
 
+    pub fn af(&self) -> u16 {
+        self.af
+    }
+
     pub fn set_af(&mut self, af: u16) {
         self.af = af;
+    }
+
+    pub fn b(&self) -> u8 {
+        bw::get_byte16::<1>(self.bc)
     }
 
     pub fn set_b(&mut self, value: u8) {
         self.bc = bw::set_byte16::<1>(self.bc, value);
     }
 
+    pub fn c(&self) -> u8 {
+        bw::get_byte16::<0>(self.bc)
+    }
+
     pub fn set_c(&mut self, value: u8) {
         self.bc = bw::set_byte16::<0>(self.bc, value);
+    }
+
+    pub fn bc(&self) -> u16 {
+        self.bc
     }
 
     pub fn set_bc(&mut self, bc: u16) {
         self.bc = bc;
     }
 
+    pub fn d(&self) -> u8 {
+        bw::get_byte16::<1>(self.de)
+    }
+
     pub fn set_d(&mut self, value: u8) {
         self.de = bw::set_byte16::<1>(self.de, value);
+    }
+
+    pub fn e(&self) -> u8 {
+        bw::get_byte16::<0>(self.de)
     }
 
     pub fn set_e(&mut self, value: u8) {
         self.de = bw::set_byte16::<0>(self.de, value);
     }
 
+    pub fn de(&self) -> u16 {
+        self.de
+    }
+
     pub fn set_de(&mut self, de: u16) {
         self.de = de;
+    }
+
+    pub fn h(&self) -> u8 {
+        bw::get_byte16::<1>(self.hl)
     }
 
     pub fn set_h(&mut self, value: u8) {
         self.hl = bw::set_byte16::<1>(self.hl, value);
     }
 
+    pub fn l(&self) -> u8 {
+        bw::get_byte16::<0>(self.hl)
+    }
+
     pub fn set_l(&mut self, value: u8) {
         self.hl = bw::set_byte16::<0>(self.hl, value);
+    }
+    pub fn hl(&self) -> u16 {
+        self.hl
     }
 
     pub fn set_hl(&mut self, hl: u16) {
         self.hl = hl;
     }
 
-    fn set_z_flag(&mut self, value: bool) {
+    pub fn z_flag(&self) -> bool {
+        bw::test_bit16::<8>(self.af)
+    }
+
+    pub fn set_z_flag(&mut self, value: bool) {
         self.af = bw::set_bit16::<7>(self.af, value);
     }
 
-    fn set_n_flag(&mut self, value: bool) {
+    pub fn n_flag(&self) -> bool {
+        bw::test_bit16::<7>(self.af)
+    }
+    pub fn set_n_flag(&mut self, value: bool) {
         self.af = bw::set_bit16::<6>(self.af, value);
     }
 
-    fn set_h_flag(&mut self, value: bool) {
+    pub fn h_flag(&self) -> bool {
+        bw::test_bit16::<6>(self.af)
+    }
+    pub fn set_h_flag(&mut self, value: bool) {
         self.af = bw::set_bit16::<5>(self.af, value);
     }
 
-    fn set_c_flag(&mut self, value: bool) {
+    pub fn c_flag(&self) -> bool {
+        bw::test_bit16::<5>(self.af)
+    }
+
+    pub fn set_c_flag(&mut self, value: bool) {
         self.af = bw::set_bit16::<4>(self.af, value);
     }
 
-    pub fn set_sp(&mut self, sp: u16) {
-        self.sp = sp;
-    }
-
-    pub fn set_pc(&mut self, pc: u16) {
-        self.pc = pc;
-    }
-
-    pub fn set_memory8(&mut self, index: u16, value: u8) {
-        self.mem[index as usize] = value;
-    }
-
-    fn memory8(&self, index: u16) -> u8 {
-        self.mem[index as usize]
-    }
-
-    fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
-        self.mem[..256].clone_from_slice(bootrom);
+    pub fn clock_cycles(&mut self) -> u64 {
+        self.clock_cycles
     }
 
     pub fn set_clock_cycles(&mut self, clock_cycles: u64) {
         self.clock_cycles = clock_cycles;
     }
 
-    /// get 8 bit immediate at position pc + 1 + pos
-    fn get_immediate8(&self, pos: u8) -> u8 {
-        self.mem[(self.pc as usize) + (pos as usize) + 1]
+    pub fn sp(&mut self) -> u16 {
+        self.sp
     }
 
-    /// get 16 bit immediate at position pc + 1 + pos
-    fn get_immediate16(&self, pos: u8) -> u16 {
-        // little-endian: the first byte in memory is the LSB
-        ((self.get_immediate8(pos + 1) as u16) << 8) + self.get_immediate8(pos) as u16
+    pub fn set_sp(&mut self, sp: u16) {
+        self.sp = sp;
     }
 
+    pub fn pc(&mut self) -> u16 {
+        self.pc
+    }
+
+    pub fn set_pc(&mut self, pc: u16) {
+        self.pc = pc;
+    }
+
+    pub fn mem8(&self, index: u16) -> u8 {
+        self.mem[index as usize]
+    }
+
+    pub fn set_mem8(&mut self, index: u16, value: u8) {
+        self.mem[index as usize] = value;
+    }
+
+    fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
+        self.mem[..256].clone_from_slice(bootrom);
+    }
+
+    /// Run one cycle
     pub fn step(&mut self) {
         let mut opcode = self.mem[self.pc as usize] as u16;
         if self.next_cb {
@@ -196,7 +218,6 @@ impl LR35902 {
         }
         let instruction = INSTRUCTIONS[opcode as usize];
         println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
-        println!("{:?}", self);
         self.execute(instruction);
         if instruction.kind != InstructionKind::Jump {
             self.pc += instruction.size as u16;
@@ -206,6 +227,35 @@ impl LR35902 {
         // TODO: measure time and panic if cycle time exceeded
     }
 
+    /// get 8 bit immediate at position pc + 1 + pos
+    fn get_d8(&self, pos: u8) -> u8 {
+        self.mem8(self.pc + pos as u16 + 1)
+    }
+
+    /// get 16 bit immediate at position pc + 1 + pos
+    fn get_d16(&self, pos: u8) -> u16 {
+        // little-endian: the first byte in memory is the LSB
+        ((self.get_d8(pos + 1) as u16) << 8) + self.get_d8(pos) as u16
+    }
+
+    fn add8(&mut self, x: u8, y: u8) -> u8 {
+        let (result, overflow) = x.overflowing_add(y);
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(((x & 0x0f) + (y & 0x0f)) > 0x0f);
+        self.set_c_flag(overflow);
+        result
+    }
+
+    fn add16(&mut self, x: u16, y: u16) -> u16 {
+        let (result, overflow) = x.overflowing_add(y);
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag((((x >> 8) & 0x0f) + ((y >> 8) & 0x0f)) > 0x0f);
+        self.set_c_flag(overflow);
+        result
+    }
+
     fn execute(&mut self, instruction: Instruction) {
         match instruction.opcode {
             0x0 => {
@@ -213,7 +263,7 @@ impl LR35902 {
             }
             0x1 => {
                 // LD BC,d16
-                self.bc = self.get_immediate16(0);
+                self.bc = self.get_d16(0);
             }
             0x2 => {
                 // LD (BC),A
@@ -245,7 +295,8 @@ impl LR35902 {
             }
             0x9 => {
                 // ADD HL,BC
-                unimplemented!()
+                let result = self.add16(self.hl(), self.bc());
+                self.set_hl(result);
             }
             0xA => {
                 // LD A,(BC)
@@ -277,7 +328,7 @@ impl LR35902 {
             }
             0x11 => {
                 // LD DE,d16
-                self.de = self.get_immediate16(0);
+                self.de = self.get_d16(0);
             }
             0x12 => {
                 // LD (DE),A
@@ -341,7 +392,7 @@ impl LR35902 {
             }
             0x21 => {
                 // LD HL,d16
-                self.hl = self.get_immediate16(0);
+                self.hl = self.get_d16(0);
             }
             0x22 => {
                 // LD (HL+),A
@@ -405,11 +456,11 @@ impl LR35902 {
             }
             0x31 => {
                 // LD SP,d16
-                self.sp = self.get_immediate16(0);
+                self.sp = self.get_d16(0);
             }
             0x32 => {
                 // LD (HL-),A
-                self.set_memory8(self.hl, self.a());
+                self.set_mem8(self.hl, self.a());
                 self.hl -= 1
             }
             0x33 => {
@@ -458,7 +509,7 @@ impl LR35902 {
             }
             0x3E => {
                 // LD A,d8
-                self.set_a(self.get_immediate8(0));
+                self.set_a(self.get_d8(0));
             }
             0x3F => {
                 // CCF
@@ -723,40 +774,45 @@ impl LR35902 {
             }
             0x80 => {
                 // ADD A,B
-                let (result, overflow) = self.a().overflowing_add(self.b());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(((self.a() & 0b1111) + (self.b() & 0b1111)) > 0b1111);
-                self.set_c_flag(overflow);
+                let result = self.add8(self.a(), self.b());
                 self.set_a(result);
             }
             0x81 => {
                 // ADD A,C
-                unimplemented!()
+                let result = self.add8(self.a(), self.c());
+                self.set_a(result);
             }
             0x82 => {
                 // ADD A,D
-                unimplemented!()
+                let result = self.add8(self.a(), self.d());
+                self.set_a(result);
             }
             0x83 => {
                 // ADD A,E
-                unimplemented!()
+                let result = self.add8(self.a(), self.e());
+                self.set_a(result);
             }
             0x84 => {
                 // ADD A,H
-                unimplemented!()
+                let result = self.add8(self.a(), self.h());
+                self.set_a(result);
             }
             0x85 => {
                 // ADD A,L
-                unimplemented!()
+                let result = self.add8(self.a(), self.l());
+                self.set_a(result);
             }
             0x86 => {
                 // ADD A,(HL)
-                unimplemented!()
+                // TODO: not tested
+                let result = self.add8(self.a(), self.mem[self.hl() as usize]);
+                self.set_a(result);
             }
             0x87 => {
                 // ADD A,A
-                unimplemented!()
+                // TODO: not working
+                let result = self.add8(self.a(), self.a());
+                self.set_a(result);
             }
             0x88 => {
                 // ADC A,B
@@ -1013,7 +1069,8 @@ impl LR35902 {
             }
             0xC6 => {
                 // ADD A,d8
-                unimplemented!()
+                let result = self.add8(self.a(), self.get_d8(0));
+                self.set_a(result);
             }
             0xC7 => {
                 // RST 00H
@@ -1125,7 +1182,7 @@ impl LR35902 {
             }
             0xE2 => {
                 // LD (C),A
-                self.set_memory8(self.c().into(), self.a());
+                self.set_mem8(self.c().into(), self.a());
             }
             0xE3 => {
                 // Not implemented
@@ -2375,7 +2432,7 @@ mod tests {
         bootrom[2] = 3;
         cpu.load_bootrom(&bootrom);
 
-        assert_eq!(cpu.get_immediate8(0), 2);
+        assert_eq!(cpu.get_d8(0), 2);
     }
 
     #[test]
@@ -2387,14 +2444,14 @@ mod tests {
         bootrom[2] = 3;
         cpu.load_bootrom(&bootrom);
 
-        assert_eq!(cpu.get_immediate16(0), 3 * 256 + 2);
+        assert_eq!(cpu.get_d16(0), 3 * 256 + 2);
     }
 
     #[test]
     fn test_memory() {
         let mut cpu = LR35902::default();
 
-        cpu.set_memory8(10, 255);
-        assert_eq!(cpu.memory8(10), 255);
+        cpu.set_mem8(10, 255);
+        assert_eq!(cpu.mem8(10), 255);
     }
 }
