@@ -3,16 +3,7 @@ use fpt::lr35902::LR35902;
 #[derive(Clone)]
 #[allow(dead_code)]
 struct LR35902Builder {
-    af: u16,
-    bc: u16,
-    de: u16,
-    hl: u16,
-    sp: u16,
-    pc: u16,
-    mem: [u8; 65536],
-    //next_cb: bool,
-    //instructions: Vec<Instruction>,
-    clock_cycles: u64,
+    lr35902: LR35902,
 }
 
 //TODO: build with flags
@@ -20,63 +11,65 @@ struct LR35902Builder {
 impl LR35902Builder {
     pub fn new() -> Self {
         Self {
-            af: 0,
-            bc: 0,
-            de: 0,
-            hl: 0,
-            sp: 0,
-            pc: 0,
-            mem: [0; 65536],
-            //next_cb: false,
-            //instructions: vec![],
-            clock_cycles: 0,
+            lr35902: LR35902::new(),
         }
     }
 
     pub fn with_af(mut self, af: u16) -> LR35902Builder {
-        self.af = af;
+        self.lr35902.set_af(af);
         self
     }
+
+    pub fn with_a(mut self, a: u8) -> LR35902Builder {
+        self.lr35902.set_a(a);
+        self
+    }
+
     pub fn with_bc(mut self, bc: u16) -> LR35902Builder {
-        self.bc = bc;
+        self.lr35902.set_bc(bc);
+        self
+    }
+
+    pub fn with_de(mut self, de: u16) -> LR35902Builder {
+        self.lr35902.set_de(de);
+        self
+    }
+
+    pub fn with_hl(mut self, hl: u16) -> LR35902Builder {
+        self.lr35902.set_hl(hl);
+        self
+    }
+
+    pub fn with_sp(mut self, sp: u16) -> LR35902Builder {
+        self.lr35902.set_sp(sp);
         self
     }
 
     pub fn with_pc(mut self, pc: u16) -> LR35902Builder {
-        self.pc = pc;
+        self.lr35902.set_pc(pc);
         self
     }
 
     pub fn with_clock_cycles(mut self, clock_cycles: u64) -> LR35902Builder {
-        self.clock_cycles = clock_cycles;
+        self.lr35902.set_clock_cycles(clock_cycles);
         self
     }
 
     pub fn with_memory(mut self, memory: Vec<u8>) -> LR35902Builder {
         for (i, value) in memory.iter().enumerate() {
-            self.mem[i] = *value;
+            self.lr35902.set_memory8(i as u16, *value);
         }
 
         self
     }
 
-    pub fn with_memory_byte(mut self, index: usize, value: u8) -> LR35902Builder {
-        self.mem[index] = value;
+    pub fn with_memory_byte(mut self, index: u16, value: u8) -> LR35902Builder {
+        self.lr35902.set_memory8(index, value);
         self
     }
 
     pub fn build(self) -> LR35902 {
-        let mut lr35902 = LR35902::new();
-
-        lr35902.set_af(self.af);
-        lr35902.set_bc(self.bc);
-        lr35902.set_pc(self.pc);
-        lr35902.set_clock_cycles(self.clock_cycles);
-
-        for (i, value) in self.mem.iter().enumerate() {
-            lr35902.set_memory8(i.try_into().unwrap(), *value);
-        }
-        lr35902
+        self.lr35902
     }
 }
 
@@ -111,6 +104,91 @@ fn test_instr_0x001_ld_bc_d16() {
         .with_pc(3)
         .with_bc(0x0102) // (1 << 8) + 2 == 0x0102
         .with_clock_cycles(12)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[test]
+fn test_instr_0x011_ld_de_d16() {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_memory_byte(0x0000, 0x11) // instruction LD DE,d16
+        .with_memory_byte(0x0001, 2) // lsb of immediate16
+        .with_memory_byte(0x0002, 1); // msb of immediate16
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(3)
+        .with_de(0x0102) // (1 << 8) + 2 == 0x0102
+        .with_clock_cycles(12)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[test]
+fn test_instr_0x021_ld_hl_d16() {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_memory_byte(0x0000, 0x21) // instruction LD HL,d16
+        .with_memory_byte(0x0001, 2) // lsb of immediate16
+        .with_memory_byte(0x0002, 1); // msb of immediate16
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(3)
+        .with_hl(0x0102) // (1 << 8) + 2 == 0x0102
+        .with_clock_cycles(12)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[test]
+fn test_instr_0x031_ld_sp_d16() {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_memory_byte(0x0000, 0x31) // instruction LD HL,d16
+        .with_memory_byte(0x0001, 2) // lsb of immediate16
+        .with_memory_byte(0x0002, 1); // msb of immediate16
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(3)
+        .with_sp(0x0102) // (1 << 8) + 2 == 0x0102
+        .with_clock_cycles(12)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[test]
+fn test_instr_0x032_ld_hld_a() {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_memory_byte(0x0000, 0x32) // instruction LD HL,d16
+        .with_a(0x10)
+        .with_hl(0x100);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(1)
+        .with_hl(0xFF) // hl gets decremented
+        .with_clock_cycles(8)
+        .with_memory_byte(0x100, 0x10)
         .build();
     assert_eq!(sut, expected);
 }

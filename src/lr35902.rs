@@ -6,7 +6,7 @@ use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use crate::bitwise as bw;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct LR35902 {
     af: u16,
     bc: u16,
@@ -103,7 +103,7 @@ impl LR35902 {
         bw::test_bit16::<5>(self.af)
     }
 
-    fn set_a(&mut self, value: u8) {
+    pub fn set_a(&mut self, value: u8) {
         self.af = bw::set_byte16::<1>(self.af, value);
     }
 
@@ -131,12 +131,20 @@ impl LR35902 {
         self.de = bw::set_byte16::<0>(self.de, value);
     }
 
+    pub fn set_de(&mut self, de: u16) {
+        self.de = de;
+    }
+
     fn set_h(&mut self, value: u8) {
         self.hl = bw::set_byte16::<1>(self.hl, value);
     }
 
     fn set_l(&mut self, value: u8) {
         self.hl = bw::set_byte16::<0>(self.hl, value);
+    }
+
+    pub fn set_hl(&mut self, hl: u16) {
+        self.hl = hl;
     }
 
     fn set_z_flag(&mut self, value: bool) {
@@ -153,6 +161,10 @@ impl LR35902 {
 
     fn set_c_flag(&mut self, value: bool) {
         self.af = bw::set_bit16::<4>(self.af, value);
+    }
+
+    pub fn set_sp(&mut self, sp: u16) {
+        self.sp = sp;
     }
 
     pub fn set_pc(&mut self, pc: u16) {
