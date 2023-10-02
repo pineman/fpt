@@ -101,11 +101,11 @@ impl LR35902 {
         self.af = af;
     }
 
-    fn set_b(&mut self, value: u8) {
+    pub fn set_b(&mut self, value: u8) {
         self.bc = bw::set_byte16::<1>(self.bc, value);
     }
 
-    fn set_c(&mut self, value: u8) {
+    pub fn set_c(&mut self, value: u8) {
         self.bc = bw::set_byte16::<0>(self.bc, value);
     }
 
@@ -113,11 +113,11 @@ impl LR35902 {
         self.bc = bc;
     }
 
-    fn set_d(&mut self, value: u8) {
+    pub fn set_d(&mut self, value: u8) {
         self.de = bw::set_byte16::<1>(self.de, value);
     }
 
-    fn set_e(&mut self, value: u8) {
+    pub fn set_e(&mut self, value: u8) {
         self.de = bw::set_byte16::<0>(self.de, value);
     }
 
@@ -125,11 +125,11 @@ impl LR35902 {
         self.de = de;
     }
 
-    fn set_h(&mut self, value: u8) {
+    pub fn set_h(&mut self, value: u8) {
         self.hl = bw::set_byte16::<1>(self.hl, value);
     }
 
-    fn set_l(&mut self, value: u8) {
+    pub fn set_l(&mut self, value: u8) {
         self.hl = bw::set_byte16::<0>(self.hl, value);
     }
 
@@ -470,7 +470,7 @@ impl LR35902 {
             }
             0x41 => {
                 // LD B,C
-                self.set_b(self.b());
+                self.set_b(self.c());
             }
             0x42 => {
                 // LD B,D
