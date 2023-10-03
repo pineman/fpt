@@ -380,20 +380,20 @@ fn test_load_8_bit_reg_to_8_bit_reg(
 }
 
 #[rstest]
-#[case(0x46, "b", 0x0100, 0x01)]
-#[case(0x46, "b", 0x0100, 0xFF)]
-#[case(0x4E, "c", 0x0100, 0x01)]
-#[case(0x4E, "c", 0x0100, 0xFF)]
-#[case(0x56, "d", 0x0100, 0x01)]
-#[case(0x56, "d", 0x0100, 0xFF)]
-#[case(0x5e, "e", 0x0100, 0x01)]
-#[case(0x5e, "e", 0x0100, 0xFF)]
-#[case(0x66, "h", 0x0100, 0x01)]
-#[case(0x66, "h", 0x0100, 0xFF)]
-#[case(0x6E, "l", 0x0100, 0x01)]
-#[case(0x6E, "l", 0x0100, 0xFF)]
-#[case(0x7E, "a", 0x0100, 0x01)]
-#[case(0x7E, "a", 0x0100, 0xFF)]
+#[case(0x46, "b", 0x0100, 0x01)] //  1
+#[case(0x46, "b", 0x0100, 0xFF)] //  2
+#[case(0x4E, "c", 0x0100, 0x01)] //  3
+#[case(0x4E, "c", 0x0100, 0xFF)] //  4
+#[case(0x56, "d", 0x0100, 0x01)] //  5
+#[case(0x56, "d", 0x0100, 0xFF)] //  6
+#[case(0x5e, "e", 0x0100, 0x01)] //  7
+#[case(0x5e, "e", 0x0100, 0xFF)] //  8
+#[case(0x66, "h", 0x0100, 0x01)] //  9
+#[case(0x66, "h", 0x0100, 0xFF)] // 10
+#[case(0x6E, "l", 0x0100, 0x01)] // 11
+#[case(0x6E, "l", 0x0100, 0xFF)] // 12
+#[case(0x7E, "a", 0x0100, 0x01)] // 13
+#[case(0x7E, "a", 0x0100, 0xFF)] // 14
 fn test_load_8_bit_reg_from_hl_pointer(
     #[case] opcode: u8,
     #[case] dst_reg: &str,
@@ -415,6 +415,49 @@ fn test_load_8_bit_reg_from_hl_pointer(
         .with_pc(1)
         .with_clock_cycles(8)
         .with_reg8(dst_reg, value) // hl gets decremented
+        .build();
+    assert_eq!(sut, expected);
+}
+
+
+#[rstest]
+#[case(0x70, "b", 0x0100, 0x01)] //  1
+#[case(0x70, "b", 0x0100, 0xFF)] //  2
+#[case(0x71, "c", 0x0100, 0x01)] //  3
+#[case(0x71, "c", 0x0100, 0xFF)] //  4
+#[case(0x72, "d", 0x0100, 0x01)] //  5
+#[case(0x72, "d", 0x0100, 0xFF)] //  6
+#[case(0x73, "e", 0x0100, 0x01)] //  7
+#[case(0x73, "e", 0x0100, 0xFF)] //  8
+#[case(0x74, "h", 0x0100, 0x01)] //  9
+#[case(0x74, "h", 0x0100, 0xFF)] // 10
+#[case(0x75, "l", 0x0100, 0x01)] // 11
+#[case(0x75, "l", 0x0100, 0xFF)] // 12
+#[case(0x77, "a", 0x0100, 0x01)] // 13
+#[case(0x77, "a", 0x0100, 0xFF)] // 14
+fn test_load_hl_pointer_from_8_bit_reg(
+    #[case] opcode: u8,
+    #[case] src_reg: &str,
+    #[case] hl: u16,
+    #[case] value: u8,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_memory_byte(0x0000, opcode)
+        .with_hl(dbg!(hl))
+        .with_reg8(src_reg, value);
+
+    let mut sut = builder.clone().build();
+    let hl = sut.hl();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(1)
+        .with_clock_cycles(8)
+        .with_memory_byte(hl, value) // hl gets decremented
         .build();
     assert_eq!(sut, expected);
 }
