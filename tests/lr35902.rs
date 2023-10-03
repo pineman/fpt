@@ -374,7 +374,7 @@ fn test_load_8_bit_reg_to_8_bit_reg(
     let expected = builder
         .with_pc(1)
         .with_clock_cycles(4)
-        .with_reg8(dst_reg, value) // hl gets decremented
+        .with_reg8(dst_reg, value)
         .build();
     assert_eq!(sut, expected);
 }
@@ -414,11 +414,10 @@ fn test_load_8_bit_reg_from_hl_pointer(
     let expected = builder
         .with_pc(1)
         .with_clock_cycles(8)
-        .with_reg8(dst_reg, value) // hl gets decremented
+        .with_reg8(dst_reg, value)
         .build();
     assert_eq!(sut, expected);
 }
-
 
 #[rstest]
 #[case(0x70, "b", 0x0100, 0x01)] //  1
@@ -457,7 +456,59 @@ fn test_load_hl_pointer_from_8_bit_reg(
     let expected = builder
         .with_pc(1)
         .with_clock_cycles(8)
-        .with_memory_byte(hl, value) // hl gets decremented
+        .with_memory_byte(hl, value)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
+#[case(0x06, "b", 0x01)] // 1
+#[case(0x16, "d", 0x01)] // 2
+#[case(0x26, "h", 0x01)] // 3
+#[case(0x0e, "c", 0x01)] // 4
+#[case(0x1e, "e", 0x01)] // 5
+#[case(0x2e, "l", 0x01)] // 6
+#[case(0x3e, "a", 0x01)] // 7
+fn test_load_register_from_immediate(#[case] opcode: u8, #[case] reg: &str, #[case] d8: u8) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_memory_byte(0x0000, opcode)
+        .with_memory_byte(0x0001, d8);
+
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(2)
+        .with_clock_cycles(8)
+        .with_reg8(reg, d8)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
+#[case(0x01, 0x0100)]
+#[case(0xFF, 0x0100)]
+fn test_instr_0x36_ld_hl_d8(#[case] d8: u8, #[case] hl: u16) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_memory_byte(0x0000, 0x36)
+        .with_memory_byte(0x0001, d8)
+        .with_hl(hl);
+
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(2)
+        .with_clock_cycles(12)
+        .with_memory_byte(hl, d8)
         .build();
     assert_eq!(sut, expected);
 }
