@@ -176,7 +176,7 @@ impl LR35902 {
         self.af = bw::set_bit16::<4>(self.af, value);
     }
 
-    pub fn clock_cycles(&mut self) -> u64 {
+    pub fn clock_cycles(&self) -> u64 {
         self.clock_cycles
     }
 
