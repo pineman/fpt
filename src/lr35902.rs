@@ -716,27 +716,27 @@ impl LR35902 {
             }
             0x70 => {
                 // LD (HL),B
-                unimplemented!()
+                self.set_mem8(self.hl(), self.b());
             }
             0x71 => {
                 // LD (HL),C
-                unimplemented!()
+                self.set_mem8(self.hl(), self.c());
             }
             0x72 => {
                 // LD (HL),D
-                unimplemented!()
+                self.set_mem8(self.hl(), self.d());
             }
             0x73 => {
                 // LD (HL),E
-                unimplemented!()
+                self.set_mem8(self.hl(), self.e());
             }
             0x74 => {
                 // LD (HL),H
-                unimplemented!()
+                self.set_mem8(self.hl(), self.h());
             }
             0x75 => {
                 // LD (HL),L
-                unimplemented!()
+                self.set_mem8(dbg!(self.hl()), dbg!(self.l()));
             }
             0x76 => {
                 // HALT
@@ -744,7 +744,7 @@ impl LR35902 {
             }
             0x77 => {
                 // LD (HL),A
-                unimplemented!()
+                self.set_mem8(self.hl(), self.a());
             }
             0x78 => {
                 // LD A,B
