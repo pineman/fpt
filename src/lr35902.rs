@@ -593,7 +593,6 @@ impl LR35902 {
             0x51 => {
                 // LD D,C
                 self.set_d(self.c());
-                unimplemented!()
             }
             0x52 => {
                 // LD D,D
