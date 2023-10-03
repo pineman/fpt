@@ -810,7 +810,6 @@ impl LR35902 {
             }
             0x87 => {
                 // ADD A,A
-                // TODO: not working
                 let result = self.add8(self.a(), self.a());
                 self.set_a(result);
             }
