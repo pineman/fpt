@@ -804,7 +804,6 @@ impl LR35902 {
             }
             0x86 => {
                 // ADD A,(HL)
-                // TODO: not tested
                 let result = self.add8(self.a(), self.mem[self.hl() as usize]);
                 self.set_a(result);
             }
