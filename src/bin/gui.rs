@@ -1,7 +1,7 @@
 use fpt::lr35902::LR35902;
 
 use std::{
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, MutexGuard},
     thread, time,
 };
 
@@ -24,7 +24,7 @@ fn main() {
             lr_for_the_thing.lock().unwrap().step();
 
             println!();
-            thread::sleep(time::Duration::from_millis(100));
+            thread::sleep(time::Duration::from_millis(500));
         }
     });
 
@@ -47,7 +47,8 @@ fn the_loop(lr: Arc<Mutex<LR35902>>) {
             }
             Event::MainEventsCleared => {
                 // Application update code.
-                lr.lock().unwrap().step();
+                business_logic(lr.lock().unwrap());
+                control_flow.set_wait_timeout(time::Duration::from_millis(700));
 
                 // Queue a RedrawRequested event.
                 //
@@ -66,4 +67,8 @@ fn the_loop(lr: Arc<Mutex<LR35902>>) {
             _ => (),
         }
     });
+}
+
+fn business_logic<'a>(mut lr: MutexGuard<'a, LR35902>) {
+    lr.step();
 }
