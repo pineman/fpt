@@ -341,6 +341,20 @@ fn test_instr_0x032_ld_hld_a(#[case] a: u8, #[case] hl: u16) {
 #[case(0x6d, "l", "l", 0xFF)] // 82
 #[case(0x6f, "l", "a", 0x01)] // 83
 #[case(0x6f, "l", "a", 0xFF)] // 84
+#[case(0x78, "a", "b", 0x01)] // 85
+#[case(0x78, "a", "b", 0xFF)] // 86
+#[case(0x79, "a", "c", 0x01)] // 87
+#[case(0x79, "a", "c", 0xFF)] // 88
+#[case(0x7a, "a", "d", 0x01)] // 89
+#[case(0x7a, "a", "d", 0xFF)] // 90
+#[case(0x7b, "a", "e", 0x01)] // 91
+#[case(0x7b, "a", "e", 0xFF)] // 92
+#[case(0x7c, "a", "h", 0x01)] // 93
+#[case(0x7c, "a", "h", 0xFF)] // 94
+#[case(0x7d, "a", "l", 0x01)] // 95
+#[case(0x7d, "a", "l", 0xFF)] // 96
+#[case(0x7f, "a", "a", 0x01)] // 97
+#[case(0x7f, "a", "a", 0xFF)] // 98
 fn test_load_8_bit_reg_to_8_bit_reg(
     #[case] opcode: u8,
     #[case] dst_reg: &str,
@@ -360,6 +374,46 @@ fn test_load_8_bit_reg_to_8_bit_reg(
     let expected = builder
         .with_pc(1)
         .with_clock_cycles(4)
+        .with_reg8(dst_reg, value) // hl gets decremented
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
+#[case(0x46, "b", 0x0100, 0x01)]
+#[case(0x46, "b", 0x0100, 0xFF)]
+#[case(0x4E, "c", 0x0100, 0x01)]
+#[case(0x4E, "c", 0x0100, 0xFF)]
+#[case(0x56, "d", 0x0100, 0x01)]
+#[case(0x56, "d", 0x0100, 0xFF)]
+#[case(0x5e, "e", 0x0100, 0x01)]
+#[case(0x5e, "e", 0x0100, 0xFF)]
+#[case(0x66, "h", 0x0100, 0x01)]
+#[case(0x66, "h", 0x0100, 0xFF)]
+#[case(0x6E, "l", 0x0100, 0x01)]
+#[case(0x6E, "l", 0x0100, 0xFF)]
+#[case(0x7E, "a", 0x0100, 0x01)]
+#[case(0x7E, "a", 0x0100, 0xFF)]
+fn test_load_8_bit_reg_from_hl_pointer(
+    #[case] opcode: u8,
+    #[case] dst_reg: &str,
+    #[case] hl: u16,
+    #[case] value: u8,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_memory_byte(0x0000, opcode)
+        .with_memory_byte(hl, value)
+        .with_hl(hl);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(1)
+        .with_clock_cycles(8)
         .with_reg8(dst_reg, value) // hl gets decremented
         .build();
     assert_eq!(sut, expected);
