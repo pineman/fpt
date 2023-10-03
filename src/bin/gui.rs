@@ -1,6 +1,9 @@
-use std::thread;
-
 use fpt::lr35902::LR35902;
+
+use std::{
+    sync::{Arc, Mutex},
+    thread, time,
+};
 
 use winit::{
     event::{Event, WindowEvent},
@@ -9,17 +12,27 @@ use winit::{
 };
 
 fn main() {
-    let mut lr = LR35902::new();
+    let lr: Arc<Mutex<LR35902>> = Arc::new(Mutex::new(LR35902::new()));
+    let lr_for_the_thing: Arc<Mutex<LR35902>> = Arc::clone(&lr);
 
-    let the_thing = thread::spawn(move || loop {
-        lr.step();
+    let the_thing = thread::spawn(move || {
+        let mut loop_cycle: u64 = 0;
+        loop {
+            loop_cycle += 1;
+            println!("---[Loop cycle: {:#04}]---", loop_cycle);
+
+            lr_for_the_thing.lock().unwrap().step();
+
+            println!();
+            thread::sleep(time::Duration::from_millis(100));
+        }
     });
 
-    the_loop();
+    the_loop(lr.clone());
     the_thing.join().unwrap();
 }
 
-fn the_loop() {
+fn the_loop(lr: Arc<Mutex<LR35902>>) {
     let event_loop: EventLoop<()> = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
@@ -34,7 +47,7 @@ fn the_loop() {
             }
             Event::MainEventsCleared => {
                 // Application update code.
-                // lr35902.step();
+                lr.lock().unwrap().step();
 
                 // Queue a RedrawRequested event.
                 //
