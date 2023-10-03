@@ -135,6 +135,7 @@ impl LR35902 {
     pub fn set_l(&mut self, value: u8) {
         self.hl = bw::set_byte16::<0>(self.hl, value);
     }
+
     pub fn hl(&self) -> u16 {
         self.hl
     }
@@ -154,6 +155,7 @@ impl LR35902 {
     pub fn n_flag(&self) -> bool {
         bw::test_bit16::<7>(self.af)
     }
+
     pub fn set_n_flag(&mut self, value: bool) {
         self.af = bw::set_bit16::<6>(self.af, value);
     }
@@ -161,6 +163,7 @@ impl LR35902 {
     pub fn h_flag(&self) -> bool {
         bw::test_bit16::<6>(self.af)
     }
+
     pub fn set_h_flag(&mut self, value: bool) {
         self.af = bw::set_bit16::<5>(self.af, value);
     }
@@ -238,11 +241,15 @@ impl LR35902 {
         ((self.get_d8(pos + 1) as u16) << 8) + self.get_d8(pos) as u16
     }
 
+    fn add_half_carry(&self, x: u8, y: u8) -> bool {
+        ((x & 0x0f) + (y & 0x0f)) > 0x0f
+    }
+
     fn add8(&mut self, x: u8, y: u8) -> u8 {
         let (result, overflow) = x.overflowing_add(y);
         self.set_z_flag(result == 0);
         self.set_n_flag(false);
-        self.set_h_flag(((x & 0x0f) + (y & 0x0f)) > 0x0f);
+        self.set_h_flag(self.add_half_carry(x, y));
         self.set_c_flag(overflow);
         result
     }
@@ -251,7 +258,7 @@ impl LR35902 {
         let (result, overflow) = x.overflowing_add(y);
         self.set_z_flag(result == 0);
         self.set_n_flag(false);
-        self.set_h_flag((((x >> 8) & 0x0f) + ((y >> 8) & 0x0f)) > 0x0f);
+        self.set_h_flag(self.add_half_carry((x >> 8) as u8, (y >> 8) as u8));
         self.set_c_flag(overflow);
         result
     }
