@@ -184,7 +184,7 @@ impl LR35902 {
         self.clock_cycles = clock_cycles;
     }
 
-    pub fn sp(&mut self) -> u16 {
+    pub fn sp(&self) -> u16 {
         self.sp
     }
 
@@ -192,7 +192,7 @@ impl LR35902 {
         self.sp = sp;
     }
 
-    pub fn pc(&mut self) -> u16 {
+    pub fn pc(&self) -> u16 {
         self.pc
     }
 
@@ -206,6 +206,22 @@ impl LR35902 {
 
     pub fn set_mem8(&mut self, index: u16, value: u8) {
         self.mem[index as usize] = value;
+    }
+
+    pub fn set_mem16(&mut self, index: u16, value: u16) {
+        self.set_mem8(index, ((value >> 8) & 0xFF) as u8);
+        self.set_mem8(index+1, (value & 0xFF) as u8);
+    }
+
+    /// get 8 bit immediate at position pc + 1 + pos
+    fn get_d8(&self, pos: u8) -> u8 {
+        self.mem8(self.pc + pos as u16 + 1)
+    }
+
+    /// get 16 bit immediate at position pc + 1 + pos
+    fn get_d16(&self, pos: u8) -> u16 {
+        // little-endian: the first byte in memory is the LSB
+        ((self.get_d8(pos + 1) as u16) << 8) + self.get_d8(pos) as u16
     }
 
     fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
@@ -228,17 +244,6 @@ impl LR35902 {
         thread::sleep(Duration::from_micros((instruction.cycles / 4) as u64));
         self.clock_cycles += instruction.cycles as u64;
         // TODO: measure time and panic if cycle time exceeded
-    }
-
-    /// get 8 bit immediate at position pc + 1 + pos
-    fn get_d8(&self, pos: u8) -> u8 {
-        self.mem8(self.pc + pos as u16 + 1)
-    }
-
-    /// get 16 bit immediate at position pc + 1 + pos
-    fn get_d16(&self, pos: u8) -> u16 {
-        // little-endian: the first byte in memory is the LSB
-        ((self.get_d8(pos + 1) as u16) << 8) + self.get_d8(pos) as u16
     }
 
     fn add_half_carry(&self, x: u8, y: u8) -> bool {
@@ -274,7 +279,7 @@ impl LR35902 {
             }
             0x2 => {
                 // LD (BC),A
-                unimplemented!()
+                self.set_mem8(self.bc(), self.a());
             }
             0x3 => {
                 // INC BC
@@ -290,7 +295,7 @@ impl LR35902 {
             }
             0x6 => {
                 // LD B,d8
-                unimplemented!()
+                self.set_b(self.get_d8(0));
             }
             0x7 => {
                 // RLCA
@@ -298,7 +303,7 @@ impl LR35902 {
             }
             0x8 => {
                 // LD (a16),SP
-                unimplemented!()
+                self.set_mem16(self.get_d16(0),self.sp());
             }
             0x9 => {
                 // ADD HL,BC
@@ -307,7 +312,7 @@ impl LR35902 {
             }
             0xA => {
                 // LD A,(BC)
-                unimplemented!()
+                self.set_a(self.mem8(self.bc()));
             }
             0xB => {
                 // DEC BC
@@ -323,7 +328,7 @@ impl LR35902 {
             }
             0xE => {
                 // LD C,d8
-                unimplemented!()
+                self.set_c(self.get_d8(0));
             }
             0xF => {
                 // RRCA
@@ -339,7 +344,7 @@ impl LR35902 {
             }
             0x12 => {
                 // LD (DE),A
-                unimplemented!()
+                self.set_mem8(self.de(), self.a());
             }
             0x13 => {
                 // INC DE
@@ -355,7 +360,7 @@ impl LR35902 {
             }
             0x16 => {
                 // LD D,d8
-                unimplemented!()
+                self.set_d(self.get_d8(0));
             }
             0x17 => {
                 // RLA
@@ -371,7 +376,7 @@ impl LR35902 {
             }
             0x1A => {
                 // LD A,(DE)
-                unimplemented!()
+                self.set_a(self.mem8(self.de()));
             }
             0x1B => {
                 // DEC DE
@@ -387,7 +392,7 @@ impl LR35902 {
             }
             0x1E => {
                 // LD E,d8
-                unimplemented!()
+                self.set_e(self.get_d8(0));
             }
             0x1F => {
                 // RRA
@@ -399,11 +404,12 @@ impl LR35902 {
             }
             0x21 => {
                 // LD HL,d16
-                self.hl = self.get_d16(0);
+                self.set_hl(self.get_d16(0));
             }
             0x22 => {
                 // LD (HL+),A
-                unimplemented!()
+                self.set_mem8(self.hl(), self.a());
+                self.set_hl(self.hl() + 1);
             }
             0x23 => {
                 // INC HL
@@ -419,7 +425,7 @@ impl LR35902 {
             }
             0x26 => {
                 // LD H,d8
-                unimplemented!()
+                self.set_h(self.get_d8(0));
             }
             0x27 => {
                 // DAA
@@ -435,7 +441,8 @@ impl LR35902 {
             }
             0x2A => {
                 // LD A,(HL+)
-                unimplemented!()
+                self.set_a(self.mem8(self.hl()));
+                self.set_hl(self.hl() + 1);
             }
             0x2B => {
                 // DEC HL
@@ -451,7 +458,7 @@ impl LR35902 {
             }
             0x2E => {
                 // LD L,d8
-                unimplemented!()
+                self.set_l(self.get_d8(0));
             }
             0x2F => {
                 // CPL
@@ -463,12 +470,12 @@ impl LR35902 {
             }
             0x31 => {
                 // LD SP,d16
-                self.sp = self.get_d16(0);
+                self.set_sp(self.get_d16(0));
             }
             0x32 => {
                 // LD (HL-),A
                 self.set_mem8(self.hl, self.a());
-                self.hl -= 1
+                self.set_hl(self.hl() - 1)
             }
             0x33 => {
                 // INC SP
@@ -484,7 +491,7 @@ impl LR35902 {
             }
             0x36 => {
                 // LD (HL),d8
-                unimplemented!()
+                self.set_mem8(self.hl(), self.get_d8(0));
             }
             0x37 => {
                 // SCF
@@ -500,7 +507,8 @@ impl LR35902 {
             }
             0x3A => {
                 // LD A,(HL-)
-                unimplemented!()
+                self.set_a(self.mem8(self.hl()));
+                self.set_hl(self.hl - 1);
             }
             0x3B => {
                 // DEC SP
@@ -1178,7 +1186,7 @@ impl LR35902 {
             }
             0xE0 => {
                 // LDH (a8),A
-                unimplemented!()
+                self.set_mem8(0xFF00 | self.get_d8(0) as u16, self.a());
             }
             0xE1 => {
                 // POP HL
@@ -1218,7 +1226,7 @@ impl LR35902 {
             }
             0xEA => {
                 // LD (a16),A
-                unimplemented!()
+                self.set_mem8(self.get_d16(0), self.a());
             }
             0xEB => {
                 // Not implemented
@@ -1242,7 +1250,7 @@ impl LR35902 {
             }
             0xF0 => {
                 // LDH A,(a8)
-                unimplemented!()
+                self.set_a(self.mem8(0xFF00 | self.get_d8(0) as u16));
             }
             0xF1 => {
                 // POP AF
@@ -1250,7 +1258,7 @@ impl LR35902 {
             }
             0xF2 => {
                 // LD A,(C)
-                unimplemented!()
+                self.set_a(self.mem8(0xFF00 | self.c() as u16));
             }
             0xF3 => {
                 // DI
@@ -1274,7 +1282,10 @@ impl LR35902 {
             }
             0xF8 => {
                 // LD HL,SP+r8
-                unimplemented!()
+                let result = self.add16(self.sp(), self.get_d8(0) as u16);
+                self.set_hl(result);
+                self.set_z_flag(false);
+
             }
             0xF9 => {
                 // LD SP,HL
