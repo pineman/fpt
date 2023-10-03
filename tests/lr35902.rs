@@ -335,6 +335,7 @@ fn test_load_8_bit_reg_to_8_bit_reg(
 #[case(0x85, "l", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
 #[case(0x87, "a", 0x80, 0x80, 0x00, 0b1001)] // zero, half carry and carry
 #[case(0x87, "a", 0x88, 0x88, 0x10, 0b0011)] // zero, half carry and carry
+#[case(0x86, "l", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
 fn test_add8(
     #[case] opcode: u8,
     #[case] src_reg: &str,
@@ -346,6 +347,7 @@ fn test_add8(
     // Given
     let builder = LR35902Builder::new()
         .with_memory_byte(0x0000, opcode)
+        .with_memory_byte(0x0001, y)
         .with_a(a)
         .with_reg8(src_reg, y);
     let mut sut = builder.clone().build();
@@ -358,7 +360,7 @@ fn test_add8(
         .with_pc(1)
         .with_a(r)
         .with_f(f << 4)
-        .with_clock_cycles(4)
+        .with_clock_cycles(if opcode == 0x86 { 8 } else { 4 })
         .build();
     assert_eq!(sut, expected);
 }
