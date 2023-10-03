@@ -13,3 +13,6 @@ rstest = "0.18"
 
 [[bin]]
 name = "main"
+
+[[bin]]
+name = "gui"
