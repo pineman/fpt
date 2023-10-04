@@ -232,6 +232,11 @@ impl LR35902 {
         self.mem8(self.pc + pos as u16 + 1)
     }
 
+    /// get 8 bit immediate at position pc + 1 + pos
+    fn get_r8(&self, pos: u8) -> i8 {
+        self.mem8(self.pc + pos as u16 + 1) as i8
+    }
+
     /// get 16 bit immediate at position pc + 1 + pos
     fn get_d16(&self, pos: u8) -> u16 {
         // little-endian: the first byte in memory is the LSB
@@ -278,6 +283,11 @@ impl LR35902 {
         ((x & 0x0fff) + (y & 0x0fff)) > 0x0fff
     }
 
+    fn half_carry16i(&self, x: u16, y: i8) -> bool {
+        // TODO
+        false
+    }
+
     fn add8(&mut self, x: u8, y: u8) -> u8 {
         let (result, overflow) = x.overflowing_add(y);
         self.set_z_flag(result == 0);
@@ -289,9 +299,19 @@ impl LR35902 {
 
     fn add16(&mut self, x: u16, y: u16) -> u16 {
         let (result, overflow) = x.overflowing_add(y);
-        // z flag is ignored
+        // z flag is not set
         self.set_n_flag(false);
         self.set_h_flag(self.half_carry16(x, y));
+        self.set_c_flag(overflow);
+        result
+    }
+
+    fn add16i(&mut self, x: u16, y: i8) -> u16 {
+        // TODO: write tests, check half carry
+        let (result, overflow) = x.overflowing_add_signed(y as i16);
+        self.set_z_flag(false);
+        self.set_n_flag(false);
+        //self.set_h_flag(self.half_carry16i(x, y));
         self.set_c_flag(overflow);
         result
     }
@@ -1287,7 +1307,8 @@ impl LR35902 {
             }
             0xE8 => {
                 // ADD SP,r8
-                unimplemented!()
+                let result = self.add16i(self.sp(), self.get_r8(0));
+                self.set_sp(result);
             }
             0xE9 => {
                 // JP (HL)
@@ -1351,9 +1372,8 @@ impl LR35902 {
             }
             0xF8 => {
                 // LD HL,SP+r8
-                let result = self.add16(self.sp(), self.get_d8(0) as u16);
+                let result = self.add16i(self.sp(), self.get_r8(0));
                 self.set_hl(dbg!(self.mem16(dbg!(result))));
-                self.set_z_flag(false);
             }
             0xF9 => {
                 // LD SP,HL
