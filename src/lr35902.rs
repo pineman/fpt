@@ -14,7 +14,7 @@ pub struct LR35902 {
     hl: u16,
     sp: u16,
     pc: u16,
-    mem: [u8; 65536],
+    pub mem: [u8; 65536],
     next_cb: bool,
     clock_cycles: u64,
 }
@@ -204,13 +204,17 @@ impl LR35902 {
         self.mem[index as usize]
     }
 
+    pub fn mem16(&self, index: u16) -> u16 {
+        bw::word16(self.mem8(index + 1), self.mem8(index))
+    }
+
     pub fn set_mem8(&mut self, index: u16, value: u8) {
         self.mem[index as usize] = value;
     }
 
     pub fn set_mem16(&mut self, index: u16, value: u16) {
-        self.set_mem8(index, ((value >> 8) & 0xFF) as u8);
-        self.set_mem8(index+1, (value & 0xFF) as u8);
+        self.set_mem8(index + 1, bw::get_byte16::<1>(value));
+        self.set_mem8(index, bw::get_byte16::<0>(value));
     }
 
     /// get 8 bit immediate at position pc + 1 + pos
@@ -307,7 +311,7 @@ impl LR35902 {
             }
             0x8 => {
                 // LD (a16),SP
-                self.set_mem16(self.get_d16(0),self.sp());
+                self.set_mem16(dbg!(self.get_d16(0)), self.sp());
             }
             0x9 => {
                 // ADD HL,BC
@@ -748,7 +752,7 @@ impl LR35902 {
             }
             0x75 => {
                 // LD (HL),L
-                self.set_mem8(dbg!(self.hl()), dbg!(self.l()));
+                self.set_mem8(self.hl(), self.l());
             }
             0x76 => {
                 // HALT
@@ -1198,7 +1202,7 @@ impl LR35902 {
             }
             0xE2 => {
                 // LD (C),A
-                self.set_mem8(self.c().into(), self.a());
+                self.set_mem8(0xFF00 + self.c() as u16, self.a());
             }
             0xE3 => {
                 // Not implemented
@@ -1287,9 +1291,8 @@ impl LR35902 {
             0xF8 => {
                 // LD HL,SP+r8
                 let result = self.add16(self.sp(), self.get_d8(0) as u16);
-                self.set_hl(result);
+                self.set_hl(dbg!(self.mem16(dbg!(result))));
                 self.set_z_flag(false);
-
             }
             0xF9 => {
                 // LD SP,HL
