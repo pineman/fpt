@@ -145,7 +145,7 @@ impl LR35902 {
     }
 
     pub fn z_flag(&self) -> bool {
-        bw::test_bit16::<8>(self.af)
+        bw::test_bit16::<7>(self.af)
     }
 
     pub fn set_z_flag(&mut self, value: bool) {
@@ -153,7 +153,7 @@ impl LR35902 {
     }
 
     pub fn n_flag(&self) -> bool {
-        bw::test_bit16::<7>(self.af)
+        bw::test_bit16::<6>(self.af)
     }
 
     pub fn set_n_flag(&mut self, value: bool) {
@@ -161,7 +161,7 @@ impl LR35902 {
     }
 
     pub fn h_flag(&self) -> bool {
-        bw::test_bit16::<6>(self.af)
+        bw::test_bit16::<5>(self.af)
     }
 
     pub fn set_h_flag(&mut self, value: bool) {
@@ -169,7 +169,7 @@ impl LR35902 {
     }
 
     pub fn c_flag(&self) -> bool {
-        bw::test_bit16::<5>(self.af)
+        bw::test_bit16::<4>(self.af)
     }
 
     pub fn set_c_flag(&mut self, value: bool) {
