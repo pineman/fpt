@@ -37,6 +37,16 @@ impl LR35902Builder {
         }
     }
 
+    pub fn with_flag(self, flag: &str, value: bool) -> Self {
+        match flag {
+            "z" => self.with_z_flag(value),
+            "c" => self.with_c_flag(value),
+            "n" => self.with_n_flag(value),
+            "h" => self.with_h_flag(value),
+            _ => panic!(),
+        }
+    }
+
     pub fn with_a(mut self, a: u8) -> Self {
         self.lr35902.set_a(a);
         self
@@ -99,6 +109,26 @@ impl LR35902Builder {
 
     pub fn with_pc(mut self, pc: u16) -> Self {
         self.lr35902.set_pc(pc);
+        self
+    }
+
+    pub fn with_z_flag(mut self, z: bool) -> Self {
+        self.lr35902.set_z_flag(z);
+        self
+    }
+
+    pub fn with_c_flag(mut self, c: bool) -> Self {
+        self.lr35902.set_c_flag(c);
+        self
+    }
+
+    pub fn with_n_flag(mut self, n: bool) -> Self {
+        self.lr35902.set_n_flag(n);
+        self
+    }
+
+    pub fn with_h_flag(mut self, h: bool) -> Self {
+        self.lr35902.set_h_flag(h);
         self
     }
 
@@ -910,5 +940,53 @@ fn test_alu16_reg_reg(
         .with_f(flags_after << 4)
         .with_clock_cycles(8)
         .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
+#[case(0xC2, 0xFF00, "z", true, 3, 12)]
+#[case(0xC2, 0xFF00, "z", false, 0xFF00, 16)]
+#[case(0xD2, 0xFF00, "c", true, 3, 12)]
+#[case(0xD2, 0xFF00, "c", false, 0xFF00, 16)]
+#[case(0xCA, 0xFF00, "z", true, 0xFF00, 16)]
+#[case(0xCA, 0xFF00, "z", false, 3, 12)]
+#[case(0xDA, 0xFF00, "c", true, 0xFF00, 16)]
+#[case(0xDA, 0xFF00, "c", false, 3, 12)]
+#[case(0xC3, 0xFF00, "z", false, 0xFF00, 16)]
+#[case(0xC3, 0xFF00, "z", true, 0xFF00, 16)]
+#[case(0xC3, 0xFF00, "c", false, 0xFF00, 16)]
+#[case(0xC3, 0xFF00, "c", true, 0xFF00, 16)]
+#[case(0x20, 0x00FF, "z", true, 2, 8)]
+#[case(0x20, 0x00FF, "z", false, 0x00FF, 12)]
+#[case(0x30, 0x00FF, "c", true, 2, 8)]
+#[case(0x30, 0x00FF, "c", false, 0x00FF, 12)]
+#[case(0x28, 0x00FF, "z", true, 0x00FF, 12)]
+#[case(0x28, 0x00FF, "z", false, 2, 8)]
+#[case(0x38, 0x00FF, "c", true, 0x00FF, 12)]
+#[case(0x38, 0x00FF, "c", false, 2, 8)]
+#[case(0x18, 0x00FF, "z", false, 0x00FF, 12)]
+#[case(0x18, 0x00FF, "z", true, 0x00FF, 12)]
+#[case(0x18, 0x00FF, "c", false, 0x00FF, 12)]
+#[case(0x18, 0x00FF, "c", true, 0x00FF, 12)]
+fn test_jump(
+    #[case] opcode: u8,
+    #[case] address: u16,
+    #[case] flag: &str,
+    #[case] value: bool,
+    #[case] pc: u16,
+    #[case] clocks: u64,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, opcode)
+        .with_mem16(0x0001, address)
+        .with_flag(flag, value);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder.with_pc(pc).with_clock_cycles(clocks).build();
     assert_eq!(sut, expected);
 }
