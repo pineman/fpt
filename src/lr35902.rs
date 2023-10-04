@@ -284,6 +284,15 @@ impl LR35902 {
         result
     }
 
+    fn xor8(&mut self, x: u8, y: u8) -> u8 {
+        let result = x ^ y;
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(false);
+        result
+    }
+
     fn execute(&mut self, instruction: Instruction) {
         match instruction.opcode {
             0x0 => {
@@ -834,7 +843,7 @@ impl LR35902 {
             }
             0x86 => {
                 // ADD A,(HL)
-                let result = self.add8(self.a(), self.mem8[self.hl()]);
+                let result = self.add8(self.a(), self.mem8(self.hl()));
                 self.set_a(result);
             }
             0x87 => {
@@ -972,40 +981,46 @@ impl LR35902 {
             }
             0xA8 => {
                 // XOR B
-                unimplemented!()
+                let result = self.xor8(self.a(), self.b());
+                self.set_a(result);
             }
             0xA9 => {
                 // XOR C
-                unimplemented!()
+                let result = self.xor8(self.a(), self.c());
+                self.set_a(result);
             }
             0xAA => {
                 // XOR D
-                unimplemented!()
+                let result = self.xor8(self.a(), self.d());
+                self.set_a(result);
             }
             0xAB => {
                 // XOR E
-                unimplemented!()
+                let result = self.xor8(self.a(), self.e());
+                self.set_a(result);
             }
             0xAC => {
                 // XOR H
-                unimplemented!()
+                let result = self.xor8(self.a(), self.h());
+                self.set_a(result);
             }
             0xAD => {
                 // XOR L
-                unimplemented!()
+                let result = self.xor8(self.a(), self.l());
+                self.set_a(result);
             }
             0xAE => {
                 // XOR (HL)
-                unimplemented!()
+                let result = self.xor8(self.a(), self.mem8(self.hl()));
+                self.set_a(result);
             }
             0xAF => {
                 // XOR A
-                let result = self.a() ^ self.b();
-                self.set_z_flag(result == 0);
+                self.set_z_flag(true);
                 self.set_n_flag(false);
                 self.set_h_flag(false);
                 self.set_c_flag(false);
-                self.set_a(result);
+                self.set_a(0);
             }
             0xB0 => {
                 // OR B
