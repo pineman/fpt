@@ -32,6 +32,7 @@ impl LR35902Builder {
             "bc" => self.with_bc(value),
             "de" => self.with_de(value),
             "hl" => self.with_hl(value),
+            "sp" => self.with_hl(value),
             _ => panic!(),
         }
     }
@@ -799,34 +800,28 @@ fn test_instr_0xf2_ld_from_register_a_from_c_pointer() {
 // TODO: break test_add8 (and test_xor8) into three:
 // ADD A,<reg not A>
 // ADD A,A
-// ADD A,(HL)
 #[rstest]
-#[case(0x80, 0xfe, "b", 0x01, 0xff, 0b0000, 4)] // no flags
-#[case(0x80, 0x0f, "b", 0x01, 0x10, 0b0010, 4)] // half carry
-#[case(0x80, 0xff, "b", 0x01, 0x00, 0b1011, 4)] // zero, half carry and carry
-#[case(0x81, 0xff, "c", 0x01, 0x00, 0b1011, 4)] // zero, half carry and carry
-#[case(0x82, 0xff, "d", 0x01, 0x00, 0b1011, 4)] // zero, half carry and carry
-#[case(0x83, 0xff, "e", 0x01, 0x00, 0b1011, 4)] // zero, half carry and carry
-#[case(0x84, 0xff, "h", 0x01, 0x00, 0b1011, 4)] // zero, half carry and carry
-#[case(0x85, 0xff, "l", 0x01, 0x00, 0b1011, 4)] // zero, half carry and carry
-#[case(0x87, 0x80, "a", 0x80, 0x00, 0b1001, 4)] // zero, half carry and carry
-#[case(0x87, 0x88, "a", 0x88, 0x10, 0b0011, 4)] // zero, half carry and carry
-#[case(0x86, 0xff, "l", 0x01, 0x00, 0b1011, 8)] // zero, half carry and carry
-fn test_add8(
+// ADD A,(HL)
+#[case(0x86, 0xfe, 0x0001, 0x01, 0xff, 0b0000)] // no flags
+#[case(0x86, 0xff, 0x0001, 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x86, 0xff, 0xcafe, 0x01, 0x00, 0b1011)] // zero, half carry and carry
+// XOR A,(HL)
+#[case(0xAE, 0xca, 0x0001, 0xfe, 0x34, 0b0000)]
+#[case(0xAE, 0x01, 0xcafe, 0x01, 0x00, 0b1000)]
+fn test_alu_reg_addr(
     #[case] opcode: u8,
     #[case] a: u8,
-    #[case] src_reg: &str,
-    #[case] y: u8,
+    #[case] hl_addr: u16,
+    #[case] value: u8,
     #[case] result: u8,
     #[case] flags: u8,
-    #[case] clock_cycles: u64,
 ) {
     // Given
     let builder = LR35902Builder::new()
         .with_mem8(0x0000, opcode)
-        .with_mem8(0x0001, y) // Fixed addr 0x1 just for (HL) instruction
         .with_a(a)
-        .with_reg8(src_reg, y);
+        .with_reg16("hl", hl_addr)
+        .with_memory_byte(hl_addr, value);
     let mut sut = builder.clone().build();
 
     // When
@@ -837,37 +832,45 @@ fn test_add8(
         .with_pc(1)
         .with_a(result)
         .with_f(flags << 4)
-        .with_clock_cycles(clock_cycles)
+        .with_clock_cycles(8)
         .build();
     assert_eq!(sut, expected);
 }
 
 #[rstest]
-#[case(0xA8, 0xca, "b", 0xfe, 0x34, 0b0000, 4)]
-#[case(0xA8, 0xca, "b", 0xca, 0x00, 0b1000, 4)]
-#[case(0xA9, 0xca, "c", 0xfe, 0x34, 0b0000, 4)]
-#[case(0xAA, 0xca, "d", 0xfe, 0x34, 0b0000, 4)]
-#[case(0xAB, 0xca, "e", 0xfe, 0x34, 0b0000, 4)]
-#[case(0xAC, 0xca, "h", 0xfe, 0x34, 0b0000, 4)]
-#[case(0xAD, 0xca, "l", 0xfe, 0x34, 0b0000, 4)]
-#[case(0xAF, 0xca, "a", 0xca, 0x00, 0b1000, 4)]
-#[case(0xAE, 0x01, "l", 0x01, 0x00, 0b1000, 8)]
-#[case(0xAE, 0x00, "l", 0x01, 0x01, 0b0000, 8)]
-fn test_xor8(
+// ADD A,r8
+#[case(0x80, 0xfe, "b", 0x01, 0xff, 0b0000)] // no flags
+#[case(0x80, 0x0f, "b", 0x01, 0x10, 0b0010)] // half carry
+#[case(0x80, 0xff, "b", 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x81, 0xff, "c", 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x82, 0xff, "d", 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x83, 0xff, "e", 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x84, 0xff, "h", 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x85, 0xff, "l", 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x87, 0x80, "a", 0x80, 0x00, 0b1001)] // zero, half carry and carry
+#[case(0x87, 0x88, "a", 0x88, 0x10, 0b0011)] // zero, half carry and carry
+// XOR A,r8
+#[case(0xA8, 0xca, "b", 0xfe, 0x34, 0b0000)]
+#[case(0xA8, 0xca, "b", 0xca, 0x00, 0b1000)]
+#[case(0xA9, 0xca, "c", 0xfe, 0x34, 0b0000)]
+#[case(0xAA, 0xca, "d", 0xfe, 0x34, 0b0000)]
+#[case(0xAB, 0xca, "e", 0xfe, 0x34, 0b0000)]
+#[case(0xAC, 0xca, "h", 0xfe, 0x34, 0b0000)]
+#[case(0xAD, 0xca, "l", 0xfe, 0x34, 0b0000)]
+#[case(0xAF, 0xca, "a", 0xca, 0x00, 0b1000)]
+fn test_alu8_reg_reg(
     #[case] opcode: u8,
     #[case] a: u8,
     #[case] src_reg: &str,
-    #[case] y: u8,
+    #[case] value: u8,
     #[case] result: u8,
     #[case] flags: u8,
-    #[case] clock_cycles: u64,
 ) {
     // Given
     let builder = LR35902Builder::new()
         .with_memory_byte(0x0000, opcode)
-        .with_memory_byte(0x0001, y) // Fixed addr 0x1 just for (HL) instruction
         .with_a(a)
-        .with_reg8(src_reg, y);
+        .with_reg8(src_reg, value);
     let mut sut = builder.clone().build();
 
     // When
@@ -878,7 +881,41 @@ fn test_xor8(
         .with_pc(1)
         .with_a(result)
         .with_f(flags << 4)
-        .with_clock_cycles(clock_cycles)
+        .with_clock_cycles(4)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
+// ADD HL,r16
+#[case(0x09, 0xffff, "bc", 0x0001, 0x0, 0b0000, 0b1011)]
+#[case(0x09, 0xffff, "bc", 0x0001, 0x0, 0b0000, 0b0011)]
+fn test_alu16_reg_reg(
+    #[case] opcode: u8,
+    #[case] hl: u16,
+    #[case] src_reg: &str,
+    #[case] value: u16,
+    #[case] result: u16,
+    #[case] flags_before: u8,
+    #[case] flags_after: u8,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_memory_byte(0x0000, opcode)
+        .with_f(flags_before << 4)
+        .with_hl(hl)
+        .with_reg16(src_reg, value);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(1)
+        .with_hl(result)
+        .with_f(flags_after << 4)
+        .with_clock_cycles(8)
         .build();
     assert_eq!(sut, expected);
 }
