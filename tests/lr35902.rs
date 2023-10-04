@@ -291,7 +291,7 @@ fn test_instr_0x021_ld_hl_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
 fn test_instr_0x022_ld_pointer_hl_increment_from_a() {
     // Given
     let builder = LR35902Builder::new()
-        .with_mem8(0x0000, 0x22) 
+        .with_mem8(0x0000, 0x22)
         .with_hl(0xFF00)
         .with_a(0x1);
     let mut sut = builder.clone().build();
@@ -302,7 +302,7 @@ fn test_instr_0x022_ld_pointer_hl_increment_from_a() {
     // Then
     let expected = builder
         .with_pc(1)
-        .with_hl(0xFF01) 
+        .with_hl(0xFF01)
         .with_mem8(0xFF00, 0x1)
         .with_clock_cycles(8)
         .build();
@@ -608,7 +608,6 @@ fn test_load_hl_pointer_from_8_bit_reg(
     assert_eq!(sut, expected);
 }
 
-#[rstest]
 #[case(0x06, "b", 0x01)] // 1
 #[case(0x16, "d", 0x01)] // 2
 #[case(0x26, "h", 0x01)] // 3
@@ -797,25 +796,29 @@ fn test_instr_0xf2_ld_from_register_a_from_c_pointer() {
     assert_eq!(sut, expected);
 }
 
+// TODO: break test_add8 (and test_xor8) into three:
+// ADD A,<reg not A>
+// ADD A,A
+// ADD A,(HL)
 #[rstest]
-#[case(0x80, "b", 0xfe, 0x01, 0xff, 0b0000)] // no flags
-#[case(0x80, "b", 0x0f, 0x01, 0x10, 0b0010)] // half carry
-#[case(0x80, "b", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x81, "c", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x82, "d", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x83, "e", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x84, "h", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x85, "l", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x87, "a", 0x80, 0x80, 0x00, 0b1001)] // zero, half carry and carry
-#[case(0x87, "a", 0x88, 0x88, 0x10, 0b0011)] // zero, half carry and carry
-#[case(0x86, "l", 0xff, 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x80, 0xfe, "b", 0x01, 0xff, 0b0000)] // no flags
+#[case(0x80, 0x0f, "b", 0x01, 0x10, 0b0010)] // half carry
+#[case(0x80, 0xff, "b", 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x81, 0xff, "c", 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x82, 0xff, "d", 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x83, 0xff, "e", 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x84, 0xff, "h", 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x85, 0xff, "l", 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x87, 0x80, "a", 0x80, 0x00, 0b1001)] // zero, half carry and carry
+#[case(0x87, 0x88, "a", 0x88, 0x10, 0b0011)] // zero, half carry and carry
+#[case(0x86, 0xff, "l", 0x01, 0x00, 0b1011)] // zero, half carry and carry
 fn test_add8(
     #[case] opcode: u8,
-    #[case] src_reg: &str,
     #[case] a: u8,
+    #[case] src_reg: &str,
     #[case] y: u8,
-    #[case] r: u8,
-    #[case] f: u8,
+    #[case] result: u8,
+    #[case] flags: u8,
 ) {
     // Given
     let builder = LR35902Builder::new()
@@ -831,9 +834,49 @@ fn test_add8(
     // Then
     let expected = builder
         .with_pc(1)
-        .with_a(r)
-        .with_f(f << 4)
+        .with_a(result)
+        .with_f(flags << 4)
         .with_clock_cycles(if opcode == 0x86 { 8 } else { 4 })
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
+#[case(0xA8, 0xca, "b", 0xfe, 0x34, 0b0000)]
+#[case(0xA8, 0xca, "b", 0xca, 0x00, 0b1000)]
+#[case(0xA9, 0xca, "c", 0xfe, 0x34, 0b0000)]
+#[case(0xAA, 0xca, "d", 0xfe, 0x34, 0b0000)]
+#[case(0xAB, 0xca, "e", 0xfe, 0x34, 0b0000)]
+#[case(0xAC, 0xca, "h", 0xfe, 0x34, 0b0000)]
+#[case(0xAD, 0xca, "l", 0xfe, 0x34, 0b0000)]
+#[case(0xAF, 0xca, "a", 0xca, 0x00, 0b1000)]
+#[case(0xAE, 0x01, "l", 0x01, 0x00, 0b1000)]
+#[case(0xAE, 0x00, "l", 0x01, 0x01, 0b0000)]
+fn test_xor8(
+    #[case] opcode: u8,
+    #[case] a: u8,
+    #[case] src_reg: &str,
+    #[case] y: u8,
+    #[case] result: u8,
+    #[case] flags: u8,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_memory_byte(0x0000, opcode)
+        .with_memory_byte(0x0001, y)
+        .with_a(a)
+        .with_reg8(src_reg, y);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(1)
+        .with_a(result)
+        .with_f(flags << 4)
+        .with_clock_cycles(if opcode == 0xAE { 8 } else { 4 })
         .build();
     assert_eq!(sut, expected);
 }
