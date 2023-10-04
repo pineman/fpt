@@ -161,8 +161,7 @@ fn test_instr_0x001_ld_bc_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
 #[rstest]
 #[case(0x02, "bc")]
 #[case(0x12, "de")]
-fn test_instr_ld_pointer_from_a(#[case] opcode: u8, #[case] register: &str)
-{
+fn test_instr_ld_pointer_from_a(#[case] opcode: u8, #[case] register: &str) {
     // Given
     let builder = LR35902Builder::new()
         .with_mem8(0x0000, opcode)
