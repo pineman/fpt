@@ -37,7 +37,7 @@ impl Default for LR35902 {
 
 impl fmt::Debug for LR35902 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "LR35902 {{ af: {:#06X}, bc: {:#06X}, de: {:#06X}, hl: {:#06X}, sp: {:#06X}, pc: {:#06X}, clock_cycles: {} }} ", self.af, self.bc, self.de, self.hl, self.sp, self.pc, self.clock_cycles)
+        write!(f, "LR35902 {{ a: {:#04X}, f: {:#06b}, bc: {:#06X}, de: {:#06X}, hl: {:#06X}, sp: {:#06X}, pc: {:#06X}, clock_cycles: {} }} ", self.a(), self.f()>>4, self.bc, self.de, self.hl, self.sp, self.pc, self.clock_cycles)
     }
 }
 
@@ -48,20 +48,20 @@ impl LR35902 {
         m
     }
 
-    pub fn f(&self) -> u8 {
-        bw::get_byte16::<0>(self.af)
-    }
-
-    pub fn set_f(&mut self, value: u8) {
-        self.af = bw::set_byte16::<0>(self.af, value);
-    }
-
     pub fn a(&self) -> u8 {
         bw::get_byte16::<1>(self.af)
     }
 
     pub fn set_a(&mut self, value: u8) {
         self.af = bw::set_byte16::<1>(self.af, value);
+    }
+
+    pub fn f(&self) -> u8 {
+        bw::get_byte16::<0>(self.af)
+    }
+
+    pub fn set_f(&mut self, value: u8) {
+        self.af = bw::set_byte16::<0>(self.af, value);
     }
 
     pub fn af(&self) -> u16 {
@@ -217,6 +217,14 @@ impl LR35902 {
         self.set_mem8(index, bw::get_byte16::<0>(value));
     }
 
+    pub fn next_cb(&self) -> bool {
+        self.next_cb
+    }
+
+    pub fn set_next_cb(&mut self, value: bool) {
+        self.next_cb = value;
+    }
+
     /// get 8 bit immediate at position pc + 1 + pos
     fn get_d8(&self, pos: u8) -> u8 {
         self.mem8(self.pc + pos as u16 + 1)
@@ -234,19 +242,19 @@ impl LR35902 {
 
     /// Run one cycle
     pub fn step(&mut self) {
-        let mut opcode = self.mem[self.pc as usize] as u16;
-        if self.next_cb {
+        let mut opcode = self.mem8(self.pc()) as u16;
+        if self.next_cb() {
             opcode += 0x100;
-            self.next_cb = false;
+            self.set_next_cb(false);
         }
         let instruction = INSTRUCTIONS[opcode as usize];
         println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
         self.execute(instruction);
         if instruction.kind != InstructionKind::Jump {
-            self.pc += instruction.size as u16;
+            self.set_pc(self.pc() + instruction.size as u16);
         }
         thread::sleep(Duration::from_micros((instruction.cycles / 4) as u64));
-        self.clock_cycles += instruction.cycles as u64;
+        self.set_clock_cycles(self.clock_cycles() + instruction.cycles as u64);
         // TODO: measure time and panic if cycle time exceeded
     }
 
@@ -255,7 +263,7 @@ impl LR35902 {
     }
 
     fn half_carry16(&self, x: u16, y: u16) -> bool {
-        self.half_carry8((x >> 8) as u8, (y >> 8) as u8)
+        ((x & 0x0fff) + (y & 0x0fff)) > 0x0fff
     }
 
     fn add8(&mut self, x: u8, y: u8) -> u8 {
@@ -269,76 +277,85 @@ impl LR35902 {
 
     fn add16(&mut self, x: u16, y: u16) -> u16 {
         let (result, overflow) = x.overflowing_add(y);
-        self.set_z_flag(result == 0);
+        // z flag is ignored
         self.set_n_flag(false);
         self.set_h_flag(self.half_carry16(x, y));
         self.set_c_flag(overflow);
         result
     }
 
+    fn xor8(&mut self, x: u8, y: u8) -> u8 {
+        let result = x ^ y;
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(false);
+        result
+    }
+
     fn execute(&mut self, instruction: Instruction) {
         match instruction.opcode {
-            0x0 => {
+            0x00 => {
                 // NOP
             }
-            0x1 => {
+            0x01 => {
                 // LD BC,d16
                 self.bc = self.get_d16(0);
             }
-            0x2 => {
+            0x02 => {
                 // LD (BC),A
                 self.set_mem8(self.bc(), self.a());
             }
-            0x3 => {
+            0x03 => {
                 // INC BC
                 unimplemented!()
             }
-            0x4 => {
+            0x04 => {
                 // INC B
                 unimplemented!()
             }
-            0x5 => {
+            0x05 => {
                 // DEC B
                 unimplemented!()
             }
-            0x6 => {
+            0x06 => {
                 // LD B,d8
                 self.set_b(self.get_d8(0));
             }
-            0x7 => {
+            0x07 => {
                 // RLCA
                 unimplemented!()
             }
-            0x8 => {
+            0x08 => {
                 // LD (a16),SP
                 self.set_mem16(dbg!(self.get_d16(0)), self.sp());
             }
-            0x9 => {
+            0x09 => {
                 // ADD HL,BC
                 let result = self.add16(self.hl(), self.bc());
                 self.set_hl(result);
             }
-            0xA => {
+            0x0A => {
                 // LD A,(BC)
                 self.set_a(self.mem8(self.bc()));
             }
-            0xB => {
+            0x0B => {
                 // DEC BC
                 unimplemented!()
             }
-            0xC => {
+            0x0C => {
                 // INC C
                 unimplemented!()
             }
-            0xD => {
+            0x0D => {
                 // DEC C
                 unimplemented!()
             }
-            0xE => {
+            0x0E => {
                 // LD C,d8
                 self.set_c(self.get_d8(0));
             }
-            0xF => {
+            0x0F => {
                 // RRCA
                 unimplemented!()
             }
@@ -380,7 +397,8 @@ impl LR35902 {
             }
             0x19 => {
                 // ADD HL,DE
-                unimplemented!()
+                let result = self.add16(self.hl(), self.de());
+                self.set_hl(result);
             }
             0x1A => {
                 // LD A,(DE)
@@ -445,7 +463,8 @@ impl LR35902 {
             }
             0x29 => {
                 // ADD HL,HL
-                unimplemented!()
+                let result = self.add16(self.hl(), self.hl());
+                self.set_hl(result);
             }
             0x2A => {
                 // LD A,(HL+)
@@ -511,7 +530,8 @@ impl LR35902 {
             }
             0x39 => {
                 // ADD HL,SP
-                unimplemented!()
+                let result = self.add16(self.hl(), self.sp());
+                self.set_hl(result);
             }
             0x3A => {
                 // LD A,(HL-)
@@ -826,7 +846,7 @@ impl LR35902 {
             }
             0x86 => {
                 // ADD A,(HL)
-                let result = self.add8(self.a(), self.mem[self.hl() as usize]);
+                let result = self.add8(self.a(), self.mem8(self.hl()));
                 self.set_a(result);
             }
             0x87 => {
@@ -964,40 +984,46 @@ impl LR35902 {
             }
             0xA8 => {
                 // XOR B
-                unimplemented!()
+                let result = self.xor8(self.a(), self.b());
+                self.set_a(result);
             }
             0xA9 => {
                 // XOR C
-                unimplemented!()
+                let result = self.xor8(self.a(), self.c());
+                self.set_a(result);
             }
             0xAA => {
                 // XOR D
-                unimplemented!()
+                let result = self.xor8(self.a(), self.d());
+                self.set_a(result);
             }
             0xAB => {
                 // XOR E
-                unimplemented!()
+                let result = self.xor8(self.a(), self.e());
+                self.set_a(result);
             }
             0xAC => {
                 // XOR H
-                unimplemented!()
+                let result = self.xor8(self.a(), self.h());
+                self.set_a(result);
             }
             0xAD => {
                 // XOR L
-                unimplemented!()
+                let result = self.xor8(self.a(), self.l());
+                self.set_a(result);
             }
             0xAE => {
                 // XOR (HL)
-                unimplemented!()
+                let result = self.xor8(self.a(), self.mem8(self.hl()));
+                self.set_a(result);
             }
             0xAF => {
                 // XOR A
-                let result = self.a() ^ self.b();
-                self.set_z_flag(result == 0);
+                self.set_z_flag(true);
                 self.set_n_flag(false);
                 self.set_h_flag(false);
                 self.set_c_flag(false);
-                self.set_a(result);
+                self.set_a(0);
             }
             0xB0 => {
                 // OR B
