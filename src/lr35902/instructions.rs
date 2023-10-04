@@ -1831,7 +1831,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     Instruction {
         opcode: 0xE2,
         mnemonic: "LD (C),A",
-        size: 2,
+        size: 1,
         cycles: 8,
         cycles_not_taken: 0,
         kind: InstructionKind::LSM8Bit,
@@ -1959,7 +1959,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     Instruction {
         opcode: 0xF2,
         mnemonic: "LD A,(C)",
-        size: 2,
+        size: 1,
         cycles: 8,
         cycles_not_taken: 0,
         kind: InstructionKind::LSM8Bit,

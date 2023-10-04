@@ -17,6 +17,10 @@ pub fn set_byte16<const INDEX: u8>(word: u16, byte: u8) -> u16 {
     word | ((byte as u16) << (INDEX * 8))
 }
 
+pub fn word16(msb: u8, lsb: u8) -> u16 {
+    ((msb as u16) << 8) | (lsb as u16)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

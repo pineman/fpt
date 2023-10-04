@@ -27,14 +27,14 @@ impl LR35902Builder {
         }
     }
 
-    // pub fn with_reg16(self, register: &str, value: u16) -> Self {
-    //     match register {
-    //         "bc" => self.with_bc(value),
-    //         "de" => self.with_de(value),
-    //         "hl" => self.with_hl(value),
-    //         _ => panic!(),
-    //     }
-    // }
+    pub fn with_reg16(self, register: &str, value: u16) -> Self {
+        match register {
+            "bc" => self.with_bc(value),
+            "de" => self.with_de(value),
+            "hl" => self.with_hl(value),
+            _ => panic!(),
+        }
+    }
 
     pub fn with_a(mut self, a: u8) -> Self {
         self.lr35902.set_a(a);
@@ -119,8 +119,13 @@ impl LR35902Builder {
     //    self
     //}
 
-    pub fn with_memory_byte(mut self, index: u16, value: u8) -> LR35902Builder {
+    pub fn with_mem8(mut self, index: u16, value: u8) -> LR35902Builder {
         self.lr35902.set_mem8(index, value);
+        self
+    }
+
+    pub fn with_mem16(mut self, index: u16, value: u16) -> LR35902Builder {
+        self.lr35902.set_mem16(index, value);
         self
     }
 
@@ -132,7 +137,7 @@ impl LR35902Builder {
 #[test]
 fn test_instr_0x000_nop() {
     // Given
-    let builder = LR35902Builder::new().with_memory_byte(0x0000, 0x0);
+    let builder = LR35902Builder::new().with_mem8(0x0000, 0x0);
     let mut sut = builder.clone().build();
 
     // When
@@ -148,9 +153,9 @@ fn test_instr_0x000_nop() {
 fn test_instr_0x001_ld_bc_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: u16) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, 0x1) // instruction LD BC,d16
-        .with_memory_byte(0x0001, lsb) // lsb of immediate16
-        .with_memory_byte(0x0002, msb); // msb of immediate16
+        .with_mem8(0x0000, 0x1) // instruction LD BC,d16
+        .with_mem8(0x0001, lsb) // lsb of immediate16
+        .with_mem8(0x0002, msb); // msb of immediate16
     let mut sut = builder.clone().build();
 
     // When
@@ -166,13 +171,58 @@ fn test_instr_0x001_ld_bc_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
 }
 
 #[rstest]
+#[case(0x02, "bc")]
+#[case(0x12, "de")]
+fn test_instr_ld_pointer_from_a(#[case] opcode: u8, #[case] register: &str)
+{
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, opcode)
+        .with_a(0x01)
+        .with_reg16(register, 0xFF00);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(1)
+        .with_mem16(0xFF00, 0x01)
+        .with_clock_cycles(8)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[test]
+fn test_instr_0x008_ld_pointer_immediate16_from_sp() {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, 0x8)
+        .with_mem16(0x0001, 0xFF00)
+        .with_sp(0x01);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(3)
+        .with_mem16(0xFF00, 0x01)
+        .with_clock_cycles(20)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
 #[case(2, 1, 0x0102)]
 fn test_instr_0x011_ld_de_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: u16) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, 0x11) // instruction LD DE,d16
-        .with_memory_byte(0x0001, lsb) // lsb of immediate16
-        .with_memory_byte(0x0002, msb); // msb of immediate16
+        .with_mem8(0x0000, 0x11) // instruction LD DE,d16
+        .with_mem8(0x0001, lsb) // lsb of immediate16
+        .with_mem8(0x0002, msb); // msb of immediate16
     let mut sut = builder.clone().build();
 
     // When
@@ -188,13 +238,41 @@ fn test_instr_0x011_ld_de_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
 }
 
 #[rstest]
+#[case(0xa, "bc", 0xFF00, 0x01)]
+#[case(0x1a, "de", 0xFF00, 0x01)]
+fn test_instr_ld_register_a_from_pointer(
+    #[case] opcode: u8,
+    #[case] register: &str,
+    #[case] address: u16,
+    #[case] value: u8,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, opcode) // instruction LD (HL-), a
+        .with_mem8(address, value)
+        .with_reg16(register, address);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(1)
+        .with_clock_cycles(8)
+        .with_a(value)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
 #[case(0x2, 0x1, 0x0102)]
 fn test_instr_0x021_ld_hl_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: u16) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, 0x21) // instruction LD HL,d16
-        .with_memory_byte(0x0001, lsb) // lsb of immediate16
-        .with_memory_byte(0x0002, msb); // msb of immediate16
+        .with_mem8(0x0000, 0x21) // instruction LD HL,d16
+        .with_mem8(0x0001, lsb) // lsb of immediate16
+        .with_mem8(0x0002, msb); // msb of immediate16
     let mut sut = builder.clone().build();
 
     // When
@@ -209,15 +287,60 @@ fn test_instr_0x021_ld_hl_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
     assert_eq!(sut, expected);
 }
 
+#[test]
+fn test_instr_0x022_ld_pointer_hl_increment_from_a() {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, 0x22) 
+        .with_hl(0xFF00)
+        .with_a(0x1);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(1)
+        .with_hl(0xFF01) 
+        .with_mem8(0xFF00, 0x1)
+        .with_clock_cycles(8)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[test]
+fn test_instr_0x2a_ld_register_a_from_hli() {
+    // Given
+    let hl = 0xFF00;
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, 0x2a) // instruction LD (HL-), a
+        .with_mem8(hl, 0x01)
+        .with_hl(hl);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(1)
+        .with_hl(hl + 1) // hl gets decremented
+        .with_clock_cycles(8)
+        .with_a(0x01)
+        .build();
+    assert_eq!(sut, expected);
+}
+
 #[rstest]
 #[case(0x2, 0x1, 0x0102)]
 #[case(0xFF, 0xFF, 0xFFFF)]
 fn test_instr_0x031_ld_sp_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: u16) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, 0x31) // instruction LD SP,d16
-        .with_memory_byte(0x0001, lsb) // lsb of immediate16
-        .with_memory_byte(0x0002, msb); // msb of immediate16
+        .with_mem8(0x0000, 0x31) // instruction LD SP,d16
+        .with_mem8(0x0001, lsb) // lsb of immediate16
+        .with_mem8(0x0002, msb); // msb of immediate16
     let mut sut = builder.clone().build();
 
     // When
@@ -238,7 +361,7 @@ fn test_instr_0x031_ld_sp_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
 fn test_instr_0x032_ld_hld_a(#[case] a: u8, #[case] hl: u16) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, 0x32) // instruction LD (HL-), a
+        .with_mem8(0x0000, 0x32) // instruction LD (HL-), a
         .with_a(a)
         .with_hl(hl);
     let mut sut = builder.clone().build();
@@ -251,7 +374,31 @@ fn test_instr_0x032_ld_hld_a(#[case] a: u8, #[case] hl: u16) {
         .with_pc(1)
         .with_hl(hl - 1) // hl gets decremented
         .with_clock_cycles(8)
-        .with_memory_byte(hl, a)
+        .with_mem8(hl, a)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[test]
+fn test_instr_0x3a_ld_register_a_from_hld() {
+    // Given
+
+    let hl = 0xFF00;
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, 0x3a) // instruction LD (HL-), a
+        .with_mem8(hl, 0x01)
+        .with_hl(hl);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(1)
+        .with_hl(hl - 1) // hl gets decremented
+        .with_clock_cycles(8)
+        .with_a(0x01)
         .build();
     assert_eq!(sut, expected);
 }
@@ -363,7 +510,7 @@ fn test_load_8_bit_reg_to_8_bit_reg(
 ) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, opcode)
+        .with_mem8(0x0000, opcode)
         .with_reg8(src_reg, value);
     let mut sut = builder.clone().build();
 
@@ -402,8 +549,8 @@ fn test_load_8_bit_reg_from_hl_pointer(
 ) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, opcode)
-        .with_memory_byte(hl, value)
+        .with_mem8(0x0000, opcode)
+        .with_mem8(hl, value)
         .with_hl(hl);
     let mut sut = builder.clone().build();
 
@@ -442,7 +589,7 @@ fn test_load_hl_pointer_from_8_bit_reg(
 ) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, opcode)
+        .with_mem8(0x0000, opcode)
         .with_hl(dbg!(hl))
         .with_reg8(src_reg, value);
 
@@ -456,7 +603,7 @@ fn test_load_hl_pointer_from_8_bit_reg(
     let expected = builder
         .with_pc(1)
         .with_clock_cycles(8)
-        .with_memory_byte(hl, value)
+        .with_mem8(hl, value)
         .build();
     assert_eq!(sut, expected);
 }
@@ -472,8 +619,8 @@ fn test_load_hl_pointer_from_8_bit_reg(
 fn test_load_register_from_immediate(#[case] opcode: u8, #[case] reg: &str, #[case] d8: u8) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, opcode)
-        .with_memory_byte(0x0001, d8);
+        .with_mem8(0x0000, opcode)
+        .with_mem8(0x0001, d8);
 
     let mut sut = builder.clone().build();
 
@@ -495,8 +642,8 @@ fn test_load_register_from_immediate(#[case] opcode: u8, #[case] reg: &str, #[ca
 fn test_instr_0x36_ld_hl_d8(#[case] d8: u8, #[case] hl: u16) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, 0x36)
-        .with_memory_byte(0x0001, d8)
+        .with_mem8(0x0000, 0x36)
+        .with_mem8(0x0001, d8)
         .with_hl(hl);
 
     let mut sut = builder.clone().build();
@@ -508,8 +655,145 @@ fn test_instr_0x36_ld_hl_d8(#[case] d8: u8, #[case] hl: u16) {
     let expected = builder
         .with_pc(2)
         .with_clock_cycles(12)
-        .with_memory_byte(hl, d8)
+        .with_mem8(hl, d8)
         .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
+fn test_instr_0xf8_ld_hl_sp_plus_r8() {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, 0xf8)
+        .with_mem8(0x0001, 0x80)
+        .with_sp(0x80)
+        .with_mem16(0x0100, 0xABCD);
+
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(2)
+        .with_clock_cycles(12)
+        .with_hl(0xABCD)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[test]
+fn test_instr_0xe0_ld_immediate8_pointer_from_register_a() {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, 0xe0)
+        .with_mem8(0x0001, 0xFF)
+        .with_a(0x01);
+
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(2)
+        .with_clock_cycles(12)
+        .with_mem8(0xFFFF, 0x01)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[test]
+fn test_instr_0xe2_ld_pointer_c_from_register_a() {
+    // Given
+    let address = 0xFF;
+
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, 0xe2)
+        .with_c(address)
+        .with_a(0x01);
+
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    dbg!(sut.mem8(0xFF00 + (address as u16)));
+
+    // Then
+    let expected = builder
+        .with_pc(1)
+        .with_clock_cycles(8)
+        .with_mem8(0xFF00 + (address as u16), 0x01)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[test]
+fn test_instr_0xea_ld_immediate16_pointer_from_register_a() {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, 0xea)
+        .with_mem16(0x0001, 0xFFFF)
+        .with_a(0x01);
+
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(3)
+        .with_clock_cycles(16)
+        .with_mem8(0xFFFF, 0x01)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[test]
+fn test_instr_0xf0_ld_register_a_from_immediate_pointer() {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, 0xf0)
+        .with_mem8(0x0001, 0xFF)
+        .with_mem8(0xFFFF, 0x01);
+
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(2)
+        .with_clock_cycles(12)
+        .with_a(0x01)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[test]
+fn test_instr_0xf2_ld_from_register_a_from_c_pointer() {
+    // Given
+    let address = 0xFF;
+
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, 0xf2)
+        .with_mem8(0xFFFF, 0x01)
+        .with_c(address);
+
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    dbg!(sut.mem8(0xFF00 + (address as u16)));
+
+    // Then
+    let expected = builder.with_pc(1).with_clock_cycles(8).with_a(0x01).build();
     assert_eq!(sut, expected);
 }
 
@@ -535,8 +819,8 @@ fn test_add8(
 ) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, opcode)
-        .with_memory_byte(0x0001, y)
+        .with_mem8(0x0000, opcode)
+        .with_mem8(0x0001, y)
         .with_a(a)
         .with_reg8(src_reg, y);
     let mut sut = builder.clone().build();
