@@ -14,7 +14,7 @@ pub struct LR35902 {
     hl: u16,
     sp: u16,
     pc: u16,
-    pub mem: [u8; 65536],
+    mem: [u8; 65536],
     next_cb: bool,
     clock_cycles: u64,
 }
