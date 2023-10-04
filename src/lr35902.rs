@@ -246,15 +246,19 @@ impl LR35902 {
         // TODO: measure time and panic if cycle time exceeded
     }
 
-    fn add_half_carry(&self, x: u8, y: u8) -> bool {
+    fn half_carry8(&self, x: u8, y: u8) -> bool {
         ((x & 0x0f) + (y & 0x0f)) > 0x0f
+    }
+
+    fn half_carry16(&self, x: u16, y: u16) -> bool {
+        self.half_carry8((x >> 8) as u8, (y >> 8) as u8)
     }
 
     fn add8(&mut self, x: u8, y: u8) -> u8 {
         let (result, overflow) = x.overflowing_add(y);
         self.set_z_flag(result == 0);
         self.set_n_flag(false);
-        self.set_h_flag(self.add_half_carry(x, y));
+        self.set_h_flag(self.half_carry8(x, y));
         self.set_c_flag(overflow);
         result
     }
@@ -263,7 +267,7 @@ impl LR35902 {
         let (result, overflow) = x.overflowing_add(y);
         self.set_z_flag(result == 0);
         self.set_n_flag(false);
-        self.set_h_flag(self.add_half_carry((x >> 8) as u8, (y >> 8) as u8));
+        self.set_h_flag(self.half_carry16(x, y));
         self.set_c_flag(overflow);
         result
     }
