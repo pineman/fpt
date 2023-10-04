@@ -37,7 +37,7 @@ impl Default for LR35902 {
 
 impl fmt::Debug for LR35902 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "LR35902 {{ af: {:#06X}, bc: {:#06X}, de: {:#06X}, hl: {:#06X}, sp: {:#06X}, pc: {:#06X}, clock_cycles: {} }} ", self.af, self.bc, self.de, self.hl, self.sp, self.pc, self.clock_cycles)
+        write!(f, "LR35902 {{ a: {:#04X}, f: {:#010b}, bc: {:#06X}, de: {:#06X}, hl: {:#06X}, sp: {:#06X}, pc: {:#06X}, clock_cycles: {} }} ", self.a(), self.f(), self.bc, self.de, self.hl, self.sp, self.pc, self.clock_cycles)
     }
 }
 
@@ -48,20 +48,20 @@ impl LR35902 {
         m
     }
 
-    pub fn f(&self) -> u8 {
-        bw::get_byte16::<0>(self.af)
-    }
-
-    pub fn set_f(&mut self, value: u8) {
-        self.af = bw::set_byte16::<0>(self.af, value);
-    }
-
     pub fn a(&self) -> u8 {
         bw::get_byte16::<1>(self.af)
     }
 
     pub fn set_a(&mut self, value: u8) {
         self.af = bw::set_byte16::<1>(self.af, value);
+    }
+
+    pub fn f(&self) -> u8 {
+        bw::get_byte16::<0>(self.af)
+    }
+
+    pub fn set_f(&mut self, value: u8) {
+        self.af = bw::set_byte16::<0>(self.af, value);
     }
 
     pub fn af(&self) -> u16 {
@@ -263,7 +263,7 @@ impl LR35902 {
     }
 
     fn half_carry16(&self, x: u16, y: u16) -> bool {
-        self.half_carry8((x >> 8) as u8, (y >> 8) as u8)
+        ((x & 0x0fff) + (y & 0x0fff)) > 0x0fff
     }
 
     fn add8(&mut self, x: u8, y: u8) -> u8 {
@@ -277,7 +277,6 @@ impl LR35902 {
 
     fn add16(&mut self, x: u16, y: u16) -> u16 {
         let (result, overflow) = x.overflowing_add(y);
-        self.set_z_flag(result == 0);
         self.set_n_flag(false);
         self.set_h_flag(self.half_carry16(x, y));
         self.set_c_flag(overflow);
@@ -295,67 +294,67 @@ impl LR35902 {
 
     fn execute(&mut self, instruction: Instruction) {
         match instruction.opcode {
-            0x0 => {
+            0x00 => {
                 // NOP
             }
-            0x1 => {
+            0x01 => {
                 // LD BC,d16
                 self.bc = self.get_d16(0);
             }
-            0x2 => {
+            0x02 => {
                 // LD (BC),A
                 self.set_mem8(self.bc(), self.a());
             }
-            0x3 => {
+            0x03 => {
                 // INC BC
                 unimplemented!()
             }
-            0x4 => {
+            0x04 => {
                 // INC B
                 unimplemented!()
             }
-            0x5 => {
+            0x05 => {
                 // DEC B
                 unimplemented!()
             }
-            0x6 => {
+            0x06 => {
                 // LD B,d8
                 self.set_b(self.get_d8(0));
             }
-            0x7 => {
+            0x07 => {
                 // RLCA
                 unimplemented!()
             }
-            0x8 => {
+            0x08 => {
                 // LD (a16),SP
                 self.set_mem16(dbg!(self.get_d16(0)), self.sp());
             }
-            0x9 => {
+            0x09 => {
                 // ADD HL,BC
                 let result = self.add16(self.hl(), self.bc());
                 self.set_hl(result);
             }
-            0xA => {
+            0x0A => {
                 // LD A,(BC)
                 self.set_a(self.mem8(self.bc()));
             }
-            0xB => {
+            0x0B => {
                 // DEC BC
                 unimplemented!()
             }
-            0xC => {
+            0x0C => {
                 // INC C
                 unimplemented!()
             }
-            0xD => {
+            0x0D => {
                 // DEC C
                 unimplemented!()
             }
-            0xE => {
+            0x0E => {
                 // LD C,d8
                 self.set_c(self.get_d8(0));
             }
-            0xF => {
+            0x0F => {
                 // RRCA
                 unimplemented!()
             }
