@@ -37,7 +37,7 @@ impl Default for LR35902 {
 
 impl fmt::Debug for LR35902 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "LR35902 {{ a: {:#04X}, f: {:#010b}, bc: {:#06X}, de: {:#06X}, hl: {:#06X}, sp: {:#06X}, pc: {:#06X}, clock_cycles: {} }} ", self.a(), self.f(), self.bc, self.de, self.hl, self.sp, self.pc, self.clock_cycles)
+        write!(f, "LR35902 {{ a: {:#04X}, f: {:#06b}, bc: {:#06X}, de: {:#06X}, hl: {:#06X}, sp: {:#06X}, pc: {:#06X}, clock_cycles: {} }} ", self.a(), self.f()>>4, self.bc, self.de, self.hl, self.sp, self.pc, self.clock_cycles)
     }
 }
 
@@ -277,6 +277,7 @@ impl LR35902 {
 
     fn add16(&mut self, x: u16, y: u16) -> u16 {
         let (result, overflow) = x.overflowing_add(y);
+        // z flag is ignored
         self.set_n_flag(false);
         self.set_h_flag(self.half_carry16(x, y));
         self.set_c_flag(overflow);
@@ -396,7 +397,8 @@ impl LR35902 {
             }
             0x19 => {
                 // ADD HL,DE
-                unimplemented!()
+                let result = self.add16(self.hl(), self.de());
+                self.set_hl(result);
             }
             0x1A => {
                 // LD A,(DE)
@@ -461,7 +463,8 @@ impl LR35902 {
             }
             0x29 => {
                 // ADD HL,HL
-                unimplemented!()
+                let result = self.add16(self.hl(), self.hl());
+                self.set_hl(result);
             }
             0x2A => {
                 // LD A,(HL+)
@@ -527,7 +530,8 @@ impl LR35902 {
             }
             0x39 => {
                 // ADD HL,SP
-                unimplemented!()
+                let result = self.add16(self.hl(), self.sp());
+                self.set_hl(result);
             }
             0x3A => {
                 // LD A,(HL-)

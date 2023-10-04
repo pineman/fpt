@@ -32,7 +32,7 @@ impl LR35902Builder {
             "bc" => self.with_bc(value),
             "de" => self.with_de(value),
             "hl" => self.with_hl(value),
-            "sp" => self.with_hl(value),
+            "sp" => self.with_sp(value),
             _ => panic!(),
         }
     }
@@ -46,11 +46,6 @@ impl LR35902Builder {
         self.lr35902.set_f(f);
         self
     }
-
-    // pub fn with_af(mut self, af: u16) -> Self {
-    //     self.lr35902.set_af(af);
-    //     self
-    // }
 
     pub fn with_b(mut self, b: u8) -> Self {
         self.lr35902.set_b(b);
@@ -111,14 +106,6 @@ impl LR35902Builder {
         self.lr35902.set_clock_cycles(clock_cycles);
         self
     }
-
-    //pub fn with_memory(mut self, memory: Vec<u8>) -> LR35902Builder {
-    //    for (i, value) in memory.iter().enumerate() {
-    //        self.lr35902.set_memory8(i as u16, *value);
-    //    }
-
-    //    self
-    //}
 
     pub fn with_mem8(mut self, index: u16, value: u8) -> LR35902Builder {
         self.lr35902.set_mem8(index, value);
@@ -609,6 +596,7 @@ fn test_load_hl_pointer_from_8_bit_reg(
     assert_eq!(sut, expected);
 }
 
+#[rstest]
 #[case(0x06, "b", 0x01)] // 1
 #[case(0x16, "d", 0x01)] // 2
 #[case(0x26, "h", 0x01)] // 3
@@ -821,7 +809,7 @@ fn test_alu_reg_addr(
         .with_mem8(0x0000, opcode)
         .with_a(a)
         .with_reg16("hl", hl_addr)
-        .with_memory_byte(hl_addr, value);
+        .with_mem8(hl_addr, value);
     let mut sut = builder.clone().build();
 
     // When
@@ -868,7 +856,7 @@ fn test_alu8_reg_reg(
 ) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, opcode)
+        .with_mem8(0x0000, opcode)
         .with_a(a)
         .with_reg8(src_reg, value);
     let mut sut = builder.clone().build();
@@ -888,8 +876,14 @@ fn test_alu8_reg_reg(
 
 #[rstest]
 // ADD HL,r16
-#[case(0x09, 0xffff, "bc", 0x0001, 0x0, 0b0000, 0b1011)]
 #[case(0x09, 0xffff, "bc", 0x0001, 0x0, 0b0000, 0b0011)]
+#[case(0x09, 0xffff, "bc", 0x0001, 0x0, 0b1000, 0b1011)]
+#[case(0x19, 0xffff, "de", 0x0001, 0x0, 0b0000, 0b0011)]
+#[case(0x19, 0xffff, "de", 0x0001, 0x0, 0b1000, 0b1011)]
+#[case(0x29, 0x8000, "hl", 0x8000, 0x0, 0b0000, 0b0001)]
+#[case(0x29, 0x8000, "hl", 0x8000, 0x0, 0b1000, 0b1001)]
+#[case(0x39, 0xffff, "sp", 0x0001, 0x0, 0b0000, 0b0011)]
+#[case(0x39, 0xffff, "sp", 0x0001, 0x0, 0b1000, 0b1011)]
 fn test_alu16_reg_reg(
     #[case] opcode: u8,
     #[case] hl: u16,
@@ -901,7 +895,7 @@ fn test_alu16_reg_reg(
 ) {
     // Given
     let builder = LR35902Builder::new()
-        .with_memory_byte(0x0000, opcode)
+        .with_mem8(0x0000, opcode)
         .with_f(flags_before << 4)
         .with_hl(hl)
         .with_reg16(src_reg, value);
