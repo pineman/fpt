@@ -217,6 +217,14 @@ impl LR35902 {
         self.set_mem8(index, bw::get_byte16::<0>(value));
     }
 
+    pub fn next_cb(&self) -> bool {
+        self.next_cb
+    }
+
+    pub fn set_next_cb(&mut self, value: bool) {
+        self.next_cb = value;
+    }
+
     /// get 8 bit immediate at position pc + 1 + pos
     fn get_d8(&self, pos: u8) -> u8 {
         self.mem8(self.pc + pos as u16 + 1)
@@ -234,19 +242,19 @@ impl LR35902 {
 
     /// Run one cycle
     pub fn step(&mut self) {
-        let mut opcode = self.mem[self.pc as usize] as u16;
-        if self.next_cb {
+        let mut opcode = self.mem8(self.pc()) as u16;
+        if self.next_cb() {
             opcode += 0x100;
-            self.next_cb = false;
+            self.set_next_cb(false);
         }
         let instruction = INSTRUCTIONS[opcode as usize];
         println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
         self.execute(instruction);
         if instruction.kind != InstructionKind::Jump {
-            self.pc += instruction.size as u16;
+            self.set_pc(self.pc() + instruction.size as u16);
         }
         thread::sleep(Duration::from_micros((instruction.cycles / 4) as u64));
-        self.clock_cycles += instruction.cycles as u64;
+        self.set_clock_cycles(self.clock_cycles() + instruction.cycles as u64);
         // TODO: measure time and panic if cycle time exceeded
     }
 
@@ -826,7 +834,7 @@ impl LR35902 {
             }
             0x86 => {
                 // ADD A,(HL)
-                let result = self.add8(self.a(), self.mem[self.hl() as usize]);
+                let result = self.add8(self.a(), self.mem8[self.hl()]);
                 self.set_a(result);
             }
             0x87 => {
