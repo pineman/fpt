@@ -258,7 +258,7 @@ impl LR35902 {
             if self.branch_taken {
                 self.branch_taken = false;
             } else {
-                cycles = instruction.cycles_not_taken;
+                cycles = dbg!(instruction.cycles_not_taken);
                 self.pc += instruction.size as u16;
             }
         } else {
@@ -303,6 +303,11 @@ impl LR35902 {
         self.set_h_flag(false);
         self.set_c_flag(false);
         result
+    }
+
+    fn jump(&mut self, address: u16) {
+        self.set_pc(address);
+        self.branch_taken = true;
     }
 
     fn execute(&mut self, instruction: Instruction) {
@@ -405,7 +410,7 @@ impl LR35902 {
             }
             0x18 => {
                 // JR r8
-                self.set_pc(self.pc() + self.get_d8(0) as u16);
+                self.jump(self.pc() + self.get_d8(0) as u16);
             }
             0x19 => {
                 // ADD HL,DE
@@ -439,8 +444,7 @@ impl LR35902 {
             0x20 => {
                 // JR NZ,r8
                 if !self.z_flag() {
-                    self.set_pc(self.pc() + self.get_d8(0) as u16);
-                    self.branch_taken = true;
+                    self.jump(self.pc() + self.get_d8(0) as u16)
                 }
             }
             0x21 => {
@@ -475,8 +479,7 @@ impl LR35902 {
             0x28 => {
                 // JR Z,r8
                 if self.z_flag() {
-                    self.set_pc(self.pc() + self.get_d8(0) as u16);
-                    self.branch_taken = true;
+                    self.jump(self.pc() + self.get_d8(0) as u16);
                 }
             }
             0x29 => {
@@ -512,8 +515,7 @@ impl LR35902 {
             0x30 => {
                 // JR NC,r8
                 if !self.c_flag() {
-                    self.set_pc(self.pc() + self.get_d8(0) as u16);
-                    self.branch_taken = true;
+                    self.jump(self.pc() + self.get_d8(0) as u16);
                 }
             }
             0x31 => {
@@ -548,8 +550,7 @@ impl LR35902 {
             0x38 => {
                 // JR C,r8
                 if self.c_flag() {
-                    self.set_pc(self.pc() + self.get_d8(0) as u16);
-                    self.branch_taken = true;
+                    self.jump(self.pc() + self.get_d8(0) as u16);
                 }
             }
             0x39 => {
@@ -1124,13 +1125,12 @@ impl LR35902 {
             0xC2 => {
                 // JP NZ,a16
                 if !self.z_flag() {
-                    self.set_pc(self.get_d16(0));
-                    self.branch_taken = true;
+                    self.jump(self.get_d16(0))
                 }
             }
             0xC3 => {
                 // JP a16
-                self.set_pc(self.get_d16(0));
+                self.jump(self.get_d16(0));
             }
             0xC4 => {
                 // CALL NZ,a16
@@ -1151,12 +1151,7 @@ impl LR35902 {
             }
             0xC8 => {
                 // RET Z
-                if self.z_flag() {
-                    self.set_pc(self.get_d16(0));
-                    self.branch_taken = true;
-                } else {
-                    self.set_pc(self.pc() + instruction.size as u16);
-                }
+                unimplemented!()
             }
             0xC9 => {
                 // RET
@@ -1235,8 +1230,7 @@ impl LR35902 {
             0xDA => {
                 // JP C,a16
                 if self.c_flag() {
-                    self.set_pc(self.get_d16(0));
-                    self.branch_taken = true;
+                    self.jump(self.get_d16(0));
                 }
             }
             0xDB => {

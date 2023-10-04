@@ -217,7 +217,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
         mnemonic: "JR r8",
         size: 2,
         cycles: 12,
-        cycles_not_taken: 0,
+        cycles_not_taken: 12,
         kind: InstructionKind::Jump,
     },
     Instruction {
@@ -1585,7 +1585,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
         mnemonic: "JP a16",
         size: 3,
         cycles: 16,
-        cycles_not_taken: 0,
+        cycles_not_taken: 16,
         kind: InstructionKind::Jump,
     },
     Instruction {
