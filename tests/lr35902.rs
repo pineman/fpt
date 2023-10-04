@@ -801,17 +801,17 @@ fn test_instr_0xf2_ld_from_register_a_from_c_pointer() {
 // ADD A,A
 // ADD A,(HL)
 #[rstest]
-#[case(0x80, 0xfe, "b", 0x01, 0xff, 0b0000)] // no flags
-#[case(0x80, 0x0f, "b", 0x01, 0x10, 0b0010)] // half carry
-#[case(0x80, 0xff, "b", 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x81, 0xff, "c", 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x82, 0xff, "d", 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x83, 0xff, "e", 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x84, 0xff, "h", 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x85, 0xff, "l", 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x87, 0x80, "a", 0x80, 0x00, 0b1001)] // zero, half carry and carry
-#[case(0x87, 0x88, "a", 0x88, 0x10, 0b0011)] // zero, half carry and carry
-#[case(0x86, 0xff, "l", 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x80, 0xfe, "b", 0x01, 0xff, 0b0000, 4)] // no flags
+#[case(0x80, 0x0f, "b", 0x01, 0x10, 0b0010, 4)] // half carry
+#[case(0x80, 0xff, "b", 0x01, 0x00, 0b1011, 4)] // zero, half carry and carry
+#[case(0x81, 0xff, "c", 0x01, 0x00, 0b1011, 4)] // zero, half carry and carry
+#[case(0x82, 0xff, "d", 0x01, 0x00, 0b1011, 4)] // zero, half carry and carry
+#[case(0x83, 0xff, "e", 0x01, 0x00, 0b1011, 4)] // zero, half carry and carry
+#[case(0x84, 0xff, "h", 0x01, 0x00, 0b1011, 4)] // zero, half carry and carry
+#[case(0x85, 0xff, "l", 0x01, 0x00, 0b1011, 4)] // zero, half carry and carry
+#[case(0x87, 0x80, "a", 0x80, 0x00, 0b1001, 4)] // zero, half carry and carry
+#[case(0x87, 0x88, "a", 0x88, 0x10, 0b0011, 4)] // zero, half carry and carry
+#[case(0x86, 0xff, "l", 0x01, 0x00, 0b1011, 8)] // zero, half carry and carry
 fn test_add8(
     #[case] opcode: u8,
     #[case] a: u8,
@@ -819,6 +819,7 @@ fn test_add8(
     #[case] y: u8,
     #[case] result: u8,
     #[case] flags: u8,
+    #[case] clock_cycles: u64,
 ) {
     // Given
     let builder = LR35902Builder::new()
@@ -836,22 +837,22 @@ fn test_add8(
         .with_pc(1)
         .with_a(result)
         .with_f(flags << 4)
-        .with_clock_cycles(if opcode == 0x86 { 8 } else { 4 })
+        .with_clock_cycles(clock_cycles)
         .build();
     assert_eq!(sut, expected);
 }
 
 #[rstest]
-#[case(0xA8, 0xca, "b", 0xfe, 0x34, 0b0000)]
-#[case(0xA8, 0xca, "b", 0xca, 0x00, 0b1000)]
-#[case(0xA9, 0xca, "c", 0xfe, 0x34, 0b0000)]
-#[case(0xAA, 0xca, "d", 0xfe, 0x34, 0b0000)]
-#[case(0xAB, 0xca, "e", 0xfe, 0x34, 0b0000)]
-#[case(0xAC, 0xca, "h", 0xfe, 0x34, 0b0000)]
-#[case(0xAD, 0xca, "l", 0xfe, 0x34, 0b0000)]
-#[case(0xAF, 0xca, "a", 0xca, 0x00, 0b1000)]
-#[case(0xAE, 0x01, "l", 0x01, 0x00, 0b1000)]
-#[case(0xAE, 0x00, "l", 0x01, 0x01, 0b0000)]
+#[case(0xA8, 0xca, "b", 0xfe, 0x34, 0b0000, 4)]
+#[case(0xA8, 0xca, "b", 0xca, 0x00, 0b1000, 4)]
+#[case(0xA9, 0xca, "c", 0xfe, 0x34, 0b0000, 4)]
+#[case(0xAA, 0xca, "d", 0xfe, 0x34, 0b0000, 4)]
+#[case(0xAB, 0xca, "e", 0xfe, 0x34, 0b0000, 4)]
+#[case(0xAC, 0xca, "h", 0xfe, 0x34, 0b0000, 4)]
+#[case(0xAD, 0xca, "l", 0xfe, 0x34, 0b0000, 4)]
+#[case(0xAF, 0xca, "a", 0xca, 0x00, 0b1000, 4)]
+#[case(0xAE, 0x01, "l", 0x01, 0x00, 0b1000, 8)]
+#[case(0xAE, 0x00, "l", 0x01, 0x01, 0b0000, 8)]
 fn test_xor8(
     #[case] opcode: u8,
     #[case] a: u8,
@@ -859,6 +860,7 @@ fn test_xor8(
     #[case] y: u8,
     #[case] result: u8,
     #[case] flags: u8,
+    #[case] clock_cycles: u64,
 ) {
     // Given
     let builder = LR35902Builder::new()
@@ -876,7 +878,7 @@ fn test_xor8(
         .with_pc(1)
         .with_a(result)
         .with_f(flags << 4)
-        .with_clock_cycles(if opcode == 0xAE { 8 } else { 4 })
+        .with_clock_cycles(clock_cycles)
         .build();
     assert_eq!(sut, expected);
 }
