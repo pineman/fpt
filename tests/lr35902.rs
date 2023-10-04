@@ -824,7 +824,7 @@ fn test_add8(
     // Given
     let builder = LR35902Builder::new()
         .with_mem8(0x0000, opcode)
-        .with_mem8(0x0001, y)
+        .with_mem8(0x0001, y) // Fixed addr 0x1 just for (HL) instruction
         .with_a(a)
         .with_reg8(src_reg, y);
     let mut sut = builder.clone().build();
@@ -865,7 +865,7 @@ fn test_xor8(
     // Given
     let builder = LR35902Builder::new()
         .with_memory_byte(0x0000, opcode)
-        .with_memory_byte(0x0001, y)
+        .with_memory_byte(0x0001, y) // Fixed addr 0x1 just for (HL) instruction
         .with_a(a)
         .with_reg8(src_reg, y);
     let mut sut = builder.clone().build();
