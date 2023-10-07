@@ -288,6 +288,15 @@ impl LR35902 {
         false
     }
 
+    fn inc8(&mut self, x: u8) -> u8 {
+        let (result, _overflow) = x.overflowing_add(1);
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(self.half_carry8(x, 1));
+        // INC r8 instructions don't set the C (carry) flag
+        result
+    }
+
     fn add8(&mut self, x: u8, y: u8) -> u8 {
         let (result, overflow) = x.overflowing_add(y);
         self.set_z_flag(result == 0);
@@ -349,7 +358,8 @@ impl LR35902 {
             }
             0x04 => {
                 // INC B
-                unimplemented!()
+                let result = self.inc8(self.b());
+                self.set_b(result);
             }
             0x05 => {
                 // DEC B
@@ -382,7 +392,8 @@ impl LR35902 {
             }
             0x0C => {
                 // INC C
-                unimplemented!()
+                let result = self.inc8(self.c());
+                self.set_c(result);
             }
             0x0D => {
                 // DEC C
@@ -414,7 +425,8 @@ impl LR35902 {
             }
             0x14 => {
                 // INC D
-                unimplemented!()
+                let result: u8 = self.inc8(self.d());
+                self.set_d(result);
             }
             0x15 => {
                 // DEC D
@@ -447,7 +459,8 @@ impl LR35902 {
             }
             0x1C => {
                 // INC E
-                unimplemented!()
+                let result = self.inc8(self.e());
+                self.set_e(result);
             }
             0x1D => {
                 // DEC E
@@ -482,7 +495,8 @@ impl LR35902 {
             }
             0x24 => {
                 // INC H
-                unimplemented!()
+                let result = self.inc8(self.h());
+                self.set_h(result);
             }
             0x25 => {
                 // DEC H
@@ -518,7 +532,8 @@ impl LR35902 {
             }
             0x2C => {
                 // INC L
-                unimplemented!()
+                let result = self.inc8(self.l());
+                self.set_l(result);
             }
             0x2D => {
                 // DEC L
@@ -589,7 +604,8 @@ impl LR35902 {
             }
             0x3C => {
                 // INC A
-                unimplemented!()
+                let result = self.inc8(self.a());
+                self.set_a(result);
             }
             0x3D => {
                 // DEC A
