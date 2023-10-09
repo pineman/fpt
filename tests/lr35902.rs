@@ -950,6 +950,42 @@ fn test_alu16_reg_reg(
 }
 
 #[rstest]
+// INC r8
+#[case(0x04, "b", 0x10, 0x11, 0b000, 0b0000)]
+#[case(0x0C, "c", 0x10, 0x11, 0b000, 0b0000)]
+#[case(0x14, "d", 0x10, 0x11, 0b000, 0b0000)]
+#[case(0x1C, "e", 0x10, 0x11, 0b000, 0b0000)]
+#[case(0x24, "h", 0x10, 0x11, 0b000, 0b0000)]
+#[case(0x2C, "l", 0x10, 0x11, 0b000, 0b0000)]
+#[case(0x3C, "a", 0x10, 0x11, 0b000, 0b0000)]
+fn test_instr_inc_r8(
+    #[case] opcode: u8,
+    #[case] reg: &str,
+    #[case] value: u8,
+    #[case] result: u8,
+    #[case] flags_before: u8,
+    #[case] flags_after: u8,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, opcode)
+        .with_reg8(reg, value)
+        .with_f(flags_before << 4);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    let expected = builder
+        .with_pc(1)
+        .with_reg8(reg, result)
+        .with_f(flags_after << 4)
+        .with_clock_cycles(4)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
 #[case(0xC2, 0xFF00, "z", true, 3, 12)]
 #[case(0xC2, 0xFF00, "z", false, 0xFF00, 16)]
 #[case(0xD2, 0xFF00, "c", true, 3, 12)]
