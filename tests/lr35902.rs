@@ -32,6 +32,7 @@ impl LR35902Builder {
             "bc" => self.with_bc(value),
             "de" => self.with_de(value),
             "hl" => self.with_hl(value),
+            "af" => self.with_af(value),
             "sp" => self.with_sp(value),
             _ => panic!(),
         }
@@ -54,6 +55,11 @@ impl LR35902Builder {
 
     pub fn with_f(mut self, f: u8) -> Self {
         self.lr35902.set_f(f);
+        self
+    }
+
+    pub fn with_af(mut self, af: u16) -> Self {
+        self.lr35902.set_af(af);
         self
     }
 
@@ -990,3 +996,65 @@ fn test_jump(
     let expected = builder.with_pc(pc).with_clock_cycles(clocks).build();
     assert_eq!(sut, expected);
 }
+
+#[rstest]
+#[case(0xC5, "bc", 0xFFFF, 0xFF00)]
+#[case(0xC5, "bc", 0x0001, 0xFF00)]
+#[case(0xD5, "de", 0xFFFF, 0xFF00)]
+#[case(0xD5, "de", 0x0001, 0xFF00)]
+#[case(0xE5, "hl", 0xFFFF, 0xFF00)]
+#[case(0xE5, "hl", 0x0001, 0xFF00)]
+#[case(0xF5, "af", 0xFFFF, 0xFF00)]
+#[case(0xF5, "af", 0x0001, 0xFF00)]
+fn test_push(#[case] opcode: u8, #[case] register: &str, #[case] value: u16, #[case] sp: u16) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, opcode)
+        .with_sp(sp)
+        .with_reg16(register, value);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(0x0001)
+        .with_clock_cycles(16)
+        .with_mem16(sp-2, value)
+        .with_sp(sp-2)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+
+#[rstest]
+#[case(0xC1, "bc", 0xFFFF, 0xFF00)]
+#[case(0xC1, "bc", 0x0001, 0xFF00)]
+#[case(0xD1, "de", 0xFFFF, 0xFF00)]
+#[case(0xD1, "de", 0x0001, 0xFF00)]
+#[case(0xE1, "hl", 0xFFFF, 0xFF00)]
+#[case(0xE1, "hl", 0x0001, 0xFF00)]
+#[case(0xF1, "af", 0xFFFF, 0xFF00)]
+#[case(0xF1, "af", 0x0001, 0xFF00)]
+fn test_pop(#[case] opcode: u8, #[case] register: &str, #[case] value: u16, #[case] sp: u16) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, opcode)
+        .with_sp(sp)
+        .with_mem16(sp, value);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(0x0001)
+        .with_clock_cycles(12)
+        .with_sp(sp+2)
+        .with_reg16(register, value)
+        .build();
+    assert_eq!(sut, expected);
+}
+
