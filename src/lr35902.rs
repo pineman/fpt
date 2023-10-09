@@ -283,9 +283,8 @@ impl LR35902 {
         ((x & 0x0fff) + (y & 0x0fff)) > 0x0fff
     }
 
-    fn half_carry16i(&self, x: u16, y: i8) -> bool {
-        // TODO
-        false
+    fn _half_carry16i(&self, _x: u16, _y: i8) -> bool {
+        todo!();
     }
 
     fn inc8(&mut self, x: u8) -> u8 {
@@ -340,7 +339,7 @@ impl LR35902 {
     }
 
     fn push(&mut self, value: u16) {
-        self.set_sp(self.sp()-2);
+        self.set_sp(self.sp() - 2);
         self.set_mem16(self.sp(), value);
     }
 
