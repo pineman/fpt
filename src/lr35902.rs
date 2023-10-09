@@ -296,6 +296,12 @@ impl LR35902 {
         result
     }
 
+    fn inc16(&mut self, x: u16) -> u16 {
+        let (result, _overflow) = x.overflowing_add(1);
+        // No flags affected
+        result
+    }
+
     fn add8(&mut self, x: u8, y: u8) -> u8 {
         let (result, overflow) = x.overflowing_add(y);
         self.set_z_flag(result == 0);
@@ -364,7 +370,8 @@ impl LR35902 {
             }
             0x03 => {
                 // INC BC
-                todo!()
+                let result = self.inc16(self.bc());
+                self.set_bc(result);
             }
             0x04 => {
                 // INC B
@@ -431,7 +438,8 @@ impl LR35902 {
             }
             0x13 => {
                 // INC DE
-                todo!()
+                let result = self.inc16(self.de());
+                self.set_de(result);
             }
             0x14 => {
                 // INC D
@@ -501,7 +509,8 @@ impl LR35902 {
             }
             0x23 => {
                 // INC HL
-                todo!()
+                let result = self.inc16(self.hl());
+                self.set_hl(result);
             }
             0x24 => {
                 // INC H
@@ -574,7 +583,8 @@ impl LR35902 {
             }
             0x33 => {
                 // INC SP
-                todo!()
+                let result = self.inc16(self.sp());
+                self.set_sp(result);
             }
             0x34 => {
                 // INC (HL)
