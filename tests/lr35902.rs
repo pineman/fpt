@@ -951,16 +951,19 @@ fn test_alu16_reg_reg(
 
 #[rstest]
 // INC r8
-#[case(0x04, "b", 0x10, 0x11, 0b000, 0b0000)]
-#[case(0x0C, "c", 0x10, 0x11, 0b000, 0b0000)]
-#[case(0x14, "d", 0x10, 0x11, 0b000, 0b0000)]
-#[case(0x1C, "e", 0x10, 0x11, 0b000, 0b0000)]
-#[case(0x24, "h", 0x10, 0x11, 0b000, 0b0000)]
-#[case(0x2C, "l", 0x10, 0x11, 0b000, 0b0000)]
-#[case(0x3C, "a", 0x10, 0x11, 0b000, 0b0000)]
-fn test_instr_inc_r8(
-    #[case] opcode: u8,
-    #[case] reg: &str,
+#[case::base_case(0x00, 0x01, 0b0000, 0b0000)]
+#[case::overwrite(0x41, 0x42, 0b1111, 0b0001)]
+#[case::half_carry(0x0F, 0x10, 0b0010, 0b0010)]
+#[case::zero_flag(0xFF, 0x00, 0b0000, 0b1010)] // and no carry, unlike ADD 1
+fn test_inc_8_bit_reg(
+    #[values((0x04, "b"),
+             (0x0C, "c"),
+             (0x14, "d"),
+             (0x1C, "e"),
+             (0x24, "h"),
+             (0x2C, "l"),
+             (0x3C, "a"))]
+    _opcode_reg @ (opcode, reg): (u8, &str),
     #[case] value: u8,
     #[case] result: u8,
     #[case] flags_before: u8,
