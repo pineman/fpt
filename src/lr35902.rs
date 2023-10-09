@@ -1156,7 +1156,8 @@ impl LR35902 {
             }
             0xC1 => {
                 // POP BC
-                todo!()
+                self.set_bc(self.mem16(self.sp()));
+                self.set_sp(self.sp() + 2)
             }
             0xC2 => {
                 // JP NZ,a16
@@ -1174,7 +1175,8 @@ impl LR35902 {
             }
             0xC5 => {
                 // PUSH BC
-                todo!()
+                self.set_sp(self.sp() - 2);
+                self.set_mem16(self.sp(), self.bc());
             }
             0xC6 => {
                 // ADD A,d8
@@ -1226,7 +1228,8 @@ impl LR35902 {
             }
             0xD1 => {
                 // POP DE
-                todo!()
+                self.set_de(self.mem16(self.sp()));
+                self.set_sp(self.sp() + 2)
             }
             0xD2 => {
                 // JP NC,a16
@@ -1245,7 +1248,8 @@ impl LR35902 {
             }
             0xD5 => {
                 // PUSH DE
-                todo!()
+                self.set_sp(self.sp() - 2);
+                self.set_mem16(self.sp(), self.de());
             }
             0xD6 => {
                 // SUB d8
@@ -1295,7 +1299,8 @@ impl LR35902 {
             }
             0xE1 => {
                 // POP HL
-                todo!()
+                self.set_hl(self.mem16(self.sp()));
+                self.set_sp(self.sp() + 2)
             }
             0xE2 => {
                 // LD (C),A
@@ -1311,7 +1316,8 @@ impl LR35902 {
             }
             0xE5 => {
                 // PUSH HL
-                todo!()
+                self.set_sp(self.sp() - 2);
+                self.set_mem16(self.sp(), self.hl());
             }
             0xE6 => {
                 // AND d8
@@ -1360,7 +1366,8 @@ impl LR35902 {
             }
             0xF1 => {
                 // POP AF
-                todo!()
+                self.set_af(self.mem16(self.sp()));
+                self.set_sp(self.sp() + 2)
             }
             0xF2 => {
                 // LD A,(C)
@@ -1376,7 +1383,8 @@ impl LR35902 {
             }
             0xF5 => {
                 // PUSH AF
-                todo!()
+                self.set_sp(self.sp() - 2);
+                self.set_mem16(self.sp(), self.af());
             }
             0xF6 => {
                 // OR d8
