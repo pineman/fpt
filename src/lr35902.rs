@@ -354,7 +354,7 @@ impl LR35902 {
             }
             0x03 => {
                 // INC BC
-                unimplemented!()
+                todo!()
             }
             0x04 => {
                 // INC B
@@ -363,7 +363,7 @@ impl LR35902 {
             }
             0x05 => {
                 // DEC B
-                unimplemented!()
+                todo!()
             }
             0x06 => {
                 // LD B,d8
@@ -371,7 +371,7 @@ impl LR35902 {
             }
             0x07 => {
                 // RLCA
-                unimplemented!()
+                todo!()
             }
             0x08 => {
                 // LD (a16),SP
@@ -388,7 +388,7 @@ impl LR35902 {
             }
             0x0B => {
                 // DEC BC
-                unimplemented!()
+                todo!()
             }
             0x0C => {
                 // INC C
@@ -397,7 +397,7 @@ impl LR35902 {
             }
             0x0D => {
                 // DEC C
-                unimplemented!()
+                todo!()
             }
             0x0E => {
                 // LD C,d8
@@ -405,11 +405,11 @@ impl LR35902 {
             }
             0x0F => {
                 // RRCA
-                unimplemented!()
+                todo!()
             }
             0x10 => {
                 // STOP 0
-                unimplemented!()
+                todo!()
             }
             0x11 => {
                 // LD DE,d16
@@ -421,7 +421,7 @@ impl LR35902 {
             }
             0x13 => {
                 // INC DE
-                unimplemented!()
+                todo!()
             }
             0x14 => {
                 // INC D
@@ -430,7 +430,7 @@ impl LR35902 {
             }
             0x15 => {
                 // DEC D
-                unimplemented!()
+                todo!()
             }
             0x16 => {
                 // LD D,d8
@@ -438,7 +438,7 @@ impl LR35902 {
             }
             0x17 => {
                 // RLA
-                unimplemented!()
+                todo!()
             }
             0x18 => {
                 // JR r8
@@ -455,7 +455,7 @@ impl LR35902 {
             }
             0x1B => {
                 // DEC DE
-                unimplemented!()
+                todo!()
             }
             0x1C => {
                 // INC E
@@ -464,7 +464,7 @@ impl LR35902 {
             }
             0x1D => {
                 // DEC E
-                unimplemented!()
+                todo!()
             }
             0x1E => {
                 // LD E,d8
@@ -472,7 +472,7 @@ impl LR35902 {
             }
             0x1F => {
                 // RRA
-                unimplemented!()
+                todo!()
             }
             0x20 => {
                 // JR NZ,r8
@@ -491,7 +491,7 @@ impl LR35902 {
             }
             0x23 => {
                 // INC HL
-                unimplemented!()
+                todo!()
             }
             0x24 => {
                 // INC H
@@ -500,7 +500,7 @@ impl LR35902 {
             }
             0x25 => {
                 // DEC H
-                unimplemented!()
+                todo!()
             }
             0x26 => {
                 // LD H,d8
@@ -508,7 +508,7 @@ impl LR35902 {
             }
             0x27 => {
                 // DAA
-                unimplemented!()
+                todo!()
             }
             0x28 => {
                 // JR Z,r8
@@ -528,7 +528,7 @@ impl LR35902 {
             }
             0x2B => {
                 // DEC HL
-                unimplemented!()
+                todo!()
             }
             0x2C => {
                 // INC L
@@ -537,7 +537,7 @@ impl LR35902 {
             }
             0x2D => {
                 // DEC L
-                unimplemented!()
+                todo!()
             }
             0x2E => {
                 // LD L,d8
@@ -545,7 +545,7 @@ impl LR35902 {
             }
             0x2F => {
                 // CPL
-                unimplemented!()
+                todo!()
             }
             0x30 => {
                 // JR NC,r8
@@ -564,15 +564,15 @@ impl LR35902 {
             }
             0x33 => {
                 // INC SP
-                unimplemented!()
+                todo!()
             }
             0x34 => {
                 // INC (HL)
-                unimplemented!()
+                todo!()
             }
             0x35 => {
                 // DEC (HL)
-                unimplemented!()
+                todo!()
             }
             0x36 => {
                 // LD (HL),d8
@@ -580,7 +580,7 @@ impl LR35902 {
             }
             0x37 => {
                 // SCF
-                unimplemented!()
+                todo!()
             }
             0x38 => {
                 // JR C,r8
@@ -600,7 +600,7 @@ impl LR35902 {
             }
             0x3B => {
                 // DEC SP
-                unimplemented!()
+                todo!()
             }
             0x3C => {
                 // INC A
@@ -609,7 +609,7 @@ impl LR35902 {
             }
             0x3D => {
                 // DEC A
-                unimplemented!()
+                todo!()
             }
             0x3E => {
                 // LD A,d8
@@ -617,7 +617,7 @@ impl LR35902 {
             }
             0x3F => {
                 // CCF
-                unimplemented!()
+                todo!()
             }
             0x40 => {
                 // LD B,B
@@ -837,7 +837,7 @@ impl LR35902 {
             }
             0x76 => {
                 // HALT
-                unimplemented!()
+                todo!()
             }
             0x77 => {
                 // LD (HL),A
@@ -917,131 +917,131 @@ impl LR35902 {
             }
             0x88 => {
                 // ADC A,B
-                unimplemented!()
+                todo!()
             }
             0x89 => {
                 // ADC A,C
-                unimplemented!()
+                todo!()
             }
             0x8A => {
                 // ADC A,D
-                unimplemented!()
+                todo!()
             }
             0x8B => {
                 // ADC A,E
-                unimplemented!()
+                todo!()
             }
             0x8C => {
                 // ADC A,H
-                unimplemented!()
+                todo!()
             }
             0x8D => {
                 // ADC A,L
-                unimplemented!()
+                todo!()
             }
             0x8E => {
                 // ADC A,(HL)
-                unimplemented!()
+                todo!()
             }
             0x8F => {
                 // ADC A,A
-                unimplemented!()
+                todo!()
             }
             0x90 => {
                 // SUB B
-                unimplemented!()
+                todo!()
             }
             0x91 => {
                 // SUB C
-                unimplemented!()
+                todo!()
             }
             0x92 => {
                 // SUB D
-                unimplemented!()
+                todo!()
             }
             0x93 => {
                 // SUB E
-                unimplemented!()
+                todo!()
             }
             0x94 => {
                 // SUB H
-                unimplemented!()
+                todo!()
             }
             0x95 => {
                 // SUB L
-                unimplemented!()
+                todo!()
             }
             0x96 => {
                 // SUB (HL)
-                unimplemented!()
+                todo!()
             }
             0x97 => {
                 // SUB A
-                unimplemented!()
+                todo!()
             }
             0x98 => {
                 // SBC A,B
-                unimplemented!()
+                todo!()
             }
             0x99 => {
                 // SBC A,C
-                unimplemented!()
+                todo!()
             }
             0x9A => {
                 // SBC A,D
-                unimplemented!()
+                todo!()
             }
             0x9B => {
                 // SBC A,E
-                unimplemented!()
+                todo!()
             }
             0x9C => {
                 // SBC A,H
-                unimplemented!()
+                todo!()
             }
             0x9D => {
                 // SBC A,L
-                unimplemented!()
+                todo!()
             }
             0x9E => {
                 // SBC A,(HL)
-                unimplemented!()
+                todo!()
             }
             0x9F => {
                 // SBC A,A
-                unimplemented!()
+                todo!()
             }
             0xA0 => {
                 // AND B
-                unimplemented!()
+                todo!()
             }
             0xA1 => {
                 // AND C
-                unimplemented!()
+                todo!()
             }
             0xA2 => {
                 // AND D
-                unimplemented!()
+                todo!()
             }
             0xA3 => {
                 // AND E
-                unimplemented!()
+                todo!()
             }
             0xA4 => {
                 // AND H
-                unimplemented!()
+                todo!()
             }
             0xA5 => {
                 // AND L
-                unimplemented!()
+                todo!()
             }
             0xA6 => {
                 // AND (HL)
-                unimplemented!()
+                todo!()
             }
             0xA7 => {
                 // AND A
-                unimplemented!()
+                todo!()
             }
             0xA8 => {
                 // XOR B
@@ -1088,75 +1088,75 @@ impl LR35902 {
             }
             0xB0 => {
                 // OR B
-                unimplemented!()
+                todo!()
             }
             0xB1 => {
                 // OR C
-                unimplemented!()
+                todo!()
             }
             0xB2 => {
                 // OR D
-                unimplemented!()
+                todo!()
             }
             0xB3 => {
                 // OR E
-                unimplemented!()
+                todo!()
             }
             0xB4 => {
                 // OR H
-                unimplemented!()
+                todo!()
             }
             0xB5 => {
                 // OR L
-                unimplemented!()
+                todo!()
             }
             0xB6 => {
                 // OR (HL)
-                unimplemented!()
+                todo!()
             }
             0xB7 => {
                 // OR A
-                unimplemented!()
+                todo!()
             }
             0xB8 => {
                 // CP B
-                unimplemented!()
+                todo!()
             }
             0xB9 => {
                 // CP C
-                unimplemented!()
+                todo!()
             }
             0xBA => {
                 // CP D
-                unimplemented!()
+                todo!()
             }
             0xBB => {
                 // CP E
-                unimplemented!()
+                todo!()
             }
             0xBC => {
                 // CP H
-                unimplemented!()
+                todo!()
             }
             0xBD => {
                 // CP L
-                unimplemented!()
+                todo!()
             }
             0xBE => {
                 // CP (HL)
-                unimplemented!()
+                todo!()
             }
             0xBF => {
                 // CP A
-                unimplemented!()
+                todo!()
             }
             0xC0 => {
                 // RET NZ
-                unimplemented!()
+                todo!()
             }
             0xC1 => {
                 // POP BC
-                unimplemented!()
+                todo!()
             }
             0xC2 => {
                 // JP NZ,a16
@@ -1170,11 +1170,11 @@ impl LR35902 {
             }
             0xC4 => {
                 // CALL NZ,a16
-                unimplemented!()
+                todo!()
             }
             0xC5 => {
                 // PUSH BC
-                unimplemented!()
+                todo!()
             }
             0xC6 => {
                 // ADD A,d8
@@ -1183,15 +1183,15 @@ impl LR35902 {
             }
             0xC7 => {
                 // RST 00H
-                unimplemented!()
+                todo!()
             }
             0xC8 => {
                 // RET Z
-                unimplemented!()
+                todo!()
             }
             0xC9 => {
                 // RET
-                unimplemented!()
+                todo!()
             }
             0xCA => {
                 // JP Z,a16
@@ -1206,27 +1206,27 @@ impl LR35902 {
             }
             0xCC => {
                 // CALL Z,a16
-                unimplemented!()
+                todo!()
             }
             0xCD => {
                 // CALL a16
-                unimplemented!()
+                todo!()
             }
             0xCE => {
                 // ADC A,d8
-                unimplemented!()
+                todo!()
             }
             0xCF => {
                 // RST 08H
-                unimplemented!()
+                todo!()
             }
             0xD0 => {
                 // RET NC
-                unimplemented!()
+                todo!()
             }
             0xD1 => {
                 // POP DE
-                unimplemented!()
+                todo!()
             }
             0xD2 => {
                 // JP NC,a16
@@ -1237,31 +1237,31 @@ impl LR35902 {
             }
             0xD3 => {
                 // Not implemented
-                unimplemented!()
+                todo!()
             }
             0xD4 => {
                 // CALL NC,a16
-                unimplemented!()
+                todo!()
             }
             0xD5 => {
                 // PUSH DE
-                unimplemented!()
+                todo!()
             }
             0xD6 => {
                 // SUB d8
-                unimplemented!()
+                todo!()
             }
             0xD7 => {
                 // RST 10H
-                unimplemented!()
+                todo!()
             }
             0xD8 => {
                 // RET C
-                unimplemented!()
+                todo!()
             }
             0xD9 => {
                 // RETI
-                unimplemented!()
+                todo!()
             }
             0xDA => {
                 // JP C,a16
@@ -1271,23 +1271,23 @@ impl LR35902 {
             }
             0xDB => {
                 // Not implemented
-                unimplemented!()
+                todo!()
             }
             0xDC => {
                 // CALL C,a16
-                unimplemented!()
+                todo!()
             }
             0xDD => {
                 // Not implemented
-                unimplemented!()
+                todo!()
             }
             0xDE => {
                 // SBC A,d8
-                unimplemented!()
+                todo!()
             }
             0xDF => {
                 // RST 18H
-                unimplemented!()
+                todo!()
             }
             0xE0 => {
                 // LDH (a8),A
@@ -1295,7 +1295,7 @@ impl LR35902 {
             }
             0xE1 => {
                 // POP HL
-                unimplemented!()
+                todo!()
             }
             0xE2 => {
                 // LD (C),A
@@ -1303,23 +1303,23 @@ impl LR35902 {
             }
             0xE3 => {
                 // Not implemented
-                unimplemented!()
+                todo!()
             }
             0xE4 => {
                 // Not implemented
-                unimplemented!()
+                todo!()
             }
             0xE5 => {
                 // PUSH HL
-                unimplemented!()
+                todo!()
             }
             0xE6 => {
                 // AND d8
-                unimplemented!()
+                todo!()
             }
             0xE7 => {
                 // RST 20H
-                unimplemented!()
+                todo!()
             }
             0xE8 => {
                 // ADD SP,r8
@@ -1328,7 +1328,7 @@ impl LR35902 {
             }
             0xE9 => {
                 // JP (HL)
-                unimplemented!()
+                todo!()
             }
             0xEA => {
                 // LD (a16),A
@@ -1336,23 +1336,23 @@ impl LR35902 {
             }
             0xEB => {
                 // Not implemented
-                unimplemented!()
+                todo!()
             }
             0xEC => {
                 // Not implemented
-                unimplemented!()
+                todo!()
             }
             0xED => {
                 // Not implemented
-                unimplemented!()
+                todo!()
             }
             0xEE => {
                 // XOR d8
-                unimplemented!()
+                todo!()
             }
             0xEF => {
                 // RST 28H
-                unimplemented!()
+                todo!()
             }
             0xF0 => {
                 // LDH A,(a8)
@@ -1360,7 +1360,7 @@ impl LR35902 {
             }
             0xF1 => {
                 // POP AF
-                unimplemented!()
+                todo!()
             }
             0xF2 => {
                 // LD A,(C)
@@ -1368,23 +1368,23 @@ impl LR35902 {
             }
             0xF3 => {
                 // DI
-                unimplemented!()
+                todo!()
             }
             0xF4 => {
                 // Not implemented
-                unimplemented!()
+                todo!()
             }
             0xF5 => {
                 // PUSH AF
-                unimplemented!()
+                todo!()
             }
             0xF6 => {
                 // OR d8
-                unimplemented!()
+                todo!()
             }
             0xF7 => {
                 // RST 30H
-                unimplemented!()
+                todo!()
             }
             0xF8 => {
                 // LD HL,SP+r8
@@ -1393,527 +1393,527 @@ impl LR35902 {
             }
             0xF9 => {
                 // LD SP,HL
-                unimplemented!()
+                todo!()
             }
             0xFA => {
                 // LD A,(a16)
-                unimplemented!()
+                todo!()
             }
             0xFB => {
                 // EI
-                unimplemented!()
+                todo!()
             }
             0xFC => {
                 // Not implemented
-                unimplemented!()
+                todo!()
             }
             0xFD => {
                 // Not implemented
-                unimplemented!()
+                todo!()
             }
             0xFE => {
                 // CP d8
-                unimplemented!()
+                todo!()
             }
             0xFF => {
                 // RST 38H
-                unimplemented!()
+                todo!()
             }
             0x100 => {
                 // RLC B
-                unimplemented!()
+                todo!()
             }
             0x101 => {
                 // RLC C
-                unimplemented!()
+                todo!()
             }
             0x102 => {
                 // RLC D
-                unimplemented!()
+                todo!()
             }
             0x103 => {
                 // RLC E
-                unimplemented!()
+                todo!()
             }
             0x104 => {
                 // RLC H
-                unimplemented!()
+                todo!()
             }
             0x105 => {
                 // RLC L
-                unimplemented!()
+                todo!()
             }
             0x106 => {
                 // RLC (HL)
-                unimplemented!()
+                todo!()
             }
             0x107 => {
                 // RLC A
-                unimplemented!()
+                todo!()
             }
             0x108 => {
                 // RRC B
-                unimplemented!()
+                todo!()
             }
             0x109 => {
                 // RRC C
-                unimplemented!()
+                todo!()
             }
             0x10A => {
                 // RRC D
-                unimplemented!()
+                todo!()
             }
             0x10B => {
                 // RRC E
-                unimplemented!()
+                todo!()
             }
             0x10C => {
                 // RRC H
-                unimplemented!()
+                todo!()
             }
             0x10D => {
                 // RRC L
-                unimplemented!()
+                todo!()
             }
             0x10E => {
                 // RRC (HL)
-                unimplemented!()
+                todo!()
             }
             0x10F => {
                 // RRC A
-                unimplemented!()
+                todo!()
             }
             0x110 => {
                 // RL B
-                unimplemented!()
+                todo!()
             }
             0x111 => {
                 // RL C
-                unimplemented!()
+                todo!()
             }
             0x112 => {
                 // RL D
-                unimplemented!()
+                todo!()
             }
             0x113 => {
                 // RL E
-                unimplemented!()
+                todo!()
             }
             0x114 => {
                 // RL H
-                unimplemented!()
+                todo!()
             }
             0x115 => {
                 // RL L
-                unimplemented!()
+                todo!()
             }
             0x116 => {
                 // RL (HL)
-                unimplemented!()
+                todo!()
             }
             0x117 => {
                 // RL A
-                unimplemented!()
+                todo!()
             }
             0x118 => {
                 // RR B
-                unimplemented!()
+                todo!()
             }
             0x119 => {
                 // RR C
-                unimplemented!()
+                todo!()
             }
             0x11A => {
                 // RR D
-                unimplemented!()
+                todo!()
             }
             0x11B => {
                 // RR E
-                unimplemented!()
+                todo!()
             }
             0x11C => {
                 // RR H
-                unimplemented!()
+                todo!()
             }
             0x11D => {
                 // RR L
-                unimplemented!()
+                todo!()
             }
             0x11E => {
                 // RR (HL)
-                unimplemented!()
+                todo!()
             }
             0x11F => {
                 // RR A
-                unimplemented!()
+                todo!()
             }
             0x120 => {
                 // SLA B
-                unimplemented!()
+                todo!()
             }
             0x121 => {
                 // SLA C
-                unimplemented!()
+                todo!()
             }
             0x122 => {
                 // SLA D
-                unimplemented!()
+                todo!()
             }
             0x123 => {
                 // SLA E
-                unimplemented!()
+                todo!()
             }
             0x124 => {
                 // SLA H
-                unimplemented!()
+                todo!()
             }
             0x125 => {
                 // SLA L
-                unimplemented!()
+                todo!()
             }
             0x126 => {
                 // SLA (HL)
-                unimplemented!()
+                todo!()
             }
             0x127 => {
                 // SLA A
-                unimplemented!()
+                todo!()
             }
             0x128 => {
                 // SRA B
-                unimplemented!()
+                todo!()
             }
             0x129 => {
                 // SRA C
-                unimplemented!()
+                todo!()
             }
             0x12A => {
                 // SRA D
-                unimplemented!()
+                todo!()
             }
             0x12B => {
                 // SRA E
-                unimplemented!()
+                todo!()
             }
             0x12C => {
                 // SRA H
-                unimplemented!()
+                todo!()
             }
             0x12D => {
                 // SRA L
-                unimplemented!()
+                todo!()
             }
             0x12E => {
                 // SRA (HL)
-                unimplemented!()
+                todo!()
             }
             0x12F => {
                 // SRA A
-                unimplemented!()
+                todo!()
             }
             0x130 => {
                 // SWAP B
-                unimplemented!()
+                todo!()
             }
             0x131 => {
                 // SWAP C
-                unimplemented!()
+                todo!()
             }
             0x132 => {
                 // SWAP D
-                unimplemented!()
+                todo!()
             }
             0x133 => {
                 // SWAP E
-                unimplemented!()
+                todo!()
             }
             0x134 => {
                 // SWAP H
-                unimplemented!()
+                todo!()
             }
             0x135 => {
                 // SWAP L
-                unimplemented!()
+                todo!()
             }
             0x136 => {
                 // SWAP (HL)
-                unimplemented!()
+                todo!()
             }
             0x137 => {
                 // SWAP A
-                unimplemented!()
+                todo!()
             }
             0x138 => {
                 // SRL B
-                unimplemented!()
+                todo!()
             }
             0x139 => {
                 // SRL C
-                unimplemented!()
+                todo!()
             }
             0x13A => {
                 // SRL D
-                unimplemented!()
+                todo!()
             }
             0x13B => {
                 // SRL E
-                unimplemented!()
+                todo!()
             }
             0x13C => {
                 // SRL H
-                unimplemented!()
+                todo!()
             }
             0x13D => {
                 // SRL L
-                unimplemented!()
+                todo!()
             }
             0x13E => {
                 // SRL (HL)
-                unimplemented!()
+                todo!()
             }
             0x13F => {
                 // SRL A
-                unimplemented!()
+                todo!()
             }
             0x140 => {
                 // BIT 0,B
-                unimplemented!()
+                todo!()
             }
             0x141 => {
                 // BIT 0,C
-                unimplemented!()
+                todo!()
             }
             0x142 => {
                 // BIT 0,D
-                unimplemented!()
+                todo!()
             }
             0x143 => {
                 // BIT 0,E
-                unimplemented!()
+                todo!()
             }
             0x144 => {
                 // BIT 0,H
-                unimplemented!()
+                todo!()
             }
             0x145 => {
                 // BIT 0,L
-                unimplemented!()
+                todo!()
             }
             0x146 => {
                 // BIT 0,(HL)
-                unimplemented!()
+                todo!()
             }
             0x147 => {
                 // BIT 0,A
-                unimplemented!()
+                todo!()
             }
             0x148 => {
                 // BIT 1,B
-                unimplemented!()
+                todo!()
             }
             0x149 => {
                 // BIT 1,C
-                unimplemented!()
+                todo!()
             }
             0x14A => {
                 // BIT 1,D
-                unimplemented!()
+                todo!()
             }
             0x14B => {
                 // BIT 1,E
-                unimplemented!()
+                todo!()
             }
             0x14C => {
                 // BIT 1,H
-                unimplemented!()
+                todo!()
             }
             0x14D => {
                 // BIT 1,L
-                unimplemented!()
+                todo!()
             }
             0x14E => {
                 // BIT 1,(HL)
-                unimplemented!()
+                todo!()
             }
             0x14F => {
                 // BIT 1,A
-                unimplemented!()
+                todo!()
             }
             0x150 => {
                 // BIT 2,B
-                unimplemented!()
+                todo!()
             }
             0x151 => {
                 // BIT 2,C
-                unimplemented!()
+                todo!()
             }
             0x152 => {
                 // BIT 2,D
-                unimplemented!()
+                todo!()
             }
             0x153 => {
                 // BIT 2,E
-                unimplemented!()
+                todo!()
             }
             0x154 => {
                 // BIT 2,H
-                unimplemented!()
+                todo!()
             }
             0x155 => {
                 // BIT 2,L
-                unimplemented!()
+                todo!()
             }
             0x156 => {
                 // BIT 2,(HL)
-                unimplemented!()
+                todo!()
             }
             0x157 => {
                 // BIT 2,A
-                unimplemented!()
+                todo!()
             }
             0x158 => {
                 // BIT 3,B
-                unimplemented!()
+                todo!()
             }
             0x159 => {
                 // BIT 3,C
-                unimplemented!()
+                todo!()
             }
             0x15A => {
                 // BIT 3,D
-                unimplemented!()
+                todo!()
             }
             0x15B => {
                 // BIT 3,E
-                unimplemented!()
+                todo!()
             }
             0x15C => {
                 // BIT 3,H
-                unimplemented!()
+                todo!()
             }
             0x15D => {
                 // BIT 3,L
-                unimplemented!()
+                todo!()
             }
             0x15E => {
                 // BIT 3,(HL)
-                unimplemented!()
+                todo!()
             }
             0x15F => {
                 // BIT 3,A
-                unimplemented!()
+                todo!()
             }
             0x160 => {
                 // BIT 4,B
-                unimplemented!()
+                todo!()
             }
             0x161 => {
                 // BIT 4,C
-                unimplemented!()
+                todo!()
             }
             0x162 => {
                 // BIT 4,D
-                unimplemented!()
+                todo!()
             }
             0x163 => {
                 // BIT 4,E
-                unimplemented!()
+                todo!()
             }
             0x164 => {
                 // BIT 4,H
-                unimplemented!()
+                todo!()
             }
             0x165 => {
                 // BIT 4,L
-                unimplemented!()
+                todo!()
             }
             0x166 => {
                 // BIT 4,(HL)
-                unimplemented!()
+                todo!()
             }
             0x167 => {
                 // BIT 4,A
-                unimplemented!()
+                todo!()
             }
             0x168 => {
                 // BIT 5,B
-                unimplemented!()
+                todo!()
             }
             0x169 => {
                 // BIT 5,C
-                unimplemented!()
+                todo!()
             }
             0x16A => {
                 // BIT 5,D
-                unimplemented!()
+                todo!()
             }
             0x16B => {
                 // BIT 5,E
-                unimplemented!()
+                todo!()
             }
             0x16C => {
                 // BIT 5,H
-                unimplemented!()
+                todo!()
             }
             0x16D => {
                 // BIT 5,L
-                unimplemented!()
+                todo!()
             }
             0x16E => {
                 // BIT 5,(HL)
-                unimplemented!()
+                todo!()
             }
             0x16F => {
                 // BIT 5,A
-                unimplemented!()
+                todo!()
             }
             0x170 => {
                 // BIT 6,B
-                unimplemented!()
+                todo!()
             }
             0x171 => {
                 // BIT 6,C
-                unimplemented!()
+                todo!()
             }
             0x172 => {
                 // BIT 6,D
-                unimplemented!()
+                todo!()
             }
             0x173 => {
                 // BIT 6,E
-                unimplemented!()
+                todo!()
             }
             0x174 => {
                 // BIT 6,H
-                unimplemented!()
+                todo!()
             }
             0x175 => {
                 // BIT 6,L
-                unimplemented!()
+                todo!()
             }
             0x176 => {
                 // BIT 6,(HL)
-                unimplemented!()
+                todo!()
             }
             0x177 => {
                 // BIT 6,A
-                unimplemented!()
+                todo!()
             }
             0x178 => {
                 // BIT 7,B
-                unimplemented!()
+                todo!()
             }
             0x179 => {
                 // BIT 7,C
-                unimplemented!()
+                todo!()
             }
             0x17A => {
                 // BIT 7,D
-                unimplemented!()
+                todo!()
             }
             0x17B => {
                 // BIT 7,E
-                unimplemented!()
+                todo!()
             }
             0x17C => {
                 // BIT 7,H
@@ -1925,530 +1925,530 @@ impl LR35902 {
             }
             0x17D => {
                 // BIT 7,L
-                unimplemented!()
+                todo!()
             }
             0x17E => {
                 // BIT 7,(HL)
-                unimplemented!()
+                todo!()
             }
             0x17F => {
                 // BIT 7,A
-                unimplemented!()
+                todo!()
             }
             0x180 => {
                 // RES 0,B
-                unimplemented!()
+                todo!()
             }
             0x181 => {
                 // RES 0,C
-                unimplemented!()
+                todo!()
             }
             0x182 => {
                 // RES 0,D
-                unimplemented!()
+                todo!()
             }
             0x183 => {
                 // RES 0,E
-                unimplemented!()
+                todo!()
             }
             0x184 => {
                 // RES 0,H
-                unimplemented!()
+                todo!()
             }
             0x185 => {
                 // RES 0,L
-                unimplemented!()
+                todo!()
             }
             0x186 => {
                 // RES 0,(HL)
-                unimplemented!()
+                todo!()
             }
             0x187 => {
                 // RES 0,A
-                unimplemented!()
+                todo!()
             }
             0x188 => {
                 // RES 1,B
-                unimplemented!()
+                todo!()
             }
             0x189 => {
                 // RES 1,C
-                unimplemented!()
+                todo!()
             }
             0x18A => {
                 // RES 1,D
-                unimplemented!()
+                todo!()
             }
             0x18B => {
                 // RES 1,E
-                unimplemented!()
+                todo!()
             }
             0x18C => {
                 // RES 1,H
-                unimplemented!()
+                todo!()
             }
             0x18D => {
                 // RES 1,L
-                unimplemented!()
+                todo!()
             }
             0x18E => {
                 // RES 1,(HL)
-                unimplemented!()
+                todo!()
             }
             0x18F => {
                 // RES 1,A
-                unimplemented!()
+                todo!()
             }
             0x190 => {
                 // RES 2,B
-                unimplemented!()
+                todo!()
             }
             0x191 => {
                 // RES 2,C
-                unimplemented!()
+                todo!()
             }
             0x192 => {
                 // RES 2,D
-                unimplemented!()
+                todo!()
             }
             0x193 => {
                 // RES 2,E
-                unimplemented!()
+                todo!()
             }
             0x194 => {
                 // RES 2,H
-                unimplemented!()
+                todo!()
             }
             0x195 => {
                 // RES 2,L
-                unimplemented!()
+                todo!()
             }
             0x196 => {
                 // RES 2,(HL)
-                unimplemented!()
+                todo!()
             }
             0x197 => {
                 // RES 2,A
-                unimplemented!()
+                todo!()
             }
             0x198 => {
                 // RES 3,B
-                unimplemented!()
+                todo!()
             }
             0x199 => {
                 // RES 3,C
-                unimplemented!()
+                todo!()
             }
             0x19A => {
                 // RES 3,D
-                unimplemented!()
+                todo!()
             }
             0x19B => {
                 // RES 3,E
-                unimplemented!()
+                todo!()
             }
             0x19C => {
                 // RES 3,H
-                unimplemented!()
+                todo!()
             }
             0x19D => {
                 // RES 3,L
-                unimplemented!()
+                todo!()
             }
             0x19E => {
                 // RES 3,(HL)
-                unimplemented!()
+                todo!()
             }
             0x19F => {
                 // RES 3,A
-                unimplemented!()
+                todo!()
             }
             0x1A0 => {
                 // RES 4,B
-                unimplemented!()
+                todo!()
             }
             0x1A1 => {
                 // RES 4,C
-                unimplemented!()
+                todo!()
             }
             0x1A2 => {
                 // RES 4,D
-                unimplemented!()
+                todo!()
             }
             0x1A3 => {
                 // RES 4,E
-                unimplemented!()
+                todo!()
             }
             0x1A4 => {
                 // RES 4,H
-                unimplemented!()
+                todo!()
             }
             0x1A5 => {
                 // RES 4,L
-                unimplemented!()
+                todo!()
             }
             0x1A6 => {
                 // RES 4,(HL)
-                unimplemented!()
+                todo!()
             }
             0x1A7 => {
                 // RES 4,A
-                unimplemented!()
+                todo!()
             }
             0x1A8 => {
                 // RES 5,B
-                unimplemented!()
+                todo!()
             }
             0x1A9 => {
                 // RES 5,C
-                unimplemented!()
+                todo!()
             }
             0x1AA => {
                 // RES 5,D
-                unimplemented!()
+                todo!()
             }
             0x1AB => {
                 // RES 5,E
-                unimplemented!()
+                todo!()
             }
             0x1AC => {
                 // RES 5,H
-                unimplemented!()
+                todo!()
             }
             0x1AD => {
                 // RES 5,L
-                unimplemented!()
+                todo!()
             }
             0x1AE => {
                 // RES 5,(HL)
-                unimplemented!()
+                todo!()
             }
             0x1AF => {
                 // RES 5,A
-                unimplemented!()
+                todo!()
             }
             0x1B0 => {
                 // RES 6,B
-                unimplemented!()
+                todo!()
             }
             0x1B1 => {
                 // RES 6,C
-                unimplemented!()
+                todo!()
             }
             0x1B2 => {
                 // RES 6,D
-                unimplemented!()
+                todo!()
             }
             0x1B3 => {
                 // RES 6,E
-                unimplemented!()
+                todo!()
             }
             0x1B4 => {
                 // RES 6,H
-                unimplemented!()
+                todo!()
             }
             0x1B5 => {
                 // RES 6,L
-                unimplemented!()
+                todo!()
             }
             0x1B6 => {
                 // RES 6,(HL)
-                unimplemented!()
+                todo!()
             }
             0x1B7 => {
                 // RES 6,A
-                unimplemented!()
+                todo!()
             }
             0x1B8 => {
                 // RES 7,B
-                unimplemented!()
+                todo!()
             }
             0x1B9 => {
                 // RES 7,C
-                unimplemented!()
+                todo!()
             }
             0x1BA => {
                 // RES 7,D
-                unimplemented!()
+                todo!()
             }
             0x1BB => {
                 // RES 7,E
-                unimplemented!()
+                todo!()
             }
             0x1BC => {
                 // RES 7,H
-                unimplemented!()
+                todo!()
             }
             0x1BD => {
                 // RES 7,L
-                unimplemented!()
+                todo!()
             }
             0x1BE => {
                 // RES 7,(HL)
-                unimplemented!()
+                todo!()
             }
             0x1BF => {
                 // RES 7,A
-                unimplemented!()
+                todo!()
             }
             0x1C0 => {
                 // SET 0,B
-                unimplemented!()
+                todo!()
             }
             0x1C1 => {
                 // SET 0,C
-                unimplemented!()
+                todo!()
             }
             0x1C2 => {
                 // SET 0,D
-                unimplemented!()
+                todo!()
             }
             0x1C3 => {
                 // SET 0,E
-                unimplemented!()
+                todo!()
             }
             0x1C4 => {
                 // SET 0,H
-                unimplemented!()
+                todo!()
             }
             0x1C5 => {
                 // SET 0,L
-                unimplemented!()
+                todo!()
             }
             0x1C6 => {
                 // SET 0,(HL)
-                unimplemented!()
+                todo!()
             }
             0x1C7 => {
                 // SET 0,A
-                unimplemented!()
+                todo!()
             }
             0x1C8 => {
                 // SET 1,B
-                unimplemented!()
+                todo!()
             }
             0x1C9 => {
                 // SET 1,C
-                unimplemented!()
+                todo!()
             }
             0x1CA => {
                 // SET 1,D
-                unimplemented!()
+                todo!()
             }
             0x1CB => {
                 // SET 1,E
-                unimplemented!()
+                todo!()
             }
             0x1CC => {
                 // SET 1,H
-                unimplemented!()
+                todo!()
             }
             0x1CD => {
                 // SET 1,L
-                unimplemented!()
+                todo!()
             }
             0x1CE => {
                 // SET 1,(HL)
-                unimplemented!()
+                todo!()
             }
             0x1CF => {
                 // SET 1,A
-                unimplemented!()
+                todo!()
             }
             0x1D0 => {
                 // SET 2,B
-                unimplemented!()
+                todo!()
             }
             0x1D1 => {
                 // SET 2,C
-                unimplemented!()
+                todo!()
             }
             0x1D2 => {
                 // SET 2,D
-                unimplemented!()
+                todo!()
             }
             0x1D3 => {
                 // SET 2,E
-                unimplemented!()
+                todo!()
             }
             0x1D4 => {
                 // SET 2,H
-                unimplemented!()
+                todo!()
             }
             0x1D5 => {
                 // SET 2,L
-                unimplemented!()
+                todo!()
             }
             0x1D6 => {
                 // SET 2,(HL)
-                unimplemented!()
+                todo!()
             }
             0x1D7 => {
                 // SET 2,A
-                unimplemented!()
+                todo!()
             }
             0x1D8 => {
                 // SET 3,B
-                unimplemented!()
+                todo!()
             }
             0x1D9 => {
                 // SET 3,C
-                unimplemented!()
+                todo!()
             }
             0x1DA => {
                 // SET 3,D
-                unimplemented!()
+                todo!()
             }
             0x1DB => {
                 // SET 3,E
-                unimplemented!()
+                todo!()
             }
             0x1DC => {
                 // SET 3,H
-                unimplemented!()
+                todo!()
             }
             0x1DD => {
                 // SET 3,L
-                unimplemented!()
+                todo!()
             }
             0x1DE => {
                 // SET 3,(HL)
-                unimplemented!()
+                todo!()
             }
             0x1DF => {
                 // SET 3,A
-                unimplemented!()
+                todo!()
             }
             0x1E0 => {
                 // SET 4,B
-                unimplemented!()
+                todo!()
             }
             0x1E1 => {
                 // SET 4,C
-                unimplemented!()
+                todo!()
             }
             0x1E2 => {
                 // SET 4,D
-                unimplemented!()
+                todo!()
             }
             0x1E3 => {
                 // SET 4,E
-                unimplemented!()
+                todo!()
             }
             0x1E4 => {
                 // SET 4,H
-                unimplemented!()
+                todo!()
             }
             0x1E5 => {
                 // SET 4,L
-                unimplemented!()
+                todo!()
             }
             0x1E6 => {
                 // SET 4,(HL)
-                unimplemented!()
+                todo!()
             }
             0x1E7 => {
                 // SET 4,A
-                unimplemented!()
+                todo!()
             }
             0x1E8 => {
                 // SET 5,B
-                unimplemented!()
+                todo!()
             }
             0x1E9 => {
                 // SET 5,C
-                unimplemented!()
+                todo!()
             }
             0x1EA => {
                 // SET 5,D
-                unimplemented!()
+                todo!()
             }
             0x1EB => {
                 // SET 5,E
-                unimplemented!()
+                todo!()
             }
             0x1EC => {
                 // SET 5,H
-                unimplemented!()
+                todo!()
             }
             0x1ED => {
                 // SET 5,L
-                unimplemented!()
+                todo!()
             }
             0x1EE => {
                 // SET 5,(HL)
-                unimplemented!()
+                todo!()
             }
             0x1EF => {
                 // SET 5,A
-                unimplemented!()
+                todo!()
             }
             0x1F0 => {
                 // SET 6,B
-                unimplemented!()
+                todo!()
             }
             0x1F1 => {
                 // SET 6,C
-                unimplemented!()
+                todo!()
             }
             0x1F2 => {
                 // SET 6,D
-                unimplemented!()
+                todo!()
             }
             0x1F3 => {
                 // SET 6,E
-                unimplemented!()
+                todo!()
             }
             0x1F4 => {
                 // SET 6,H
-                unimplemented!()
+                todo!()
             }
             0x1F5 => {
                 // SET 6,L
-                unimplemented!()
+                todo!()
             }
             0x1F6 => {
                 // SET 6,(HL)
-                unimplemented!()
+                todo!()
             }
             0x1F7 => {
                 // SET 6,A
-                unimplemented!()
+                todo!()
             }
             0x1F8 => {
                 // SET 7,B
-                unimplemented!()
+                todo!()
             }
             0x1F9 => {
                 // SET 7,C
-                unimplemented!()
+                todo!()
             }
             0x1FA => {
                 // SET 7,D
-                unimplemented!()
+                todo!()
             }
             0x1FB => {
                 // SET 7,E
-                unimplemented!()
+                todo!()
             }
             0x1FC => {
                 // SET 7,H
-                unimplemented!()
+                todo!()
             }
             0x1FD => {
                 // SET 7,L
-                unimplemented!()
+                todo!()
             }
             0x1FE => {
                 // SET 7,(HL)
-                unimplemented!()
+                todo!()
             }
             0x1FF => {
                 // SET 7,A
-                unimplemented!()
+                todo!()
             }
             _ => {
-                unimplemented!()
+                todo!()
             }
         }
     }
