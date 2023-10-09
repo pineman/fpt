@@ -1404,7 +1404,7 @@ impl LR35902 {
             0xF8 => {
                 // LD HL,SP+r8
                 let result = self.add16i(self.sp(), self.get_r8(0));
-                self.set_hl(dbg!(self.mem16(dbg!(result))));
+                self.set_hl(result);
             }
             0xF9 => {
                 // LD SP,HL

@@ -683,14 +683,14 @@ fn test_instr_0x36_ld_hl_d8(#[case] d8: u8, #[case] hl: u16) {
     assert_eq!(sut, expected);
 }
 
+// TODO e8 is signed
 #[rstest]
-fn test_instr_0xf8_ld_hl_sp_plus_r8() {
+fn test_instr_0xf8_ld_hl_sp_plus_e8() {
     // Given
     let builder = LR35902Builder::new()
         .with_mem8(0x0000, 0xf8)
-        .with_mem8(0x0001, 0x80)
-        .with_sp(0x80)
-        .with_mem16(0x0100, 0xABCD);
+        .with_mem8(0x0001, 0x05) // e8 = 5
+        .with_sp(0x1000);
 
     let mut sut = builder.clone().build();
 
@@ -701,7 +701,7 @@ fn test_instr_0xf8_ld_hl_sp_plus_r8() {
     let expected = builder
         .with_pc(2)
         .with_clock_cycles(12)
-        .with_hl(0xABCD)
+        .with_hl(0x1005)
         .build();
     assert_eq!(sut, expected);
 }
