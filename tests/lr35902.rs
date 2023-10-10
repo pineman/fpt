@@ -632,14 +632,20 @@ fn test_load_hl_pointer_from_8_bit_reg(
 }
 
 #[rstest]
-#[case(0x06, "b", 0x01)] // 1
-#[case(0x16, "d", 0x01)] // 2
-#[case(0x26, "h", 0x01)] // 3
-#[case(0x0e, "c", 0x01)] // 4
-#[case(0x1e, "e", 0x01)] // 5
-#[case(0x2e, "l", 0x01)] // 6
-#[case(0x3e, "a", 0x01)] // 7
-fn test_load_register_from_immediate(#[case] opcode: u8, #[case] reg: &str, #[case] d8: u8) {
+#[case(0x01)]
+#[case(0xFF)]
+fn test_load_register_from_immediate(
+    #[values(
+        (0x06, "b"), 
+        (0x16, "d"),
+        (0x26, "h"),
+        (0x0e, "c"),
+        (0x1e, "e"),
+        (0x2e, "l"),    
+        (0x3e, "a"))]
+    _opcode_reg @ (opcode, reg): (u8, &str),
+    #[case] d8: u8,
+) {
     // Given
     let builder = LR35902Builder::new()
         .with_mem8(0x0000, opcode)
