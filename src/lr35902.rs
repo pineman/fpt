@@ -311,6 +311,12 @@ impl LR35902 {
         result
     }
 
+    fn sub8(&mut self, x: u8, y: u8) -> u8 {
+        let r = self.add8(x, !y + 1);
+        self.set_n_flag(true);
+        r
+    }
+
     fn add16(&mut self, x: u16, y: u16) -> u16 {
         let (result, overflow) = x.overflowing_add(y);
         // z flag is not set
@@ -1140,35 +1146,35 @@ impl LR35902 {
             }
             0xB8 => {
                 // CP B
-                todo!()
+                self.sub8(self.a(), self.b());
             }
             0xB9 => {
                 // CP C
-                todo!()
+                self.sub8(self.a(), self.c());
             }
             0xBA => {
                 // CP D
-                todo!()
+                self.sub8(self.a(), self.d());
             }
             0xBB => {
                 // CP E
-                todo!()
+                self.sub8(self.a(), self.e());
             }
             0xBC => {
                 // CP H
-                todo!()
+                self.sub8(self.a(), self.h());
             }
             0xBD => {
                 // CP L
-                todo!()
+                self.sub8(self.a(), self.l());
             }
             0xBE => {
                 // CP (HL)
-                todo!()
+                self.sub8(self.a(), self.mem8(self.hl()));
             }
             0xBF => {
                 // CP A
-                todo!()
+                self.sub8(self.a(), self.a());
             }
             0xC0 => {
                 // RET NZ
