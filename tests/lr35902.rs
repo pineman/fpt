@@ -956,13 +956,15 @@ fn test_alu16_reg_reg(
 #[case::half_carry(0x0F, 0x10, 0b0010, 0b0010)]
 #[case::zero_flag(0xFF, 0x00, 0b0000, 0b1010)] // and no carry, unlike ADD 1
 fn test_inc_8_bit_reg(
-    #[values((0x04, "b"),
-             (0x0C, "c"),
-             (0x14, "d"),
-             (0x1C, "e"),
-             (0x24, "h"),
-             (0x2C, "l"),
-             (0x3C, "a"))]
+    //         x=0  y  z=4
+    #[values((0b00_000_100, "b"),  // 04, INC B
+             (0b00_001_100, "c"),  // 0C, INC C
+             (0b00_010_100, "d"),  // 14, INC D
+             (0b00_011_100, "e"),  // 1C, INC E
+             (0b00_100_100, "h"),  // 24, INC H
+             (0b00_101_100, "l"),  // 2C, INC L
+             // y=7 would be (HL)
+             (0b00_111_100, "a"))] // 3C, INC A
     _opcode_reg @ (opcode, reg): (u8, &str),
     #[case] value: u8,
     #[case] result: u8,
@@ -1060,12 +1062,11 @@ fn test_push(#[case] opcode: u8, #[case] register: &str, #[case] value: u16, #[c
     let expected = builder
         .with_pc(0x0001)
         .with_clock_cycles(16)
-        .with_mem16(sp-2, value)
-        .with_sp(sp-2)
+        .with_mem16(sp - 2, value)
+        .with_sp(sp - 2)
         .build();
     assert_eq!(sut, expected);
 }
-
 
 #[rstest]
 #[case(0xC1, "bc", 0xFFFF, 0xFF00)]
@@ -1091,9 +1092,8 @@ fn test_pop(#[case] opcode: u8, #[case] register: &str, #[case] value: u16, #[ca
     let expected = builder
         .with_pc(0x0001)
         .with_clock_cycles(12)
-        .with_sp(sp+2)
+        .with_sp(sp + 2)
         .with_reg16(register, value)
         .build();
     assert_eq!(sut, expected);
 }
-
