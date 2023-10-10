@@ -950,21 +950,15 @@ fn test_alu16_reg_reg(
 }
 
 #[rstest]
-// INC r8
 #[case::base_case(0x00, 0x01, 0b0000, 0b0000)]
 #[case::overwrite(0x41, 0x42, 0b1111, 0b0001)]
 #[case::half_carry(0x0F, 0x10, 0b0010, 0b0010)]
 #[case::zero_flag(0xFF, 0x00, 0b0000, 0b1010)] // and no carry, unlike ADD 1
 fn test_inc_8_bit_reg(
-    //         x=0  y  z=4
-    #[values((0b00_000_100, "b"),  // 04, INC B
-             (0b00_001_100, "c"),  // 0C, INC C
-             (0b00_010_100, "d"),  // 14, INC D
-             (0b00_011_100, "e"),  // 1C, INC E
-             (0b00_100_100, "h"),  // 24, INC H
-             (0b00_101_100, "l"),  // 2C, INC L
-             // y=7 would be (HL)
-             (0b00_111_100, "a"))] // 3C, INC A
+    #[values((0x04, "b"), (0x0C, "c"),
+             (0x14, "d"), (0x1C, "e"),
+             (0x24, "h"), (0x2C, "l"),
+             (0x3C, "a"))]
     _opcode_reg @ (opcode, reg): (u8, &str),
     #[case] value: u8,
     #[case] result: u8,
