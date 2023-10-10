@@ -1,4 +1,4 @@
-use rstest::rstest;
+use rstest::*;
 
 use fpt::lr35902::LR35902;
 
@@ -984,6 +984,37 @@ fn test_inc_8_bit_reg(
     assert_eq!(sut, expected);
 }
 
+#[rstest]
+#[case(0x0000, 0x0001)]
+#[case(0x00FF, 0x0100)]
+#[case(0xFFFF, 0x0000)]
+fn test_inc_16_bit_reg(
+    #[values((0x03, "bc"),
+             (0x13, "de"),
+             (0x23, "hl"),
+             (0x33, "sp"))]
+    _opcode_reg @ (opcode, reg): (u8, &str),
+    #[case] value: u16,
+    #[case] result: u16,
+    #[values(0b0000, 0b1111)] flags: u8,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, opcode)
+        .with_reg16(reg, value)
+        .with_f(flags << 4);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    let expected = builder
+        .with_pc(1)
+        .with_reg16(reg, result)
+        .with_clock_cycles(8)
+        .build();
+    assert_eq!(sut, expected);
+}
 #[rstest]
 #[case(0xC2, 0xFF00, "z", true, 3, 12)]
 #[case(0xC2, 0xFF00, "z", false, 0xFF00, 16)]
