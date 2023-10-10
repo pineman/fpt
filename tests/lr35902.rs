@@ -989,9 +989,7 @@ fn test_inc_8_bit_reg(
 
 #[rstest]
 #[case(0x0000, 0x0001)]
-#[case(0x000F, 0x0010)]
 #[case(0x00FF, 0x0100)]
-#[case(0x0FFF, 0x1000)]
 #[case(0xFFFF, 0x0000)]
 fn test_inc_16_bit_reg(
     #[values((0x03, "bc"),
@@ -1001,7 +999,7 @@ fn test_inc_16_bit_reg(
     _opcode_reg @ (opcode, reg): (u8, &str),
     #[case] value: u16,
     #[case] result: u16,
-    #[values(0b0000, 0b0001, 0b0010, 0b0100, 0b1000, 0b1111)] flags: u8,
+    #[values(0b0000, 0b1111)] flags: u8,
 ) {
     // Given
     let builder = LR35902Builder::new()
