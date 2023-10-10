@@ -1128,3 +1128,37 @@ fn test_pop(#[case] opcode: u8, #[case] register: &str, #[case] value: u16, #[ca
         .build();
     assert_eq!(sut, expected);
 }
+#[rstest]
+#[rustfmt::skip]
+//        a,  reg,     z,     h,    c
+#[case(0x10, 0x10,  true, false, true)]
+#[case(0x10, 0x11, false, false, false)]
+fn test_cp(
+    #[values((0xB8, "b"))] _opcode_reg @ (opcode, reg): (u8, &str),
+    #[case] a: u8,
+    #[case] reg_value: u8,
+    #[case] z: bool,
+    #[case] h: bool,
+    #[case] c: bool,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, opcode)
+        .with_a(a)
+        .with_reg8(reg, reg_value);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(0x0001)
+        .with_clock_cycles(4)
+        .with_n_flag(true)
+        .with_z_flag(z)
+        .with_h_flag(h)
+        .with_c_flag(c)
+        .build();
+    assert_eq!(sut, expected);
+}
