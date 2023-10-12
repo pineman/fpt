@@ -8,6 +8,7 @@ default-run = "main"
 
 [dependencies]
 winit = "0.28.7"
+clap = { version = "4.4.6", features = ["derive"] }
 
 [dev-dependencies]
 rstest = "0.18"
@@ -17,3 +18,9 @@ name = "main"
 
 [[bin]]
 name = "gui"
+
+[[bin]]
+name = "debug"
+
+[[bin]]
+name = "objdump"

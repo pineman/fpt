@@ -18,6 +18,7 @@ pub struct LR35902 {
     next_cb: bool,
     clock_cycles: u64,
     branch_taken: bool,
+    debug: bool,
 }
 
 impl Default for LR35902 {
@@ -33,6 +34,7 @@ impl Default for LR35902 {
             next_cb: false,
             clock_cycles: 0,
             branch_taken: false,
+            debug: false,
         }
     }
 }
@@ -48,6 +50,10 @@ impl LR35902 {
         let mut m = Self::default();
         m.load_bootrom(include_bytes!("../dmg0.bin"));
         m
+    }
+
+    pub fn set_debug(&mut self, enabled: bool) {
+        self.debug = enabled;
     }
 
     pub fn a(&self) -> u8 {
@@ -247,15 +253,22 @@ impl LR35902 {
         self.mem[..256].clone_from_slice(bootrom);
     }
 
-    /// Run one cycle
-    pub fn step(&mut self) {
+    pub fn decode(&mut self) -> Instruction {
         let mut opcode = self.mem8(self.pc()) as u16;
         if self.next_cb() {
             opcode += 0x100;
             self.set_next_cb(false);
         }
         let instruction = INSTRUCTIONS[opcode as usize];
-        println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
+        if self.debug {
+            println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
+        }
+
+        instruction
+    }
+    /// Run one cycle
+    pub fn step(&mut self) {
+        let instruction = self.decode();
         self.execute(instruction);
 
         let mut cycles = instruction.cycles;
@@ -264,11 +277,9 @@ impl LR35902 {
                 self.branch_taken = false;
             } else {
                 cycles = dbg!(instruction.cycles_not_taken);
-                self.pc += instruction.size as u16;
             }
-        } else {
-            self.set_pc(self.pc() + instruction.size as u16);
         }
+        self.set_pc(self.pc() + instruction.size as u16);
 
         thread::sleep(Duration::from_micros((cycles / 4) as u64));
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
@@ -312,7 +323,7 @@ impl LR35902 {
     }
 
     fn sub8(&mut self, x: u8, y: u8) -> u8 {
-        let r = self.add8(x, !y + 1);
+        let r = self.add8(x, !y.overflowing_add(1).0);
         self.set_n_flag(true);
         r
     }
@@ -346,7 +357,7 @@ impl LR35902 {
     }
 
     fn jump(&mut self, address: u16) {
-        self.set_pc(address);
+        self.set_pc(dbg!(address));
         self.branch_taken = true;
     }
 
@@ -365,6 +376,7 @@ impl LR35902 {
         match instruction.opcode {
             0x00 => {
                 // NOP
+                panic!();
             }
             0x01 => {
                 // LD BC,d16
@@ -466,7 +478,7 @@ impl LR35902 {
             }
             0x18 => {
                 // JR r8
-                self.jump(self.pc() + self.get_d8(0) as u16);
+                self.jump(dbg!(dbg!(self.pc() as i32) + dbg!(self.get_d8(0) as i8 as i32)) as u16);
             }
             0x19 => {
                 // ADD HL,DE
@@ -500,8 +512,8 @@ impl LR35902 {
             }
             0x20 => {
                 // JR NZ,r8
-                if !self.z_flag() {
-                    self.jump(self.pc() + self.get_d8(0) as u16)
+                if dbg!(!self.z_flag()) {
+                    self.jump((self.pc() as i32 + (dbg!(self.get_d8(0)) as i8) as i32) as u16)
                 }
             }
             0x21 => {
