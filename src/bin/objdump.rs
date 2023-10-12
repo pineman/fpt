@@ -18,9 +18,23 @@ fn main() {
     lr.set_debug(args.debug);
 
     loop {
+        if lr.pc() > 255 {
+            break;
+        }
         if args.debug {
             println!("pc: {}", lr.pc());
         }
-        lr.step();
+        let instruction = lr.decode();
+        println!(
+            "{:#02X}: {:#02X} {}",
+            lr.pc(),
+            instruction.opcode,
+            instruction.mnemonic
+        );
+
+        if instruction.size == 0 {
+            panic!();
+        }
+        lr.set_pc(lr.pc() + instruction.size as u16);
     }
 }
