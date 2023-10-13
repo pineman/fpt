@@ -286,9 +286,12 @@ impl LR35902 {
                 self.branch_taken = false;
             } else {
                 cycles = instruction.cycles_not_taken;
+                self.set_pc(self.pc() + instruction.size as u16);
             }
         }
-        self.set_pc(self.pc() + instruction.size as u16);
+        else {
+            self.set_pc(self.pc() + instruction.size as u16);
+        }
 
         thread::sleep(Duration::from_micros((cycles / 4) as u64));
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
@@ -1265,7 +1268,11 @@ impl LR35902 {
             }
             0xCD => {
                 // CALL a16
-                todo!()
+                let nn = self.get_d16(0);
+                self.set_sp(self.sp() - 2);
+                self.set_mem16(self.sp(), self.pc() + 3);
+                self.set_pc(nn);
+                self.branch_taken = true;
             }
             0xCE => {
                 // ADC A,d8
@@ -1471,7 +1478,7 @@ impl LR35902 {
             }
             0xFE => {
                 // CP d8
-                todo!()
+                self.sub8(self.a(), self.get_d8(0));
             }
             0xFF => {
                 // RST 38H
