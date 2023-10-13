@@ -6,9 +6,9 @@ use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use crate::bitwise as bw;
 
-fn compute_relative_address(base:u16, offset:i8) -> u16 {
-    let r = base as i32 + offset as i32;
-    if r > 65535 || r < 0 {
+fn compute_relative_address(base: u16, offset: i8) -> u16 {
+    let r = dbg!(base as i32 + offset as i32);
+    if !(0..=65535).contains(&r) {
         panic!();
     }
 
@@ -332,7 +332,7 @@ impl LR35902 {
     }
 
     fn sub8(&mut self, x: u8, y: u8) -> u8 {
-        let r = self.add8(x, !y.overflowing_add(1).0);
+        let r = self.add8(x, (!y).overflowing_add(1).0);
         self.set_n_flag(true);
         r
     }
@@ -393,7 +393,6 @@ impl LR35902 {
         match instruction.opcode {
             0x00 => {
                 // NOP
-                panic!();
             }
             0x01 => {
                 // LD BC,d16
@@ -488,7 +487,7 @@ impl LR35902 {
             0x16 => {
                 // LD D,d8
                 self.set_d(self.get_d8(0));
-           }
+            }
             0x17 => {
                 // RLA
                 todo!()
