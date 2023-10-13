@@ -361,6 +361,14 @@ impl LR35902 {
         r
     }
 
+    fn bit<const INDEX: u8>(&mut self, x: u8) {
+        if !bw::test_bit8::<INDEX>(x) {
+            self.set_z_flag(true);
+        }
+        self.set_n_flag(false);
+        self.set_h_flag(true);
+    }
+
     fn execute(&mut self, instruction: Instruction) {
         match instruction.opcode {
             0x00 => {
@@ -1707,263 +1715,259 @@ impl LR35902 {
             }
             0x140 => {
                 // BIT 0,B
-                todo!()
+                self.bit::<0>(self.b());
             }
             0x141 => {
                 // BIT 0,C
-                todo!()
+                self.bit::<0>(self.c());
             }
             0x142 => {
                 // BIT 0,D
-                todo!()
+                self.bit::<0>(self.d());
             }
             0x143 => {
                 // BIT 0,E
-                todo!()
+                self.bit::<0>(self.e());
             }
             0x144 => {
                 // BIT 0,H
-                todo!()
+                self.bit::<0>(self.h());
             }
             0x145 => {
                 // BIT 0,L
-                todo!()
+                self.bit::<0>(self.l());
             }
             0x146 => {
                 // BIT 0,(HL)
-                todo!()
+                self.bit::<0>(self.mem8(self.hl()));
             }
             0x147 => {
                 // BIT 0,A
-                todo!()
+                self.bit::<0>(self.a());
             }
             0x148 => {
                 // BIT 1,B
-                todo!()
+                self.bit::<1>(self.b());
             }
             0x149 => {
                 // BIT 1,C
-                todo!()
+                self.bit::<1>(self.c());
             }
             0x14A => {
                 // BIT 1,D
-                todo!()
+                self.bit::<1>(self.d());
             }
             0x14B => {
                 // BIT 1,E
-                todo!()
+                self.bit::<1>(self.e());
             }
             0x14C => {
                 // BIT 1,H
-                todo!()
+                self.bit::<1>(self.h());
             }
             0x14D => {
                 // BIT 1,L
-                todo!()
+                self.bit::<1>(self.l());
             }
             0x14E => {
                 // BIT 1,(HL)
-                todo!()
+                self.bit::<1>(self.mem8(self.hl()));
             }
             0x14F => {
                 // BIT 1,A
-                todo!()
+                self.bit::<1>(self.a());
             }
             0x150 => {
                 // BIT 2,B
-                todo!()
+                self.bit::<2>(self.b());
             }
             0x151 => {
                 // BIT 2,C
-                todo!()
+                self.bit::<2>(self.c());
             }
             0x152 => {
                 // BIT 2,D
-                todo!()
+                self.bit::<2>(self.d());
             }
             0x153 => {
                 // BIT 2,E
-                todo!()
+                self.bit::<2>(self.e());
             }
             0x154 => {
                 // BIT 2,H
-                todo!()
+                self.bit::<2>(self.h());
             }
             0x155 => {
                 // BIT 2,L
-                todo!()
+                self.bit::<2>(self.l());
             }
             0x156 => {
                 // BIT 2,(HL)
-                todo!()
+                self.bit::<2>(self.mem8(self.hl()));
             }
             0x157 => {
                 // BIT 2,A
-                todo!()
+                self.bit::<2>(self.a());
             }
             0x158 => {
                 // BIT 3,B
-                todo!()
+                self.bit::<3>(self.b());
             }
             0x159 => {
                 // BIT 3,C
-                todo!()
+                self.bit::<3>(self.c());
             }
             0x15A => {
                 // BIT 3,D
-                todo!()
+                self.bit::<3>(self.d());
             }
             0x15B => {
                 // BIT 3,E
-                todo!()
+                self.bit::<3>(self.e());
             }
             0x15C => {
                 // BIT 3,H
-                todo!()
+                self.bit::<3>(self.h());
             }
             0x15D => {
                 // BIT 3,L
-                todo!()
+                self.bit::<3>(self.l());
             }
             0x15E => {
                 // BIT 3,(HL)
-                todo!()
+                self.bit::<3>(self.mem8(self.hl()));
             }
             0x15F => {
                 // BIT 3,A
-                todo!()
+                self.bit::<3>(self.a());
             }
             0x160 => {
                 // BIT 4,B
-                todo!()
+                self.bit::<4>(self.b());
             }
             0x161 => {
                 // BIT 4,C
-                todo!()
+                self.bit::<4>(self.c());
             }
             0x162 => {
                 // BIT 4,D
-                todo!()
+                self.bit::<4>(self.d());
             }
             0x163 => {
                 // BIT 4,E
-                todo!()
+                self.bit::<4>(self.e());
             }
             0x164 => {
                 // BIT 4,H
-                todo!()
+                self.bit::<4>(self.h());
             }
             0x165 => {
                 // BIT 4,L
-                todo!()
+                self.bit::<4>(self.l());
             }
             0x166 => {
                 // BIT 4,(HL)
-                todo!()
+                self.bit::<4>(self.mem8(self.hl()));
             }
             0x167 => {
                 // BIT 4,A
-                todo!()
+                self.bit::<4>(self.a());
             }
             0x168 => {
                 // BIT 5,B
-                todo!()
+                self.bit::<5>(self.b());
             }
             0x169 => {
                 // BIT 5,C
-                todo!()
+                self.bit::<5>(self.c());
             }
             0x16A => {
                 // BIT 5,D
-                todo!()
+                self.bit::<5>(self.d());
             }
             0x16B => {
                 // BIT 5,E
-                todo!()
+                self.bit::<5>(self.e());
             }
             0x16C => {
                 // BIT 5,H
-                todo!()
+                self.bit::<5>(self.h());
             }
             0x16D => {
                 // BIT 5,L
-                todo!()
+                self.bit::<5>(self.l());
             }
             0x16E => {
                 // BIT 5,(HL)
-                todo!()
+                self.bit::<5>(self.mem8(self.hl()));
             }
             0x16F => {
                 // BIT 5,A
-                todo!()
+                self.bit::<5>(self.a());
             }
             0x170 => {
                 // BIT 6,B
-                todo!()
+                self.bit::<6>(self.b());
             }
             0x171 => {
                 // BIT 6,C
-                todo!()
+                self.bit::<6>(self.c());
             }
             0x172 => {
                 // BIT 6,D
-                todo!()
+                self.bit::<6>(self.d());
             }
             0x173 => {
                 // BIT 6,E
-                todo!()
+                self.bit::<6>(self.e());
             }
             0x174 => {
                 // BIT 6,H
-                todo!()
+                self.bit::<6>(self.h());
             }
             0x175 => {
                 // BIT 6,L
-                todo!()
+                self.bit::<6>(self.l());
             }
             0x176 => {
                 // BIT 6,(HL)
-                todo!()
+                self.bit::<6>(self.mem8(self.hl()));
             }
             0x177 => {
                 // BIT 6,A
-                todo!()
+                self.bit::<6>(self.a());
             }
             0x178 => {
                 // BIT 7,B
-                todo!()
+                self.bit::<7>(self.b());
             }
             0x179 => {
                 // BIT 7,C
-                todo!()
+                self.bit::<7>(self.c());
             }
             0x17A => {
                 // BIT 7,D
-                todo!()
+                self.bit::<7>(self.d());
             }
             0x17B => {
                 // BIT 7,E
-                todo!()
+                self.bit::<7>(self.e());
             }
             0x17C => {
                 // BIT 7,H
-                if !bw::test_bit16::<8>(self.hl) {
-                    self.set_z_flag(true);
-                }
-                self.set_n_flag(false);
-                self.set_h_flag(true);
+                self.bit::<7>(self.h());
             }
             0x17D => {
                 // BIT 7,L
-                todo!()
+                self.bit::<7>(self.l());
             }
             0x17E => {
                 // BIT 7,(HL)
-                todo!()
+                self.bit::<7>(self.mem8(self.hl()));
             }
             0x17F => {
                 // BIT 7,A
-                todo!()
+                self.bit::<7>(self.a());
             }
             0x180 => {
                 // RES 0,B

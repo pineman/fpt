@@ -636,13 +636,13 @@ fn test_load_hl_pointer_from_8_bit_reg(
 #[case(0xFF)]
 fn test_load_register_from_immediate(
     #[values(
-        (0x06, "b"), 
-        (0x16, "d"),
-        (0x26, "h"),
-        (0x0e, "c"),
-        (0x1e, "e"),
-        (0x2e, "l"),    
-        (0x3e, "a"))]
+    (0x06, "b"),
+    (0x16, "d"),
+    (0x26, "h"),
+    (0x0e, "c"),
+    (0x1e, "e"),
+    (0x2e, "l"),
+    (0x3e, "a"))]
     _opcode_reg @ (opcode, reg): (u8, &str),
     #[case] d8: u8,
 ) {
@@ -826,9 +826,6 @@ fn test_instr_0xf2_ld_from_register_a_from_c_pointer() {
     assert_eq!(sut, expected);
 }
 
-// TODO: break test_add8 (and test_xor8) into three:
-// ADD A,<reg not A>
-// ADD A,A
 #[rstest]
 // ADD A,(HL)
 #[case(0x86, 0xfe, 0x0001, 0x01, 0xff, 0b0000)] // no flags
@@ -837,7 +834,7 @@ fn test_instr_0xf2_ld_from_register_a_from_c_pointer() {
 // XOR A,(HL)
 #[case(0xAE, 0xca, 0x0001, 0xfe, 0x34, 0b0000)]
 #[case(0xAE, 0x01, 0xcafe, 0x01, 0x00, 0b1000)]
-fn test_alu_reg_addr(
+fn test_alu8_reg_addr(
     #[case] opcode: u8,
     #[case] a: u8,
     #[case] hl_addr: u16,
@@ -868,16 +865,16 @@ fn test_alu_reg_addr(
 
 #[rstest]
 // ADD A,r8
-#[case(0x80, 0xfe, "b", 0x01, 0xff, 0b0000)] // no flags
-#[case(0x80, 0x0f, "b", 0x01, 0x10, 0b0010)] // half carry
-#[case(0x80, 0xff, "b", 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x81, 0xff, "c", 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x82, 0xff, "d", 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x83, 0xff, "e", 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x84, 0xff, "h", 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x85, 0xff, "l", 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x87, 0x80, "a", 0x80, 0x00, 0b1001)] // zero, half carry and carry
-#[case(0x87, 0x88, "a", 0x88, 0x10, 0b0011)] // zero, half carry and carry
+#[case(0x80, 0xfe, "b", 0x01, 0xff, 0b0000)]
+#[case(0x80, 0x0f, "b", 0x01, 0x10, 0b0010)]
+#[case(0x80, 0xff, "b", 0x01, 0x00, 0b1011)]
+#[case(0x81, 0xff, "c", 0x01, 0x00, 0b1011)]
+#[case(0x82, 0xff, "d", 0x01, 0x00, 0b1011)]
+#[case(0x83, 0xff, "e", 0x01, 0x00, 0b1011)]
+#[case(0x84, 0xff, "h", 0x01, 0x00, 0b1011)]
+#[case(0x85, 0xff, "l", 0x01, 0x00, 0b1011)]
+#[case(0x87, 0x80, "a", 0x80, 0x00, 0b1001)]
+#[case(0x87, 0x88, "a", 0x88, 0x10, 0b0011)]
 // XOR A,r8
 #[case(0xA8, 0xca, "b", 0xfe, 0x34, 0b0000)]
 #[case(0xA8, 0xca, "b", 0xca, 0x00, 0b1000)]
@@ -956,15 +953,142 @@ fn test_alu16_reg_reg(
 }
 
 #[rstest]
+#[case::not_zero(0x1, 0b0001, 0b0011)]
+#[case::zero(0x0, 0b0000, 0b1010)]
+// BIT n,REG
+fn test_rsb8_reg(
+    #[values(
+    (0x40, "b", 0),
+    (0x41, "c", 0),
+    (0x42, "d", 0),
+    (0x43, "e", 0),
+    (0x44, "h", 0),
+    (0x45, "l", 0),
+    (0x47, "a", 0),
+    (0x48, "b", 1),
+    (0x49, "c", 1),
+    (0x4A, "d", 1),
+    (0x4B, "e", 1),
+    (0x4C, "h", 1),
+    (0x4D, "l", 1),
+    (0x4F, "a", 1),
+    (0x50, "b", 2),
+    (0x51, "c", 2),
+    (0x52, "d", 2),
+    (0x53, "e", 2),
+    (0x54, "h", 2),
+    (0x55, "l", 2),
+    (0x57, "a", 2),
+    (0x58, "b", 3),
+    (0x59, "c", 3),
+    (0x5A, "d", 3),
+    (0x5B, "e", 3),
+    (0x5C, "h", 3),
+    (0x5D, "l", 3),
+    (0x5F, "a", 3),
+    (0x60, "b", 4),
+    (0x61, "c", 4),
+    (0x62, "d", 4),
+    (0x63, "e", 4),
+    (0x64, "h", 4),
+    (0x65, "l", 4),
+    (0x67, "a", 4),
+    (0x68, "b", 5),
+    (0x69, "c", 5),
+    (0x6A, "d", 5),
+    (0x6B, "e", 5),
+    (0x6C, "h", 5),
+    (0x6D, "l", 5),
+    (0x6F, "a", 5),
+    (0x70, "b", 6),
+    (0x71, "c", 6),
+    (0x72, "d", 6),
+    (0x73, "e", 6),
+    (0x74, "h", 6),
+    (0x75, "l", 6),
+    (0x77, "a", 6),
+    (0x78, "b", 7),
+    (0x79, "c", 7),
+    (0x7A, "d", 7),
+    (0x7B, "e", 7),
+    (0x7C, "h", 7),
+    (0x7D, "l", 7),
+    (0x7F, "a", 7))]
+    _opcode_src_reg_n @ (opcode, src_reg, n): (u16, &str, u8),
+    #[case] value: u8,
+    #[case] flags_before: u8,
+    #[case] flags_after: u8,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem16(0x0000, (opcode << 8) + 0xCB)
+        .with_reg8(src_reg, value << n)
+        .with_f(flags_before << 4);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(2)
+        .with_f(flags_after << 4)
+        .with_clock_cycles(8)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
+#[case::not_zero(0x1, 0b0001, 0b0011)]
+#[case::zero(0x0, 0b0000, 0b1010)]
+// BIT n,(HL)
+fn test_rsb8_addr(
+    #[values(
+    (0x46, 0),
+    (0x4E, 1),
+    (0x56, 2),
+    (0x5E, 3),
+    (0x66, 4),
+    (0x6E, 5),
+    (0x76, 6),
+    (0x7E, 7))]
+    _opcode_n @ (opcode, n): (u16, u8),
+    #[case] value: u8,
+    #[case] flags_before: u8,
+    #[case] flags_after: u8,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem16(0x0000, (opcode << 8) + 0xCB)
+        .with_mem8(0x0002, value << n)
+        .with_reg16("hl", 0x0002)
+        .with_f(flags_before << 4);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(2)
+        .with_f(flags_after << 4)
+        .with_clock_cycles(16)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
 #[case::base_case(0x00, 0x01, 0b0000, 0b0000)]
 #[case::overwrite(0x41, 0x42, 0b1111, 0b0001)]
 #[case::half_carry(0x0F, 0x10, 0b0010, 0b0010)]
 #[case::zero_flag(0xFF, 0x00, 0b0000, 0b1010)] // and no carry, unlike ADD 1
 fn test_inc_8_bit_reg(
     #[values((0x04, "b"), (0x0C, "c"),
-             (0x14, "d"), (0x1C, "e"),
-             (0x24, "h"), (0x2C, "l"),
-             (0x3C, "a"))]
+    (0x14, "d"), (0x1C, "e"),
+    (0x24, "h"), (0x2C, "l"),
+    (0x3C, "a"))]
     _opcode_reg @ (opcode, reg): (u8, &str),
     #[case] value: u8,
     #[case] result: u8,
@@ -981,6 +1105,7 @@ fn test_inc_8_bit_reg(
     // When
     sut.step();
 
+    // Then
     let expected = builder
         .with_pc(1)
         .with_reg8(reg, result)
@@ -996,9 +1121,9 @@ fn test_inc_8_bit_reg(
 #[case(0xFFFF, 0x0000)]
 fn test_inc_16_bit_reg(
     #[values((0x03, "bc"),
-             (0x13, "de"),
-             (0x23, "hl"),
-             (0x33, "sp"))]
+    (0x13, "de"),
+    (0x23, "hl"),
+    (0x33, "sp"))]
     _opcode_reg @ (opcode, reg): (u8, &str),
     #[case] value: u16,
     #[case] result: u16,
@@ -1014,6 +1139,7 @@ fn test_inc_16_bit_reg(
     // When
     sut.step();
 
+    // Then
     let expected = builder
         .with_pc(1)
         .with_reg16(reg, result)
@@ -1021,6 +1147,7 @@ fn test_inc_16_bit_reg(
         .build();
     assert_eq!(sut, expected);
 }
+
 #[rstest]
 #[case(0xC2, 0xFF00, "z", true, 3, 12)]
 #[case(0xC2, 0xFF00, "z", false, 0xFF00, 16)]
@@ -1128,6 +1255,7 @@ fn test_pop(#[case] opcode: u8, #[case] register: &str, #[case] value: u16, #[ca
         .build();
     assert_eq!(sut, expected);
 }
+
 #[rstest]
 #[rustfmt::skip]
 //        a,  reg,     z,     h,    c
