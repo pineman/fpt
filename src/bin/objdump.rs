@@ -2,11 +2,11 @@ use fpt::lr35902::LR35902;
 
 use clap::Parser;
 
-/// Simple program to greet a person
+/// Parse rom and output the disassembly
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Name of the person to greet
+    /// Flag to enable debug output
     #[arg(short, long)]
     debug: bool,
 }
