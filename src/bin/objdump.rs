@@ -25,12 +25,14 @@ fn main() {
             println!("pc: {}", lr.pc());
         }
         let instruction = lr.decode();
-        println!(
-            "{:#02X}: {:#02X} {}",
-            lr.pc(),
-            instruction.opcode,
-            instruction.mnemonic
-        );
+        //println!(
+        //    "{:#02X}: {:#02X} {}",
+        //    lr.pc(),
+        //    instruction.opcode,
+        //    instruction.mnemonic
+        //);
+        //
+        println!("{:#02X}: {}", lr.pc(), instruction);
 
         if instruction.size == 0 {
             panic!();

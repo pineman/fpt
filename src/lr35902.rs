@@ -6,6 +6,15 @@ use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use crate::bitwise as bw;
 
+fn compute_relative_address(base:u16, offset:i8) -> u16 {
+    let r = base as i32 + offset as i32;
+    if r > 65535 || r < 0 {
+        panic!();
+    }
+
+    r as u16
+}
+
 #[derive(PartialEq, Clone)]
 pub struct LR35902 {
     af: u16,
@@ -261,7 +270,7 @@ impl LR35902 {
         }
         let instruction = INSTRUCTIONS[opcode as usize];
         if self.debug {
-            println!("{:#02X} {}", instruction.opcode, instruction.mnemonic);
+            println!("{}", instruction);
         }
 
         instruction
@@ -471,14 +480,14 @@ impl LR35902 {
             0x16 => {
                 // LD D,d8
                 self.set_d(self.get_d8(0));
-            }
+           }
             0x17 => {
                 // RLA
                 todo!()
             }
             0x18 => {
                 // JR r8
-                self.jump((self.pc() as i32 + self.get_d8(0) as i8 as i32) as u16);
+                self.jump(compute_relative_address(self.pc(), self.get_r8(0)));
             }
             0x19 => {
                 // ADD HL,DE
@@ -513,7 +522,7 @@ impl LR35902 {
             0x20 => {
                 // JR NZ,r8
                 if !self.z_flag() {
-                    self.jump((self.pc() as i32 + (self.get_d8(0) as i8) as i32) as u16)
+                    self.jump(compute_relative_address(self.pc(), self.get_r8(0)))
                 }
             }
             0x21 => {
@@ -550,7 +559,7 @@ impl LR35902 {
             0x28 => {
                 // JR Z,r8
                 if self.z_flag() {
-                    self.jump(self.pc() + self.get_d8(0) as u16);
+                    self.jump(compute_relative_address(self.pc(), self.get_r8(0)));
                 }
             }
             0x29 => {
@@ -587,7 +596,7 @@ impl LR35902 {
             0x30 => {
                 // JR NC,r8
                 if !self.c_flag() {
-                    self.jump(self.pc() + self.get_d8(0) as u16);
+                    self.jump(compute_relative_address(self.pc(), self.get_r8(0)));
                 }
             }
             0x31 => {
@@ -623,7 +632,7 @@ impl LR35902 {
             0x38 => {
                 // JR C,r8
                 if self.c_flag() {
-                    self.jump(self.pc() + self.get_d8(0) as u16);
+                    self.jump(compute_relative_address(self.pc(), self.get_r8(0)));
                 }
             }
             0x39 => {
