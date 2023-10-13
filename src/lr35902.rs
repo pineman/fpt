@@ -276,7 +276,7 @@ impl LR35902 {
             if self.branch_taken {
                 self.branch_taken = false;
             } else {
-                cycles = dbg!(instruction.cycles_not_taken);
+                cycles = instruction.cycles_not_taken;
             }
         }
         self.set_pc(self.pc() + instruction.size as u16);
@@ -357,7 +357,7 @@ impl LR35902 {
     }
 
     fn jump(&mut self, address: u16) {
-        self.set_pc(dbg!(address));
+        self.set_pc(address);
         self.branch_taken = true;
     }
 
@@ -410,7 +410,7 @@ impl LR35902 {
             }
             0x08 => {
                 // LD (a16),SP
-                self.set_mem16(dbg!(self.get_d16(0)), self.sp());
+                self.set_mem16(self.get_d16(0), self.sp());
             }
             0x09 => {
                 // ADD HL,BC
@@ -478,7 +478,7 @@ impl LR35902 {
             }
             0x18 => {
                 // JR r8
-                self.jump(dbg!(dbg!(self.pc() as i32) + dbg!(self.get_d8(0) as i8 as i32)) as u16);
+                self.jump((self.pc() as i32 + self.get_d8(0) as i8 as i32) as u16);
             }
             0x19 => {
                 // ADD HL,DE
@@ -512,8 +512,8 @@ impl LR35902 {
             }
             0x20 => {
                 // JR NZ,r8
-                if dbg!(!self.z_flag()) {
-                    self.jump((self.pc() as i32 + (dbg!(self.get_d8(0)) as i8) as i32) as u16)
+                if !self.z_flag() {
+                    self.jump((self.pc() as i32 + (self.get_d8(0) as i8) as i32) as u16)
                 }
             }
             0x21 => {

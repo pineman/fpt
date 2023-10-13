@@ -613,7 +613,7 @@ fn test_load_hl_pointer_from_8_bit_reg(
     // Given
     let builder = LR35902Builder::new()
         .with_mem8(0x0000, opcode)
-        .with_hl(dbg!(hl))
+        .with_hl(hl)
         .with_reg8(src_reg, value);
 
     let mut sut = builder.clone().build();
@@ -749,7 +749,7 @@ fn test_instr_0xe2_ld_pointer_c_from_register_a() {
     // When
     sut.step();
 
-    dbg!(sut.mem8(0xFF00 + (address as u16)));
+    sut.mem8(0xFF00 + (address as u16));
 
     // Then
     let expected = builder
@@ -819,7 +819,7 @@ fn test_instr_0xf2_ld_from_register_a_from_c_pointer() {
     // When
     sut.step();
 
-    dbg!(sut.mem8(0xFF00 + (address as u16)));
+    sut.mem8(0xFF00 + (address as u16));
 
     // Then
     let expected = builder.with_pc(1).with_clock_cycles(8).with_a(0x01).build();
