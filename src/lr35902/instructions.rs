@@ -17,7 +17,7 @@ pub enum InstructionKind {
     AL8Bit, // Arithmetic/Logic
     AL16Bit,
     RSB8Bit, // Rotate/Shift and Bit
-    NI, // Not Implemented
+    NI,      // Not Implemented
 }
 
 pub static INSTRUCTIONS: [Instruction; 512] = [

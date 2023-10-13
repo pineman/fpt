@@ -2,6 +2,11 @@ pub fn get_byte16<const INDEX: u8>(word: u16) -> u8 {
     ((word >> (8 * INDEX)) & 0xFF) as u8
 }
 
+pub fn test_bit8<const INDEX: u8>(word: u8) -> bool {
+    let mask: u8 = 1 << INDEX;
+    word & mask == mask
+}
+
 pub fn test_bit16<const INDEX: u8>(word: u16) -> bool {
     let mask: u16 = 1 << INDEX;
     word & mask == mask
