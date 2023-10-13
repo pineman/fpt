@@ -12,6 +12,10 @@ pub fn test_bit16<const INDEX: u8>(word: u16) -> bool {
     word & mask == mask
 }
 
+pub fn set_bit8<const INDEX: u8>(word: u8, value: bool) -> u8 {
+    word & !(1 << INDEX) | (u8::from(value) << INDEX)
+}
+
 pub fn set_bit16<const INDEX: u8>(word: u16, value: bool) -> u16 {
     word & !(1 << INDEX) | (u16::from(value) << INDEX)
 }

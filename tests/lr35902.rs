@@ -1080,6 +1080,135 @@ fn test_rsb8_addr(
 }
 
 #[rstest]
+#[case::not_zero(0x1, 0b0101, 0b0101)]
+#[case::zero(0x0, 0b1010, 0b1010)]
+// RES n,REG
+fn test_rsb8_reg_reg(
+    #[values(
+    (0x80, "b", 0),
+    (0x81, "c", 0),
+    (0x82, "d", 0),
+    (0x83, "e", 0),
+    (0x84, "h", 0),
+    (0x85, "l", 0),
+    (0x87, "a", 0),
+    (0x88, "b", 1),
+    (0x89, "c", 1),
+    (0x8A, "d", 1),
+    (0x8B, "e", 1),
+    (0x8C, "h", 1),
+    (0x8D, "l", 1),
+    (0x8F, "a", 1),
+    (0x90, "b", 2),
+    (0x91, "c", 2),
+    (0x92, "d", 2),
+    (0x93, "e", 2),
+    (0x94, "h", 2),
+    (0x95, "l", 2),
+    (0x97, "a", 2),
+    (0x98, "b", 3),
+    (0x99, "c", 3),
+    (0x9A, "d", 3),
+    (0x9B, "e", 3),
+    (0x9C, "h", 3),
+    (0x9D, "l", 3),
+    (0x9F, "a", 3),
+    (0xA0, "b", 4),
+    (0xA1, "c", 4),
+    (0xA2, "d", 4),
+    (0xA3, "e", 4),
+    (0xA4, "h", 4),
+    (0xA5, "l", 4),
+    (0xA7, "a", 4),
+    (0xA8, "b", 5),
+    (0xA9, "c", 5),
+    (0xAA, "d", 5),
+    (0xAB, "e", 5),
+    (0xAC, "h", 5),
+    (0xAD, "l", 5),
+    (0xAF, "a", 5),
+    (0xB0, "b", 6),
+    (0xB1, "c", 6),
+    (0xB2, "d", 6),
+    (0xB3, "e", 6),
+    (0xB4, "h", 6),
+    (0xB5, "l", 6),
+    (0xB7, "a", 6),
+    (0xB8, "b", 7),
+    (0xB9, "c", 7),
+    (0xBA, "d", 7),
+    (0xBB, "e", 7),
+    (0xBC, "h", 7),
+    (0xBD, "l", 7),
+    (0xBF, "a", 7))]
+    _opcode_src_reg_n @ (opcode, src_reg, n): (u16, &str, u8),
+    #[case] value: u8,
+    #[case] flags_before: u8,
+    #[case] flags_after: u8,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem16(0x0000, (opcode << 8) + 0xCB)
+        .with_reg8(src_reg, value << n)
+        .with_f(flags_before << 4);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(2)
+        .with_reg8(src_reg, 0)
+        .with_f(flags_after << 4)
+        .with_clock_cycles(8)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
+#[case::not_zero(0x1, 0b0101, 0b0101)]
+#[case::zero(0x0, 0b1010, 0b1010)]
+// RES n,(HL)
+fn test_rsb8_reg_addr(
+    #[values(
+    (0x86, 0),
+    (0x8E, 1),
+    (0x96, 2),
+    (0x9E, 3),
+    (0xA6, 4),
+    (0xAE, 5),
+    (0xB6, 6),
+    (0xBE, 7))]
+    _opcode_n @ (opcode, n): (u16, u8),
+    #[case] value: u8,
+    #[case] flags_before: u8,
+    #[case] flags_after: u8,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem16(0x0000, (opcode << 8) + 0xCB)
+        .with_mem8(0x02, value << n)
+        .with_reg16("hl", 0x0002)
+        .with_f(flags_before << 4);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(2)
+        .with_mem8(0x02, 0)
+        .with_f(flags_after << 4)
+        .with_clock_cycles(16)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
 #[case::base_case(0x00, 0x01, 0b0000, 0b0000)]
 #[case::overwrite(0x41, 0x42, 0b1111, 0b0001)]
 #[case::half_carry(0x0F, 0x10, 0b0010, 0b0010)]

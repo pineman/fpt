@@ -275,6 +275,7 @@ impl LR35902 {
 
         instruction
     }
+
     /// Run one cycle
     pub fn step(&mut self) {
         let instruction = self.decode();
@@ -1998,259 +1999,259 @@ impl LR35902 {
             }
             0x180 => {
                 // RES 0,B
-                todo!()
+                self.set_b(bw::set_bit8::<0>(self.b(), false));
             }
             0x181 => {
                 // RES 0,C
-                todo!()
+                self.set_c(bw::set_bit8::<0>(self.c(), false));
             }
             0x182 => {
                 // RES 0,D
-                todo!()
+                self.set_d(bw::set_bit8::<0>(self.d(), false));
             }
             0x183 => {
                 // RES 0,E
-                todo!()
+                self.set_e(bw::set_bit8::<0>(self.e(), false));
             }
             0x184 => {
                 // RES 0,H
-                todo!()
+                self.set_h(bw::set_bit8::<0>(self.h(), false));
             }
             0x185 => {
                 // RES 0,L
-                todo!()
+                self.set_l(bw::set_bit8::<0>(self.l(), false));
             }
             0x186 => {
                 // RES 0,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<0>(self.mem8(self.hl()), false));
             }
             0x187 => {
                 // RES 0,A
-                todo!()
+                self.set_a(bw::set_bit8::<0>(self.a(), false));
             }
             0x188 => {
                 // RES 1,B
-                todo!()
+                self.set_b(bw::set_bit8::<1>(self.b(), false));
             }
             0x189 => {
                 // RES 1,C
-                todo!()
+                self.set_c(bw::set_bit8::<1>(self.c(), false));
             }
             0x18A => {
                 // RES 1,D
-                todo!()
+                self.set_d(bw::set_bit8::<1>(self.d(), false));
             }
             0x18B => {
                 // RES 1,E
-                todo!()
+                self.set_e(bw::set_bit8::<1>(self.e(), false));
             }
             0x18C => {
                 // RES 1,H
-                todo!()
+                self.set_h(bw::set_bit8::<1>(self.h(), false));
             }
             0x18D => {
                 // RES 1,L
-                todo!()
+                self.set_l(bw::set_bit8::<1>(self.l(), false));
             }
             0x18E => {
                 // RES 1,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<1>(self.mem8(self.hl()), false));
             }
             0x18F => {
                 // RES 1,A
-                todo!()
+                self.set_a(bw::set_bit8::<1>(self.a(), false));
             }
             0x190 => {
                 // RES 2,B
-                todo!()
+                self.set_b(bw::set_bit8::<2>(self.b(), false));
             }
             0x191 => {
                 // RES 2,C
-                todo!()
+                self.set_c(bw::set_bit8::<2>(self.c(), false));
             }
             0x192 => {
                 // RES 2,D
-                todo!()
+                self.set_d(bw::set_bit8::<2>(self.d(), false));
             }
             0x193 => {
                 // RES 2,E
-                todo!()
+                self.set_e(bw::set_bit8::<2>(self.e(), false));
             }
             0x194 => {
                 // RES 2,H
-                todo!()
+                self.set_h(bw::set_bit8::<2>(self.h(), false));
             }
             0x195 => {
                 // RES 2,L
-                todo!()
+                self.set_l(bw::set_bit8::<2>(self.l(), false));
             }
             0x196 => {
                 // RES 2,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<2>(self.mem8(self.hl()), false));
             }
             0x197 => {
                 // RES 2,A
-                todo!()
+                self.set_a(bw::set_bit8::<2>(self.a(), false));
             }
             0x198 => {
                 // RES 3,B
-                todo!()
+                self.set_b(bw::set_bit8::<3>(self.b(), false));
             }
             0x199 => {
                 // RES 3,C
-                todo!()
+                self.set_c(bw::set_bit8::<3>(self.c(), false));
             }
             0x19A => {
                 // RES 3,D
-                todo!()
+                self.set_d(bw::set_bit8::<3>(self.d(), false));
             }
             0x19B => {
                 // RES 3,E
-                todo!()
+                self.set_e(bw::set_bit8::<3>(self.e(), false));
             }
             0x19C => {
                 // RES 3,H
-                todo!()
+                self.set_h(bw::set_bit8::<3>(self.h(), false));
             }
             0x19D => {
                 // RES 3,L
-                todo!()
+                self.set_l(bw::set_bit8::<3>(self.l(), false));
             }
             0x19E => {
                 // RES 3,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<3>(self.mem8(self.hl()), false));
             }
             0x19F => {
                 // RES 3,A
-                todo!()
+                self.set_a(bw::set_bit8::<3>(self.a(), false));
             }
             0x1A0 => {
                 // RES 4,B
-                todo!()
+                self.set_b(bw::set_bit8::<4>(self.b(), false));
             }
             0x1A1 => {
                 // RES 4,C
-                todo!()
+                self.set_c(bw::set_bit8::<4>(self.c(), false));
             }
             0x1A2 => {
                 // RES 4,D
-                todo!()
+                self.set_d(bw::set_bit8::<4>(self.d(), false));
             }
             0x1A3 => {
                 // RES 4,E
-                todo!()
+                self.set_e(bw::set_bit8::<4>(self.e(), false));
             }
             0x1A4 => {
                 // RES 4,H
-                todo!()
+                self.set_h(bw::set_bit8::<4>(self.h(), false));
             }
             0x1A5 => {
                 // RES 4,L
-                todo!()
+                self.set_l(bw::set_bit8::<4>(self.l(), false));
             }
             0x1A6 => {
                 // RES 4,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<4>(self.mem8(self.hl()), false));
             }
             0x1A7 => {
                 // RES 4,A
-                todo!()
+                self.set_a(bw::set_bit8::<4>(self.a(), false));
             }
             0x1A8 => {
                 // RES 5,B
-                todo!()
+                self.set_b(bw::set_bit8::<5>(self.b(), false));
             }
             0x1A9 => {
                 // RES 5,C
-                todo!()
+                self.set_c(bw::set_bit8::<5>(self.c(), false));
             }
             0x1AA => {
                 // RES 5,D
-                todo!()
+                self.set_d(bw::set_bit8::<5>(self.d(), false));
             }
             0x1AB => {
                 // RES 5,E
-                todo!()
+                self.set_e(bw::set_bit8::<5>(self.e(), false));
             }
             0x1AC => {
                 // RES 5,H
-                todo!()
+                self.set_h(bw::set_bit8::<5>(self.h(), false));
             }
             0x1AD => {
                 // RES 5,L
-                todo!()
+                self.set_l(bw::set_bit8::<5>(self.l(), false));
             }
             0x1AE => {
                 // RES 5,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<5>(self.mem8(self.hl()), false));
             }
             0x1AF => {
                 // RES 5,A
-                todo!()
+                self.set_a(bw::set_bit8::<5>(self.a(), false));
             }
             0x1B0 => {
                 // RES 6,B
-                todo!()
+                self.set_b(bw::set_bit8::<6>(self.b(), false));
             }
             0x1B1 => {
                 // RES 6,C
-                todo!()
+                self.set_c(bw::set_bit8::<6>(self.c(), false));
             }
             0x1B2 => {
                 // RES 6,D
-                todo!()
+                self.set_d(bw::set_bit8::<6>(self.d(), false));
             }
             0x1B3 => {
                 // RES 6,E
-                todo!()
+                self.set_e(bw::set_bit8::<6>(self.e(), false));
             }
             0x1B4 => {
                 // RES 6,H
-                todo!()
+                self.set_h(bw::set_bit8::<6>(self.h(), false));
             }
             0x1B5 => {
                 // RES 6,L
-                todo!()
+                self.set_l(bw::set_bit8::<6>(self.l(), false));
             }
             0x1B6 => {
                 // RES 6,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<6>(self.mem8(self.hl()), false));
             }
             0x1B7 => {
                 // RES 6,A
-                todo!()
+                self.set_a(bw::set_bit8::<6>(self.a(), false));
             }
             0x1B8 => {
                 // RES 7,B
-                todo!()
+                self.set_b(bw::set_bit8::<7>(self.b(), false));
             }
             0x1B9 => {
                 // RES 7,C
-                todo!()
+                self.set_c(bw::set_bit8::<7>(self.c(), false));
             }
             0x1BA => {
                 // RES 7,D
-                todo!()
+                self.set_d(bw::set_bit8::<7>(self.d(), false));
             }
             0x1BB => {
                 // RES 7,E
-                todo!()
+                self.set_e(bw::set_bit8::<7>(self.e(), false));
             }
             0x1BC => {
                 // RES 7,H
-                todo!()
+                self.set_h(bw::set_bit8::<7>(self.h(), false));
             }
             0x1BD => {
                 // RES 7,L
-                todo!()
+                self.set_l(bw::set_bit8::<7>(self.l(), false));
             }
             0x1BE => {
                 // RES 7,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<7>(self.mem8(self.hl()), false));
             }
             0x1BF => {
                 // RES 7,A
-                todo!()
+                self.set_a(bw::set_bit8::<7>(self.a(), false));
             }
             0x1C0 => {
                 // SET 0,B
