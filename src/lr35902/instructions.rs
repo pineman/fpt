@@ -17,6 +17,7 @@ pub enum InstructionKind {
     AL8Bit, // Arithmetic/Logic
     AL16Bit,
     RSB8Bit, // Rotate/Shift and Bit
+    NI, // Not Implemented
 }
 
 pub static INSTRUCTIONS: [Instruction; 512] = [
@@ -1710,11 +1711,11 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xD3,
-        mnemonic: "NOT IMPLEMENTED",
+        mnemonic: "NI",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
-        kind: InstructionKind::Control,
+        kind: InstructionKind::NI,
     },
     Instruction {
         opcode: 0xD4,
@@ -1774,11 +1775,11 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xDB,
-        mnemonic: "NOT IMPLEMENTED",
+        mnemonic: "NI",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
-        kind: InstructionKind::Control,
+        kind: InstructionKind::NI,
     },
     Instruction {
         opcode: 0xDC,
@@ -1790,11 +1791,11 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xDD,
-        mnemonic: "NOT IMPLEMENTED",
+        mnemonic: "NI",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
-        kind: InstructionKind::Control,
+        kind: InstructionKind::NI,
     },
     Instruction {
         opcode: 0xDE,
@@ -1838,19 +1839,19 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xE3,
-        mnemonic: "NOT IMPLEMENTED",
+        mnemonic: "NI",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
-        kind: InstructionKind::Control,
+        kind: InstructionKind::NI,
     },
     Instruction {
         opcode: 0xE4,
-        mnemonic: "NOT IMPLEMENTED",
+        mnemonic: "NI",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
-        kind: InstructionKind::Control,
+        kind: InstructionKind::NI,
     },
     Instruction {
         opcode: 0xE5,
@@ -1902,27 +1903,27 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xEB,
-        mnemonic: "NOT IMPLEMENTED",
+        mnemonic: "NI",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
-        kind: InstructionKind::Control,
+        kind: InstructionKind::NI,
     },
     Instruction {
         opcode: 0xEC,
-        mnemonic: "NOT IMPLEMENTED",
+        mnemonic: "NI",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
-        kind: InstructionKind::Control,
+        kind: InstructionKind::NI,
     },
     Instruction {
         opcode: 0xED,
-        mnemonic: "NOT IMPLEMENTED",
+        mnemonic: "NI",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
-        kind: InstructionKind::Control,
+        kind: InstructionKind::NI,
     },
     Instruction {
         opcode: 0xEE,
@@ -1974,11 +1975,11 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xF4,
-        mnemonic: "NOT IMPLEMENTED",
+        mnemonic: "NI",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
-        kind: InstructionKind::Control,
+        kind: InstructionKind::NI,
     },
     Instruction {
         opcode: 0xF5,
@@ -2038,7 +2039,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xFC,
-        mnemonic: "NOT IMPLEMENTED",
+        mnemonic: "NI",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
@@ -2046,11 +2047,11 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     },
     Instruction {
         opcode: 0xFD,
-        mnemonic: "NOT IMPLEMENTED",
+        mnemonic: "NI",
         size: 0,
         cycles: 0,
         cycles_not_taken: 0,
-        kind: InstructionKind::Control,
+        kind: InstructionKind::NI,
     },
     Instruction {
         opcode: 0xFE,
