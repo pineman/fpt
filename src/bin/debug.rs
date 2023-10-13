@@ -1,5 +1,6 @@
 struct Debugger {}
 
+#[allow(dead_code)]
 impl Debugger {
     fn new() -> Self {
         Debugger {}

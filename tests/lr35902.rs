@@ -1149,30 +1149,30 @@ fn test_inc_16_bit_reg(
 }
 
 #[rstest]
-#[case(0xC2, 0xFF00, "z", true, 3, 12)]
-#[case(0xC2, 0xFF00, "z", false, 0xFF00, 16)]
-#[case(0xD2, 0xFF00, "c", true, 3, 12)]
-#[case(0xD2, 0xFF00, "c", false, 0xFF00, 16)]
-#[case(0xCA, 0xFF00, "z", true, 0xFF00, 16)]
-#[case(0xCA, 0xFF00, "z", false, 3, 12)]
-#[case(0xDA, 0xFF00, "c", true, 0xFF00, 16)]
-#[case(0xDA, 0xFF00, "c", false, 3, 12)]
-#[case(0xC3, 0xFF00, "z", false, 0xFF00, 16)]
-#[case(0xC3, 0xFF00, "z", true, 0xFF00, 16)]
-#[case(0xC3, 0xFF00, "c", false, 0xFF00, 16)]
-#[case(0xC3, 0xFF00, "c", true, 0xFF00, 16)]
-#[case(0x20, 0x00FF, "z", true, 2, 8)]
-#[case(0x20, 0x00FF, "z", false, 0x00FF, 12)]
-#[case(0x30, 0x00FF, "c", true, 2, 8)]
-#[case(0x30, 0x00FF, "c", false, 0x00FF, 12)]
-#[case(0x28, 0x00FF, "z", true, 0x00FF, 12)]
-#[case(0x28, 0x00FF, "z", false, 2, 8)]
-#[case(0x38, 0x00FF, "c", true, 0x00FF, 12)]
-#[case(0x38, 0x00FF, "c", false, 2, 8)]
-#[case(0x18, 0x00FF, "z", false, 0x00FF, 12)]
-#[case(0x18, 0x00FF, "z", true, 0x00FF, 12)]
-#[case(0x18, 0x00FF, "c", false, 0x00FF, 12)]
-#[case(0x18, 0x00FF, "c", true, 0x00FF, 12)]
+#[case(0xC2, 0xFF00, "z", true, 3, 12)] // 1
+#[case(0xC2, 0xFF00, "z", false, 0xFF03, 16)] // 2
+#[case(0xD2, 0xFF00, "c", true, 3, 12)] // 3
+#[case(0xD2, 0xFF00, "c", false, 0xFF03, 16)] // 4
+#[case(0xCA, 0xFF00, "z", true, 0xFF03, 16)] // 5
+#[case(0xCA, 0xFF00, "z", false, 3, 12)] // 6
+#[case(0xDA, 0xFF00, "c", true, 0xFF03, 16)] // 7
+#[case(0xDA, 0xFF00, "c", false, 3, 12)] // 8
+#[case(0xC3, 0xFF00, "z", false, 0xFF03, 16)] // 9
+#[case(0xC3, 0xFF00, "z", true, 0xFF03, 16)] // 10
+#[case(0xC3, 0xFF00, "c", false, 0xFF03, 16)] // 11
+#[case(0xC3, 0xFF00, "c", true, 0xFF03, 16)] // 12
+#[case(0x20, 0x000F, "z", true, 2, 8)] // 13
+#[case(0x20, 0x000F, "z", false, 0x0011, 12)] // 14
+#[case(0x30, 0x000F, "c", true, 2, 8)] // 15
+#[case(0x30, 0x000F, "c", false, 0x0011, 12)] // 16
+#[case(0x28, 0x000F, "z", true, 0x0011, 12)] // 17
+#[case(0x28, 0x000F, "z", false, 2, 8)] // 18
+#[case(0x38, 0x000F, "c", true, 0x0011, 12)] // 19
+#[case(0x38, 0x000F, "c", false, 2, 8)] // 20
+#[case(0x18, 0x000F, "z", false, 0x0011, 12)] // 21
+#[case(0x18, 0x000F, "z", true, 0x0011, 12)] // 22
+#[case(0x18, 0x000F, "c", false, 0x0011, 12)] // 23
+#[case(0x18, 0x000F, "c", true, 0x0011, 12)] // 24
 fn test_jump(
     #[case] opcode: u8,
     #[case] address: u16,
@@ -1262,7 +1262,7 @@ fn test_pop(#[case] opcode: u8, #[case] register: &str, #[case] value: u16, #[ca
 #[case(0x10, 0x10,  true, false, true)]
 #[case(0x10, 0x11, false, false, false)]
 fn test_cp(
-    #[values((0xB8, "b"))] _opcode_reg @ (opcode, reg): (u8, &str),
+    #[values((0xB8, "b"), (0xB9, "c"), (0xBA, "d"), (0xBB, "e"), (0xBC, "h"), (0xBD, "l"))] _opcode_reg @ (opcode, reg): (u8, &str),
     #[case] a: u8,
     #[case] reg_value: u8,
     #[case] z: bool,
