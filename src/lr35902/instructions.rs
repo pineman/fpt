@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Instruction {
     pub opcode: u16,
@@ -6,6 +8,12 @@ pub struct Instruction {
     pub cycles: u8,
     pub cycles_not_taken: u8,
     pub kind: InstructionKind,
+}
+
+impl fmt::Display for Instruction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:#02X} {}", self.opcode, self.mnemonic)
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
