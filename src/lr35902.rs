@@ -517,6 +517,7 @@ impl LR35902 {
             0x18 => {
                 // JR r8
                 self.jump(compute_relative_address(self.pc(), self.get_r8(0)));
+                self.set_pc(self.pc() + instruction.size as u16)
             }
             0x19 => {
                 // ADD HL,DE
@@ -551,7 +552,8 @@ impl LR35902 {
             0x20 => {
                 // JR NZ,r8
                 if !self.z_flag() {
-                    self.jump(compute_relative_address(self.pc(), self.get_r8(0)))
+                    self.jump(compute_relative_address(self.pc(), self.get_r8(0)));
+                    self.set_pc(self.pc() + instruction.size as u16);
                 }
             }
             0x21 => {
@@ -589,6 +591,7 @@ impl LR35902 {
                 // JR Z,r8
                 if self.z_flag() {
                     self.jump(compute_relative_address(self.pc(), self.get_r8(0)));
+                    self.set_pc(self.pc() + instruction.size as u16);
                 }
             }
             0x29 => {
@@ -628,6 +631,7 @@ impl LR35902 {
                 // JR NC,r8
                 if !self.c_flag() {
                     self.jump(compute_relative_address(self.pc(), self.get_r8(0)));
+                    self.set_pc(self.pc() + instruction.size as u16);
                 }
             }
             0x31 => {
@@ -666,6 +670,7 @@ impl LR35902 {
                 // JR C,r8
                 if self.c_flag() {
                     self.jump(compute_relative_address(self.pc(), self.get_r8(0)));
+                    self.set_pc(self.pc() + instruction.size as u16);
                 }
             }
             0x39 => {
@@ -1259,12 +1264,14 @@ impl LR35902 {
             0xC2 => {
                 // JP NZ,a16
                 if !self.z_flag() {
-                    self.jump(self.get_d16(0))
+                    self.jump(self.get_d16(0));
+                    self.set_pc(self.pc() + instruction.size as u16);
                 }
             }
             0xC3 => {
                 // JP a16
                 self.jump(self.get_d16(0));
+                self.set_pc(self.pc() + instruction.size as u16);
             }
             0xC4 => {
                 // CALL NZ,a16
@@ -1294,8 +1301,8 @@ impl LR35902 {
             0xCA => {
                 // JP Z,a16
                 if self.z_flag() {
-                    self.set_pc(self.get_d16(0));
-                    self.branch_taken = true;
+                    self.jump(self.get_d16(0));
+                    self.set_pc(self.pc() + instruction.size as u16);
                 }
             }
             0xCB => {
@@ -1334,8 +1341,8 @@ impl LR35902 {
             0xD2 => {
                 // JP NC,a16
                 if !self.c_flag() {
-                    self.set_pc(self.get_d16(0));
-                    self.branch_taken = true;
+                    self.jump(self.get_d16(0));
+                    self.set_pc(self.pc() + instruction.size as u16);
                 }
             }
             0xD3 => {
@@ -1370,6 +1377,7 @@ impl LR35902 {
                 // JP C,a16
                 if self.c_flag() {
                     self.jump(self.get_d16(0));
+                    self.set_pc(self.pc() + instruction.size as u16);
                 }
             }
             0xDB => {

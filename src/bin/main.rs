@@ -18,7 +18,7 @@ fn main() {
 
     loop {
         if args.debug {
-            println!("pc: {}", lr.pc());
+            println!("pc: {:#02X}", lr.pc());
         }
         lr.step();
     }
