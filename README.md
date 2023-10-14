@@ -5,7 +5,8 @@
 * https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/
 * http://z80.info/decoding.htm
 
-## References (sort of)
+## References
+* https://ia803208.us.archive.org/9/items/GameBoyProgManVer1.1/GameBoyProgManVer1.1.pdf
 * http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf
 * https://gekkio.fi/files/gb-docs/gbctr.pdf
 
