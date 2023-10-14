@@ -887,6 +887,17 @@ fn test_instr_0xf2_ld_from_register_a_from_c_pointer() {
 #[case(0x8F, 0x80, "a", 0x80, 0x00, 0b0000, 0b1001)]
 #[case(0x8F, 0x80, "a", 0x80, 0x01, 0b0001, 0b0001)]
 #[case(0x8F, 0x88, "a", 0x88, 0x10, 0b0000, 0b0011)]
+// SUB A,r8
+#[case::sub01(0x90, 0x3E, "b", 0x3E, 0x00, 0b0000, 0b1100)]
+#[case::sub02(0x90, 0x3E, "b", 0x0F, 0x2F, 0b0000, 0b0110)]
+#[case::sub03(0x90, 0x3E, "b", 0x40, 0xFE, 0b0000, 0b0101)]
+#[case::sub04(0x90, 0x01, "b", 0xF1, 0x10, 0b0000, 0b0101)]
+#[case::sub05(0x91, 0x3E, "c", 0x0F, 0x2F, 0b0000, 0b0110)]
+#[case::sub06(0x92, 0x3E, "d", 0x0F, 0x2F, 0b0000, 0b0110)]
+#[case::sub07(0x93, 0x3E, "e", 0x0F, 0x2F, 0b0000, 0b0110)]
+#[case::sub08(0x94, 0x3E, "h", 0x0F, 0x2F, 0b0000, 0b0110)]
+#[case::sub09(0x95, 0x3E, "l", 0x0F, 0x2F, 0b0000, 0b0110)]
+#[case::sub10(0x97, 0x3E, "a", 0x3E, 0x00, 0b0000, 0b1100)]
 fn test_alu8_reg_reg(
     #[case] opcode: u8,
     #[case] a: u8,
@@ -919,9 +930,9 @@ fn test_alu8_reg_reg(
 
 #[rstest]
 // ADD A,(HL)
-#[case(0x86, 0xfe, 0x0001, 0x01, 0xff, 0b0000)] // no flags
-#[case(0x86, 0xff, 0x0001, 0x01, 0x00, 0b1011)] // zero, half carry and carry
-#[case(0x86, 0xff, 0xcafe, 0x01, 0x00, 0b1011)] // zero, half carry and carry
+#[case(0x86, 0xfe, 0x0001, 0x01, 0xff, 0b0000)]
+#[case(0x86, 0xff, 0x0001, 0x01, 0x00, 0b1011)]
+#[case(0x86, 0xff, 0xcafe, 0x01, 0x00, 0b1011)]
 // XOR (HL)
 #[case(0xAE, 0xca, 0x0001, 0xfe, 0x34, 0b0000)]
 #[case(0xAE, 0x01, 0xcafe, 0x01, 0x00, 0b1000)]
@@ -931,6 +942,8 @@ fn test_alu8_reg_reg(
 // OR (HL)
 #[case(0xB6, 0xca, 0x0001, 0xfe, 0xfe, 0b0000)]
 #[case(0xB6, 0x00, 0xcafe, 0x00, 0x00, 0b1000)]
+// SUB (HL)
+#[case(0x96, 0x3E, 0xcafe, 0x0F, 0x2F, 0b0110)]
 fn test_alu8_reg_addr(
     #[case] opcode: u8,
     #[case] a: u8,
@@ -981,6 +994,8 @@ fn test_alu8_reg_addr(
 #[case(0xCE, 0x0e, 0x01, 0x10, 0b0001, 0b0010)]
 #[case(0xCE, 0xff, 0x01, 0x00, 0b0000, 0b1011)]
 #[case(0xCE, 0xfe, 0x01, 0x00, 0b0001, 0b1011)]
+// SUB A,d8
+#[case(0xD6, 0x3E, 0x0F, 0x2F, 0b0000, 0b0110)]
 fn test_alu8_reg_imm(
     #[case] opcode: u8,
     #[case] a: u8,
@@ -1551,16 +1566,13 @@ fn test_pop(#[case] opcode: u8, #[case] register: &str, #[case] value: u16, #[ca
 
 #[rstest]
 #[rustfmt::skip]
-//        a,  reg,     z,     h,    c
-#[case(0x10, 0x10,  true, false, true)]
-#[case(0x10, 0x11, false, false, false)]
+#[case(0x10, 0x10, 0b1100)]
+#[case(0x10, 0x11, 0b0111)]
 fn test_cp(
     #[values((0xB8, "b"), (0xB9, "c"), (0xBA, "d"), (0xBB, "e"), (0xBC, "h"), (0xBD, "l"))] _opcode_reg @ (opcode, reg): (u8, &str),
     #[case] a: u8,
     #[case] reg_value: u8,
-    #[case] z: bool,
-    #[case] h: bool,
-    #[case] c: bool,
+    #[case] flags: u8,
 ) {
     // Given
     let builder = LR35902Builder::new()
@@ -1576,10 +1588,7 @@ fn test_cp(
     let expected = builder
         .with_pc(0x0001)
         .with_clock_cycles(4)
-        .with_n_flag(true)
-        .with_z_flag(z)
-        .with_h_flag(h)
-        .with_c_flag(c)
+        .with_f(flags << 4)
         .build();
     assert_eq!(sut, expected);
 }
