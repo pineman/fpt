@@ -310,12 +310,17 @@ fn test_instr_0x021_ld_hl_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
     assert_eq!(sut, expected);
 }
 
-#[test]
-fn test_instr_0x022_ld_pointer_hl_increment_from_a() {
+#[rstest]
+#[case(0xFF00, 0xFF01)]
+#[case(0xFFFF, 0x0000)]
+fn test_instr_0x022_ld_pointer_hl_increment_from_a(
+    #[case] hl: u16,
+    #[case] hl_inc: u16
+) {
     // Given
     let builder = LR35902Builder::new()
         .with_mem8(0x0000, 0x22)
-        .with_hl(0xFF00)
+        .with_hl(hl)
         .with_a(0x1);
     let mut sut = builder.clone().build();
 
@@ -325,8 +330,8 @@ fn test_instr_0x022_ld_pointer_hl_increment_from_a() {
     // Then
     let expected = builder
         .with_pc(1)
-        .with_hl(0xFF01)
-        .with_mem8(0xFF00, 0x1)
+        .with_hl(hl_inc)
+        .with_mem8(hl, 0x1)
         .with_clock_cycles(8)
         .build();
     assert_eq!(sut, expected);
@@ -379,13 +384,16 @@ fn test_instr_0x031_ld_sp_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
 }
 
 #[rstest]
-#[case(0x10, 0x100)]
-#[case(0xFF, 0x1)]
-fn test_instr_0x032_ld_hld_a(#[case] a: u8, #[case] hl: u16) {
+#[case(0x100, 0xFF)]
+#[case(0x0, 0xFFFF)]
+fn test_instr_0x032_ld_hld_a(
+    #[case] hl: u16,
+    #[case] hl_after: u16
+) {
     // Given
     let builder = LR35902Builder::new()
         .with_mem8(0x0000, 0x32) // instruction LD (HL-), a
-        .with_a(a)
+        .with_a(0xca)
         .with_hl(hl);
     let mut sut = builder.clone().build();
 
@@ -395,9 +403,9 @@ fn test_instr_0x032_ld_hld_a(#[case] a: u8, #[case] hl: u16) {
     // Then
     let expected = builder
         .with_pc(1)
-        .with_hl(hl - 1) // hl gets decremented
+        .with_hl(hl_after) // hl gets decremented
         .with_clock_cycles(8)
-        .with_mem8(hl, a)
+        .with_mem8(hl, 0xca)
         .build();
     assert_eq!(sut, expected);
 }
