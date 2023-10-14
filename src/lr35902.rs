@@ -8,7 +8,7 @@ use crate::bitwise as bw;
 use crate::ppu::Ppu;
 
 fn compute_relative_address(base: u16, offset: i8) -> u16 {
-    let r = dbg!(base as i32 + offset as i32);
+    let r = base as i32 + offset as i32;
     if !(0..=65535).contains(&r) {
         panic!();
     }
@@ -1562,7 +1562,7 @@ impl LR35902 {
             }
             0xF0 => {
                 // LDH A,(a8)
-                self.set_a(self.mem8(dbg!(0xFF00 | dbg!(self.get_d8(0)) as u16)));
+                self.set_a(self.mem8(0xFF00 | self.get_d8(0) as u16));
             }
             0xF1 => {
                 // POP AF
@@ -1621,7 +1621,7 @@ impl LR35902 {
             }
             0xFE => {
                 // CP d8
-                self.sub8(dbg!(self.a()), self.get_d8(0));
+                self.sub8(self.a(), self.get_d8(0));
             }
             0xFF => {
                 // RST 38H
