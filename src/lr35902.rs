@@ -1348,7 +1348,8 @@ impl LR35902 {
             }
             0xCE => {
                 // ADC A,d8
-                todo!()
+                let result = self.addc8(self.a(), self.get_d8(0));
+                self.set_a(result);
             }
             0xCF => {
                 // RST 08H
