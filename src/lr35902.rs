@@ -391,9 +391,13 @@ impl LR35902 {
     }
 
     fn sub8(&mut self, x: u8, y: u8) -> u8 {
-        let r = self.add8(x, (!y).overflowing_add(1).0);
+        // everyday I'm grateful for overflowing_sub
+        let (result, overflow) = x.overflowing_sub(y);
+        self.set_z_flag(result == 0);
         self.set_n_flag(true);
-        r
+        self.set_h_flag((x & 0x0f).overflowing_sub(y & 0x0f).1);
+        self.set_c_flag(overflow);
+        result
     }
 
     fn add16(&mut self, x: u16, y: u16) -> u16 {
@@ -1114,35 +1118,43 @@ impl LR35902 {
             }
             0x90 => {
                 // SUB B
-                todo!()
+                let result = self.sub8(self.a(), self.b());
+                self.set_a(result);
             }
             0x91 => {
                 // SUB C
-                todo!()
+                let result = self.sub8(self.a(), self.c());
+                self.set_a(result);
             }
             0x92 => {
                 // SUB D
-                todo!()
+                let result = self.sub8(self.a(), self.d());
+                self.set_a(result);
             }
             0x93 => {
                 // SUB E
-                todo!()
+                let result = self.sub8(self.a(), self.e());
+                self.set_a(result);
             }
             0x94 => {
                 // SUB H
-                todo!()
+                let result = self.sub8(self.a(), self.h());
+                self.set_a(result);
             }
             0x95 => {
                 // SUB L
-                todo!()
+                let result = self.sub8(self.a(), self.l());
+                self.set_a(result);
             }
             0x96 => {
                 // SUB (HL)
-                todo!()
+                let result = self.sub8(self.a(), self.hl_ind());
+                self.set_a(result);
             }
             0x97 => {
                 // SUB A
-                todo!()
+                let result = self.sub8(self.a(), self.a());
+                self.set_a(result);
             }
             0x98 => {
                 // SBC A,B
@@ -1438,7 +1450,8 @@ impl LR35902 {
             }
             0xD6 => {
                 // SUB d8
-                todo!()
+                let result = self.sub8(self.a(), self.get_d8(0));
+                self.set_a(result);
             }
             0xD7 => {
                 // RST 10H
