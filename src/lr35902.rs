@@ -45,7 +45,6 @@ impl PartialEq for LR35902 {
             && self.clock_cycles == other.clock_cycles
             && self.branch_taken == other.branch_taken
             && self.debug == other.debug
-            && self.ppu == other.ppu
     }
 }
 
