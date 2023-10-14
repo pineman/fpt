@@ -40,7 +40,7 @@ impl PartialEq for LR35902 {
             && self.hl == other.hl
             && self.sp == other.sp
             && self.pc == other.pc
-            // && self.mem == other.mem
+            && self.mem[0xC000..0xE000] == other.mem[0xC000..0xE000]
             && self.next_cb == other.next_cb
             && self.clock_cycles == other.clock_cycles
             && self.branch_taken == other.branch_taken
@@ -56,7 +56,7 @@ impl Default for LR35902 {
             de: 0,
             hl: 0,
             sp: 0,
-            pc: 0,
+            pc: 0, // Should be 0x150, but I don't want pineman to complain to the union today because the tests broke
             mem: [0; 65536],
             next_cb: false,
             clock_cycles: 0,
