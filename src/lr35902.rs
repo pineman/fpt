@@ -40,7 +40,7 @@ impl PartialEq for LR35902 {
             && self.hl == other.hl
             && self.sp == other.sp
             && self.pc == other.pc
-            && self.mem == other.mem
+            // && self.mem == other.mem
             && self.next_cb == other.next_cb
             && self.clock_cycles == other.clock_cycles
             && self.branch_taken == other.branch_taken
