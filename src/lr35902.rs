@@ -698,11 +698,13 @@ impl LR35902 {
             }
             0x34 => {
                 // INC (HL)
-                todo!()
+                let result = self.inc8(self.mem8(self.hl()));
+                self.set_mem8(self.hl(), result);
             }
             0x35 => {
                 // DEC (HL)
-                todo!()
+                let result = self.dec8(self.mem8(self.hl()));
+                self.set_mem8(self.hl(), result);
             }
             0x36 => {
                 // LD (HL),d8
