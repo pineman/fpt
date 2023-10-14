@@ -563,7 +563,7 @@ impl LR35902 {
             0x22 => {
                 // LD (HL+),A
                 self.set_mem8(self.hl(), self.a());
-                self.set_hl(self.hl() + 1);
+                self.set_hl(self.hl().overflowing_add(1).0);
             }
             0x23 => {
                 // INC HL
@@ -602,7 +602,7 @@ impl LR35902 {
             0x2A => {
                 // LD A,(HL+)
                 self.set_a(self.mem8(self.hl()));
-                self.set_hl(self.hl() + 1);
+                self.set_hl(self.hl().overflowing_add(1).0);
             }
             0x2B => {
                 // DEC HL
@@ -641,7 +641,7 @@ impl LR35902 {
             0x32 => {
                 // LD (HL-),A
                 self.set_mem8(self.hl, self.a());
-                self.set_hl(self.hl() - 1)
+                self.set_hl(self.hl().overflowing_sub(1).0)
             }
             0x33 => {
                 // INC SP
@@ -681,7 +681,7 @@ impl LR35902 {
             0x3A => {
                 // LD A,(HL-)
                 self.set_a(self.mem8(self.hl()));
-                self.set_hl(self.hl - 1);
+                self.set_hl(self.hl.overflowing_sub(1).0);
             }
             0x3B => {
                 // DEC SP
