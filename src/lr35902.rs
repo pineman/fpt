@@ -16,7 +16,7 @@ fn compute_relative_address(base: u16, offset: i8) -> u16 {
     r as u16
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(Clone)]
 pub struct LR35902 {
     af: u16,
     bc: u16,
@@ -30,6 +30,23 @@ pub struct LR35902 {
     branch_taken: bool,
     debug: bool,
     ppu: Ppu,
+}
+
+impl PartialEq for LR35902 {
+    fn eq(&self, other: &Self) -> bool {
+        self.af == other.af
+            && self.bc == other.bc
+            && self.de == other.de
+            && self.hl == other.hl
+            && self.sp == other.sp
+            && self.pc == other.pc
+            && self.mem == other.mem
+            && self.next_cb == other.next_cb
+            && self.clock_cycles == other.clock_cycles
+            && self.branch_taken == other.branch_taken
+            && self.debug == other.debug
+            && self.ppu == other.ppu
+    }
 }
 
 impl Default for LR35902 {
