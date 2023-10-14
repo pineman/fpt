@@ -259,6 +259,10 @@ impl LR35902 {
         ((self.get_d8(pos + 1) as u16) << 8) + self.get_d8(pos) as u16
     }
 
+    fn hl_ind(&self) -> u8 {
+        self.mem8(self.hl())
+    }
+
     fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
         self.mem[..256].clone_from_slice(bootrom);
     }
@@ -303,6 +307,10 @@ impl LR35902 {
         ((x & 0x0f) + (y & 0x0f)) > 0x0f
     }
 
+    fn half_carryc8(&self, x: u8, y: u8, c: u8) -> bool {
+        ((x & 0x0f) + (y & 0x0f) + c) > 0x0f
+    }
+
     fn half_carry16(&self, x: u16, y: u16) -> bool {
         ((x & 0x0fff) + (y & 0x0fff)) > 0x0fff
     }
@@ -331,6 +339,15 @@ impl LR35902 {
         self.set_z_flag(result == 0);
         self.set_n_flag(false);
         self.set_h_flag(self.half_carry8(x, y));
+        self.set_c_flag(overflow);
+        result
+    }
+
+    fn addc8(&mut self, x: u8, y: u8) -> u8 {
+        let (result, overflow) = x.carrying_add(y, self.c_flag());
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(self.half_carryc8(x, y, self.c_flag() as u8));
         self.set_c_flag(overflow);
         result
     }
@@ -601,7 +618,7 @@ impl LR35902 {
             }
             0x2A => {
                 // LD A,(HL+)
-                self.set_a(self.mem8(self.hl()));
+                self.set_a(self.hl_ind());
                 self.set_hl(self.hl().overflowing_add(1).0);
             }
             0x2B => {
@@ -680,7 +697,7 @@ impl LR35902 {
             }
             0x3A => {
                 // LD A,(HL-)
-                self.set_a(self.mem8(self.hl()));
+                self.set_a(self.hl_ind());
                 self.set_hl(self.hl.overflowing_sub(1).0);
             }
             0x3B => {
@@ -732,7 +749,7 @@ impl LR35902 {
             }
             0x46 => {
                 // LD B,(HL)
-                self.set_b(self.mem8(self.hl()));
+                self.set_b(self.hl_ind());
             }
             0x47 => {
                 // LD B,A
@@ -764,7 +781,7 @@ impl LR35902 {
             }
             0x4E => {
                 // LD C,(HL)
-                self.set_c(self.mem8(self.hl()));
+                self.set_c(self.hl_ind());
             }
             0x4F => {
                 // LD C,A
@@ -796,7 +813,7 @@ impl LR35902 {
             }
             0x56 => {
                 // LD D,(HL)
-                self.set_d(self.mem8(self.hl()));
+                self.set_d(self.hl_ind());
             }
             0x57 => {
                 // LD D,A
@@ -828,7 +845,7 @@ impl LR35902 {
             }
             0x5E => {
                 // LD E,(HL)
-                self.set_e(self.mem8(self.hl()));
+                self.set_e(self.hl_ind());
             }
             0x5F => {
                 // LD E,A
@@ -860,7 +877,7 @@ impl LR35902 {
             }
             0x66 => {
                 // LD H,(HL)
-                self.set_h(self.mem8(self.hl()));
+                self.set_h(self.hl_ind());
             }
             0x67 => {
                 // LD H,A
@@ -892,7 +909,7 @@ impl LR35902 {
             }
             0x6E => {
                 // LD L,(HL)
-                self.set_l(self.mem8(self.hl()));
+                self.set_l(self.hl_ind());
             }
             0x6F => {
                 // LD L,A
@@ -958,7 +975,7 @@ impl LR35902 {
             }
             0x7E => {
                 // LD A,(HL)
-                self.set_a(self.mem8(self.hl()));
+                self.set_a(self.hl_ind());
             }
             0x7F => {
                 // LD A,A
@@ -996,7 +1013,7 @@ impl LR35902 {
             }
             0x86 => {
                 // ADD A,(HL)
-                let result = self.add8(self.a(), self.mem8(self.hl()));
+                let result = self.add8(self.a(), self.hl_ind());
                 self.set_a(result);
             }
             0x87 => {
@@ -1006,35 +1023,43 @@ impl LR35902 {
             }
             0x88 => {
                 // ADC A,B
-                todo!()
+                let result = self.addc8(self.a(), self.b());
+                self.set_a(result);
             }
             0x89 => {
                 // ADC A,C
-                todo!()
+                let result = self.addc8(self.a(), self.c());
+                self.set_a(result);
             }
             0x8A => {
                 // ADC A,D
-                todo!()
+                let result = self.addc8(self.a(), self.d());
+                self.set_a(result);
             }
             0x8B => {
                 // ADC A,E
-                todo!()
+                let result = self.addc8(self.a(), self.e());
+                self.set_a(result);
             }
             0x8C => {
                 // ADC A,H
-                todo!()
+                let result = self.addc8(self.a(), self.h());
+                self.set_a(result);
             }
             0x8D => {
                 // ADC A,L
-                todo!()
+                let result = self.addc8(self.a(), self.l());
+                self.set_a(result);
             }
             0x8E => {
                 // ADC A,(HL)
-                todo!()
+                let result = self.addc8(self.a(), self.hl_ind());
+                self.set_a(result);
             }
             0x8F => {
                 // ADC A,A
-                todo!()
+                let result = self.addc8(self.a(), self.a());
+                self.set_a(result);
             }
             0x90 => {
                 // SUB B
@@ -1132,7 +1157,7 @@ impl LR35902 {
             }
             0xA6 => {
                 // AND (HL)
-                let result = self.and8(self.mem8(self.hl()));
+                let result = self.and8(self.hl_ind());
                 self.set_a(result);
             }
             0xA7 => {
@@ -1172,7 +1197,7 @@ impl LR35902 {
             }
             0xAE => {
                 // XOR (HL)
-                let result = self.xor8(self.mem8(self.hl()));
+                let result = self.xor8(self.hl_ind());
                 self.set_a(result);
             }
             0xAF => {
@@ -1212,7 +1237,7 @@ impl LR35902 {
             }
             0xB6 => {
                 // OR (HL)
-                let result = self.or8(self.mem8(self.hl()));
+                let result = self.or8(self.hl_ind());
                 self.set_a(result);
             }
             0xB7 => {
@@ -1246,7 +1271,7 @@ impl LR35902 {
             }
             0xBE => {
                 // CP (HL)
-                self.sub8(self.a(), self.mem8(self.hl()));
+                self.sub8(self.a(), self.hl_ind());
             }
             0xBF => {
                 // CP A
@@ -1817,7 +1842,7 @@ impl LR35902 {
             }
             0x146 => {
                 // BIT 0,(HL)
-                self.bit::<0>(self.mem8(self.hl()));
+                self.bit::<0>(self.hl_ind());
             }
             0x147 => {
                 // BIT 0,A
@@ -1849,7 +1874,7 @@ impl LR35902 {
             }
             0x14E => {
                 // BIT 1,(HL)
-                self.bit::<1>(self.mem8(self.hl()));
+                self.bit::<1>(self.hl_ind());
             }
             0x14F => {
                 // BIT 1,A
@@ -1881,7 +1906,7 @@ impl LR35902 {
             }
             0x156 => {
                 // BIT 2,(HL)
-                self.bit::<2>(self.mem8(self.hl()));
+                self.bit::<2>(self.hl_ind());
             }
             0x157 => {
                 // BIT 2,A
@@ -1913,7 +1938,7 @@ impl LR35902 {
             }
             0x15E => {
                 // BIT 3,(HL)
-                self.bit::<3>(self.mem8(self.hl()));
+                self.bit::<3>(self.hl_ind());
             }
             0x15F => {
                 // BIT 3,A
@@ -1945,7 +1970,7 @@ impl LR35902 {
             }
             0x166 => {
                 // BIT 4,(HL)
-                self.bit::<4>(self.mem8(self.hl()));
+                self.bit::<4>(self.hl_ind());
             }
             0x167 => {
                 // BIT 4,A
@@ -1977,7 +2002,7 @@ impl LR35902 {
             }
             0x16E => {
                 // BIT 5,(HL)
-                self.bit::<5>(self.mem8(self.hl()));
+                self.bit::<5>(self.hl_ind());
             }
             0x16F => {
                 // BIT 5,A
@@ -2009,7 +2034,7 @@ impl LR35902 {
             }
             0x176 => {
                 // BIT 6,(HL)
-                self.bit::<6>(self.mem8(self.hl()));
+                self.bit::<6>(self.hl_ind());
             }
             0x177 => {
                 // BIT 6,A
@@ -2041,7 +2066,7 @@ impl LR35902 {
             }
             0x17E => {
                 // BIT 7,(HL)
-                self.bit::<7>(self.mem8(self.hl()));
+                self.bit::<7>(self.hl_ind());
             }
             0x17F => {
                 // BIT 7,A
@@ -2073,7 +2098,7 @@ impl LR35902 {
             }
             0x186 => {
                 // RES 0,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<0>(self.mem8(self.hl()), false));
+                self.set_mem8(self.hl(), bw::set_bit8::<0>(self.hl_ind(), false));
             }
             0x187 => {
                 // RES 0,A
@@ -2105,7 +2130,7 @@ impl LR35902 {
             }
             0x18E => {
                 // RES 1,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<1>(self.mem8(self.hl()), false));
+                self.set_mem8(self.hl(), bw::set_bit8::<1>(self.hl_ind(), false));
             }
             0x18F => {
                 // RES 1,A
@@ -2137,7 +2162,7 @@ impl LR35902 {
             }
             0x196 => {
                 // RES 2,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<2>(self.mem8(self.hl()), false));
+                self.set_mem8(self.hl(), bw::set_bit8::<2>(self.hl_ind(), false));
             }
             0x197 => {
                 // RES 2,A
@@ -2169,7 +2194,7 @@ impl LR35902 {
             }
             0x19E => {
                 // RES 3,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<3>(self.mem8(self.hl()), false));
+                self.set_mem8(self.hl(), bw::set_bit8::<3>(self.hl_ind(), false));
             }
             0x19F => {
                 // RES 3,A
@@ -2201,7 +2226,7 @@ impl LR35902 {
             }
             0x1A6 => {
                 // RES 4,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<4>(self.mem8(self.hl()), false));
+                self.set_mem8(self.hl(), bw::set_bit8::<4>(self.hl_ind(), false));
             }
             0x1A7 => {
                 // RES 4,A
@@ -2233,7 +2258,7 @@ impl LR35902 {
             }
             0x1AE => {
                 // RES 5,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<5>(self.mem8(self.hl()), false));
+                self.set_mem8(self.hl(), bw::set_bit8::<5>(self.hl_ind(), false));
             }
             0x1AF => {
                 // RES 5,A
@@ -2265,7 +2290,7 @@ impl LR35902 {
             }
             0x1B6 => {
                 // RES 6,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<6>(self.mem8(self.hl()), false));
+                self.set_mem8(self.hl(), bw::set_bit8::<6>(self.hl_ind(), false));
             }
             0x1B7 => {
                 // RES 6,A
@@ -2297,7 +2322,7 @@ impl LR35902 {
             }
             0x1BE => {
                 // RES 7,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<7>(self.mem8(self.hl()), false));
+                self.set_mem8(self.hl(), bw::set_bit8::<7>(self.hl_ind(), false));
             }
             0x1BF => {
                 // RES 7,A
@@ -2329,7 +2354,7 @@ impl LR35902 {
             }
             0x1C6 => {
                 // SET 0,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<0>(self.mem8(self.hl()), true));
+                self.set_mem8(self.hl(), bw::set_bit8::<0>(self.hl_ind(), true));
             }
             0x1C7 => {
                 // SET 0,A
@@ -2361,7 +2386,7 @@ impl LR35902 {
             }
             0x1CE => {
                 // SET 1,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<1>(self.mem8(self.hl()), true));
+                self.set_mem8(self.hl(), bw::set_bit8::<1>(self.hl_ind(), true));
             }
             0x1CF => {
                 // SET 1,A
@@ -2393,7 +2418,7 @@ impl LR35902 {
             }
             0x1D6 => {
                 // SET 2,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<2>(self.mem8(self.hl()), true));
+                self.set_mem8(self.hl(), bw::set_bit8::<2>(self.hl_ind(), true));
             }
             0x1D7 => {
                 // SET 2,A
@@ -2425,7 +2450,7 @@ impl LR35902 {
             }
             0x1DE => {
                 // SET 3,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<3>(self.mem8(self.hl()), true));
+                self.set_mem8(self.hl(), bw::set_bit8::<3>(self.hl_ind(), true));
             }
             0x1DF => {
                 // SET 3,A
@@ -2457,7 +2482,7 @@ impl LR35902 {
             }
             0x1E6 => {
                 // SET 4,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<4>(self.mem8(self.hl()), true));
+                self.set_mem8(self.hl(), bw::set_bit8::<4>(self.hl_ind(), true));
             }
             0x1E7 => {
                 // SET 4,A
@@ -2489,7 +2514,7 @@ impl LR35902 {
             }
             0x1EE => {
                 // SET 5,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<5>(self.mem8(self.hl()), true));
+                self.set_mem8(self.hl(), bw::set_bit8::<5>(self.hl_ind(), true));
             }
             0x1EF => {
                 // SET 5,A
@@ -2521,7 +2546,7 @@ impl LR35902 {
             }
             0x1F6 => {
                 // SET 6,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<6>(self.mem8(self.hl()), true));
+                self.set_mem8(self.hl(), bw::set_bit8::<6>(self.hl_ind(), true));
             }
             0x1F7 => {
                 // SET 6,A
@@ -2553,7 +2578,7 @@ impl LR35902 {
             }
             0x1FE => {
                 // SET 7,(HL)
-                self.set_mem8(self.hl(), bw::set_bit8::<7>(self.mem8(self.hl()), true));
+                self.set_mem8(self.hl(), bw::set_bit8::<7>(self.hl_ind(), true));
             }
             0x1FF => {
                 // SET 7,A
