@@ -828,6 +828,46 @@ fn test_instr_0xf2_ld_from_register_a_from_c_pointer() {
 }
 
 #[rstest]
+// RLCA
+#[case(0x07, 0b10000101, 0b00001011, 0b0000, 0b0001)]
+#[case(0x07, 0b10000101, 0b00001011, 0b0001, 0b0001)]
+// RRCA
+#[case(0x0F, 0b00111011, 0b10011101, 0b0000, 0b0001)]
+#[case(0x0F, 0b00111011, 0b10011101, 0b0001, 0b0001)]
+// RLA
+#[case(0x17, 0b10010101, 0b00101011, 0b0001, 0b0001)]
+#[case(0x17, 0b10010101, 0b00101010, 0b0000, 0b0001)]
+// RRA
+#[case(0x1F, 0b10000001, 0b01000000, 0b0000, 0b0001)]
+#[case(0x1F, 0b10000001, 0b11000000, 0b0001, 0b0001)]
+fn test_alu8_reg(
+    #[case] opcode: u8,
+    #[case] a: u8,
+    #[case] result: u8,
+    #[case] flags_before: u8,
+    #[case] flags_after: u8
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, opcode)
+        .with_a(a)
+        .with_f(flags_before << 4);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(1)
+        .with_a(result)
+        .with_f(flags_after << 4)
+        .with_clock_cycles(4)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
 // ADD A,r8
 #[case(0x80, 0xfe, "b", 0x01, 0xff, 0b0000, 0b0000)]
 #[case(0x80, 0x0f, "b", 0x01, 0x10, 0b0000, 0b0010)]
