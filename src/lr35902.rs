@@ -2,6 +2,7 @@ use std::fmt;
 use std::{thread, time::Duration};
 
 pub mod instructions;
+
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use crate::bitwise as bw;
@@ -50,7 +51,7 @@ impl Default for LR35902 {
 
 impl fmt::Debug for LR35902 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "LR35902 {{ a: {:#04X}, f: {:#06b}, bc: {:#06X}, de: {:#06X}, hl: {:#06X}, sp: {:#06X}, pc: {:#06X}, clock_cycles: {} }} ", self.a(), self.f()>>4, self.bc, self.de, self.hl, self.sp, self.pc, self.clock_cycles)
+        write!(f, "LR35902 {{ a: {:#04X}, f: {:#06b}, bc: {:#06X}, de: {:#06X}, hl: {:#06X}, sp: {:#06X}, pc: {:#06X}, clock_cycles: {} }} ", self.a(), self.f() >> 4, self.bc, self.de, self.hl, self.sp, self.pc, self.clock_cycles)
     }
 }
 
@@ -289,8 +290,7 @@ impl LR35902 {
                 cycles = instruction.cycles_not_taken;
                 self.set_pc(self.pc() + instruction.size as u16);
             }
-        }
-        else {
+        } else {
             self.set_pc(self.pc() + instruction.size as u16);
         }
 
@@ -2255,259 +2255,259 @@ impl LR35902 {
             }
             0x1C0 => {
                 // SET 0,B
-                todo!()
+                self.set_b(bw::set_bit8::<0>(self.b(), true));
             }
             0x1C1 => {
                 // SET 0,C
-                todo!()
+                self.set_c(bw::set_bit8::<0>(self.c(), true));
             }
             0x1C2 => {
                 // SET 0,D
-                todo!()
+                self.set_d(bw::set_bit8::<0>(self.d(), true));
             }
             0x1C3 => {
                 // SET 0,E
-                todo!()
+                self.set_e(bw::set_bit8::<0>(self.e(), true));
             }
             0x1C4 => {
                 // SET 0,H
-                todo!()
+                self.set_h(bw::set_bit8::<0>(self.h(), true));
             }
             0x1C5 => {
                 // SET 0,L
-                todo!()
+                self.set_l(bw::set_bit8::<0>(self.l(), true));
             }
             0x1C6 => {
                 // SET 0,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<0>(self.mem8(self.hl()), true));
             }
             0x1C7 => {
                 // SET 0,A
-                todo!()
+                self.set_a(bw::set_bit8::<0>(self.a(), true));
             }
             0x1C8 => {
                 // SET 1,B
-                todo!()
+                self.set_b(bw::set_bit8::<1>(self.b(), true));
             }
             0x1C9 => {
                 // SET 1,C
-                todo!()
+                self.set_c(bw::set_bit8::<1>(self.c(), true));
             }
             0x1CA => {
                 // SET 1,D
-                todo!()
+                self.set_d(bw::set_bit8::<1>(self.d(), true));
             }
             0x1CB => {
                 // SET 1,E
-                todo!()
+                self.set_e(bw::set_bit8::<1>(self.e(), true));
             }
             0x1CC => {
                 // SET 1,H
-                todo!()
+                self.set_h(bw::set_bit8::<1>(self.h(), true));
             }
             0x1CD => {
                 // SET 1,L
-                todo!()
+                self.set_l(bw::set_bit8::<1>(self.l(), true));
             }
             0x1CE => {
                 // SET 1,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<1>(self.mem8(self.hl()), true));
             }
             0x1CF => {
                 // SET 1,A
-                todo!()
+                self.set_a(bw::set_bit8::<1>(self.a(), true));
             }
             0x1D0 => {
                 // SET 2,B
-                todo!()
+                self.set_b(bw::set_bit8::<2>(self.b(), true));
             }
             0x1D1 => {
                 // SET 2,C
-                todo!()
+                self.set_c(bw::set_bit8::<2>(self.c(), true));
             }
             0x1D2 => {
                 // SET 2,D
-                todo!()
+                self.set_d(bw::set_bit8::<2>(self.d(), true));
             }
             0x1D3 => {
                 // SET 2,E
-                todo!()
+                self.set_e(bw::set_bit8::<2>(self.e(), true));
             }
             0x1D4 => {
                 // SET 2,H
-                todo!()
+                self.set_h(bw::set_bit8::<2>(self.h(), true));
             }
             0x1D5 => {
                 // SET 2,L
-                todo!()
+                self.set_l(bw::set_bit8::<2>(self.l(), true));
             }
             0x1D6 => {
                 // SET 2,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<2>(self.mem8(self.hl()), true));
             }
             0x1D7 => {
                 // SET 2,A
-                todo!()
+                self.set_a(bw::set_bit8::<2>(self.a(), true));
             }
             0x1D8 => {
                 // SET 3,B
-                todo!()
+                self.set_b(bw::set_bit8::<3>(self.b(), true));
             }
             0x1D9 => {
                 // SET 3,C
-                todo!()
+                self.set_c(bw::set_bit8::<3>(self.c(), true));
             }
             0x1DA => {
                 // SET 3,D
-                todo!()
+                self.set_d(bw::set_bit8::<3>(self.d(), true));
             }
             0x1DB => {
                 // SET 3,E
-                todo!()
+                self.set_e(bw::set_bit8::<3>(self.e(), true));
             }
             0x1DC => {
                 // SET 3,H
-                todo!()
+                self.set_h(bw::set_bit8::<3>(self.h(), true));
             }
             0x1DD => {
                 // SET 3,L
-                todo!()
+                self.set_l(bw::set_bit8::<3>(self.l(), true));
             }
             0x1DE => {
                 // SET 3,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<3>(self.mem8(self.hl()), true));
             }
             0x1DF => {
                 // SET 3,A
-                todo!()
+                self.set_a(bw::set_bit8::<3>(self.a(), true));
             }
             0x1E0 => {
                 // SET 4,B
-                todo!()
+                self.set_b(bw::set_bit8::<4>(self.b(), true));
             }
             0x1E1 => {
                 // SET 4,C
-                todo!()
+                self.set_c(bw::set_bit8::<4>(self.c(), true));
             }
             0x1E2 => {
                 // SET 4,D
-                todo!()
+                self.set_d(bw::set_bit8::<4>(self.d(), true));
             }
             0x1E3 => {
                 // SET 4,E
-                todo!()
+                self.set_e(bw::set_bit8::<4>(self.e(), true));
             }
             0x1E4 => {
                 // SET 4,H
-                todo!()
+                self.set_h(bw::set_bit8::<4>(self.h(), true));
             }
             0x1E5 => {
                 // SET 4,L
-                todo!()
+                self.set_l(bw::set_bit8::<4>(self.l(), true));
             }
             0x1E6 => {
                 // SET 4,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<4>(self.mem8(self.hl()), true));
             }
             0x1E7 => {
                 // SET 4,A
-                todo!()
+                self.set_a(bw::set_bit8::<4>(self.a(), true));
             }
             0x1E8 => {
                 // SET 5,B
-                todo!()
+                self.set_b(bw::set_bit8::<5>(self.b(), true));
             }
             0x1E9 => {
                 // SET 5,C
-                todo!()
+                self.set_c(bw::set_bit8::<5>(self.c(), true));
             }
             0x1EA => {
                 // SET 5,D
-                todo!()
+                self.set_d(bw::set_bit8::<5>(self.d(), true));
             }
             0x1EB => {
                 // SET 5,E
-                todo!()
+                self.set_e(bw::set_bit8::<5>(self.e(), true));
             }
             0x1EC => {
                 // SET 5,H
-                todo!()
+                self.set_h(bw::set_bit8::<5>(self.h(), true));
             }
             0x1ED => {
                 // SET 5,L
-                todo!()
+                self.set_l(bw::set_bit8::<5>(self.l(), true));
             }
             0x1EE => {
                 // SET 5,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<5>(self.mem8(self.hl()), true));
             }
             0x1EF => {
                 // SET 5,A
-                todo!()
+                self.set_a(bw::set_bit8::<5>(self.a(), true));
             }
             0x1F0 => {
                 // SET 6,B
-                todo!()
+                self.set_b(bw::set_bit8::<6>(self.b(), true));
             }
             0x1F1 => {
                 // SET 6,C
-                todo!()
+                self.set_c(bw::set_bit8::<6>(self.c(), true));
             }
             0x1F2 => {
                 // SET 6,D
-                todo!()
+                self.set_d(bw::set_bit8::<6>(self.d(), true));
             }
             0x1F3 => {
                 // SET 6,E
-                todo!()
+                self.set_e(bw::set_bit8::<6>(self.e(), true));
             }
             0x1F4 => {
                 // SET 6,H
-                todo!()
+                self.set_h(bw::set_bit8::<6>(self.h(), true));
             }
             0x1F5 => {
                 // SET 6,L
-                todo!()
+                self.set_l(bw::set_bit8::<6>(self.l(), true));
             }
             0x1F6 => {
                 // SET 6,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<6>(self.mem8(self.hl()), true));
             }
             0x1F7 => {
                 // SET 6,A
-                todo!()
+                self.set_a(bw::set_bit8::<6>(self.a(), true));
             }
             0x1F8 => {
                 // SET 7,B
-                todo!()
+                self.set_b(bw::set_bit8::<7>(self.b(), true));
             }
             0x1F9 => {
                 // SET 7,C
-                todo!()
+                self.set_c(bw::set_bit8::<7>(self.c(), true));
             }
             0x1FA => {
                 // SET 7,D
-                todo!()
+                self.set_d(bw::set_bit8::<7>(self.d(), true));
             }
             0x1FB => {
                 // SET 7,E
-                todo!()
+                self.set_e(bw::set_bit8::<7>(self.e(), true));
             }
             0x1FC => {
                 // SET 7,H
-                todo!()
+                self.set_h(bw::set_bit8::<7>(self.h(), true));
             }
             0x1FD => {
                 // SET 7,L
-                todo!()
+                self.set_l(bw::set_bit8::<7>(self.l(), true));
             }
             0x1FE => {
                 // SET 7,(HL)
-                todo!()
+                self.set_mem8(self.hl(), bw::set_bit8::<7>(self.mem8(self.hl()), true));
             }
             0x1FF => {
                 // SET 7,A
-                todo!()
+                self.set_a(bw::set_bit8::<7>(self.a(), true));
             }
             _ => {
                 todo!()
