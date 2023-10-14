@@ -602,7 +602,9 @@ impl LR35902 {
             }
             0x2F => {
                 // CPL
-                todo!()
+                self.set_a(!self.a());
+                self.set_n_flag(true);
+                self.set_h_flag(true);
             }
             0x30 => {
                 // JR NC,r8
@@ -638,7 +640,9 @@ impl LR35902 {
             }
             0x37 => {
                 // SCF
-                todo!()
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_c_flag(true);
             }
             0x38 => {
                 // JR C,r8
@@ -675,7 +679,9 @@ impl LR35902 {
             }
             0x3F => {
                 // CCF
-                todo!()
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_c_flag(!self.c_flag());
             }
             0x40 => {
                 // LD B,B
@@ -1301,7 +1307,7 @@ impl LR35902 {
             }
             0xD3 => {
                 // Not implemented
-                todo!()
+                unimplemented!()
             }
             0xD4 => {
                 // CALL NC,a16
@@ -1335,7 +1341,7 @@ impl LR35902 {
             }
             0xDB => {
                 // Not implemented
-                todo!()
+                unimplemented!()
             }
             0xDC => {
                 // CALL C,a16
@@ -1343,7 +1349,7 @@ impl LR35902 {
             }
             0xDD => {
                 // Not implemented
-                todo!()
+                unimplemented!()
             }
             0xDE => {
                 // SBC A,d8
@@ -1368,11 +1374,11 @@ impl LR35902 {
             }
             0xE3 => {
                 // Not implemented
-                todo!()
+                unimplemented!()
             }
             0xE4 => {
                 // Not implemented
-                todo!()
+                unimplemented!()
             }
             0xE5 => {
                 // PUSH HL
@@ -1401,15 +1407,15 @@ impl LR35902 {
             }
             0xEB => {
                 // Not implemented
-                todo!()
+                unimplemented!()
             }
             0xEC => {
                 // Not implemented
-                todo!()
+                unimplemented!()
             }
             0xED => {
                 // Not implemented
-                todo!()
+                unimplemented!()
             }
             0xEE => {
                 // XOR d8
@@ -1438,7 +1444,7 @@ impl LR35902 {
             }
             0xF4 => {
                 // Not implemented
-                todo!()
+                unimplemented!()
             }
             0xF5 => {
                 // PUSH AF
@@ -1471,11 +1477,11 @@ impl LR35902 {
             }
             0xFC => {
                 // Not implemented
-                todo!()
+                unimplemented!()
             }
             0xFD => {
                 // Not implemented
-                todo!()
+                unimplemented!()
             }
             0xFE => {
                 // CP d8
