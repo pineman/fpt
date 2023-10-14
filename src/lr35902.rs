@@ -399,6 +399,15 @@ impl LR35902 {
         result
     }
 
+    fn subc8(&mut self, x: u8, y: u8) -> u8 {
+        let (result, overflow) = x.borrowing_sub(y, self.c_flag());
+        self.set_z_flag(result == 0);
+        self.set_n_flag(true);
+        self.set_h_flag((x & 0x0f).borrowing_sub(y & 0x0f, self.c_flag()).1);
+        self.set_c_flag(overflow);
+        result
+    }
+
     fn add16(&mut self, x: u16, y: u16) -> u16 {
         let (result, overflow) = x.overflowing_add(y);
         // z flag is not set
@@ -1156,35 +1165,44 @@ impl LR35902 {
             }
             0x98 => {
                 // SBC A,B
-                todo!()
+                let result = self.subc8(self.a(), self.b());
+                self.set_a(result);
             }
             0x99 => {
                 // SBC A,C
-                todo!()
+                let result = self.subc8(self.a(), self.c());
+                self.set_a(result);
             }
             0x9A => {
                 // SBC A,D
-                todo!()
+                let result = self.subc8(self.a(), self.d());
+                self.set_a(result);
             }
             0x9B => {
                 // SBC A,E
-                todo!()
+                let result = self.subc8(self.a(), self.e());
+                self.set_a(result);
             }
             0x9C => {
                 // SBC A,H
-                todo!()
+                let result = self.subc8(self.a(), self.h());
+                self.set_a(result);
             }
             0x9D => {
                 // SBC A,L
-                todo!()
+                let result = self.subc8(self.a(), self.l());
+                self.set_a(result);
             }
             0x9E => {
                 // SBC A,(HL)
-                todo!()
+                dbg!(self.c_flag());
+                let result = self.subc8(self.a(), self.hl_ind());
+                self.set_a(result);
             }
             0x9F => {
                 // SBC A,A
-                todo!()
+                let result = self.subc8(self.a(), self.a());
+                self.set_a(result);
             }
             0xA0 => {
                 // AND B
@@ -1484,7 +1502,8 @@ impl LR35902 {
             }
             0xDE => {
                 // SBC A,d8
-                todo!()
+                let result = self.subc8(self.a(), self.get_d8(0));
+                self.set_a(result);
             }
             0xDF => {
                 // RST 18H
