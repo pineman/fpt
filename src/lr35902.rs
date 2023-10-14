@@ -333,8 +333,25 @@ impl LR35902 {
         result
     }
 
+    fn dec8(&mut self, x: u8) -> u8 {
+        let (result, _overflow) = x.overflowing_sub(1);
+        self.set_z_flag(result == 0);
+        self.set_n_flag(true);
+        // There was a carry in bit 3 if the result's least significant nibble
+        // is all 0s (should we use a generalization to the half-carry logic?)
+        self.set_h_flag(result & 0xF == 0);
+        // DEC r8 instructions don't set the C (carry) flag
+        result
+    }
+
     fn inc16(&mut self, x: u16) -> u16 {
         let (result, _overflow) = x.overflowing_add(1);
+        // No flags affected
+        result
+    }
+
+    fn dec16(&mut self, x: u16) -> u16 {
+        let (result, _overflow) = x.overflowing_sub(1);
         // No flags affected
         result
     }
@@ -458,7 +475,8 @@ impl LR35902 {
             }
             0x05 => {
                 // DEC B
-                todo!()
+                let result = self.dec8(self.b());
+                self.set_b(result);
             }
             0x06 => {
                 // LD B,d8
@@ -483,7 +501,8 @@ impl LR35902 {
             }
             0x0B => {
                 // DEC BC
-                todo!()
+                let result = self.dec16(self.bc());
+                self.set_bc(result);
             }
             0x0C => {
                 // INC C
@@ -492,7 +511,8 @@ impl LR35902 {
             }
             0x0D => {
                 // DEC C
-                todo!()
+                let result = self.dec8(self.c());
+                self.set_c(result);
             }
             0x0E => {
                 // LD C,d8
@@ -526,7 +546,8 @@ impl LR35902 {
             }
             0x15 => {
                 // DEC D
-                todo!()
+                let result = self.dec8(self.d());
+                self.set_d(result);
             }
             0x16 => {
                 // LD D,d8
@@ -552,7 +573,8 @@ impl LR35902 {
             }
             0x1B => {
                 // DEC DE
-                todo!()
+                let result = self.dec16(self.de());
+                self.set_de(result);
             }
             0x1C => {
                 // INC E
@@ -561,7 +583,8 @@ impl LR35902 {
             }
             0x1D => {
                 // DEC E
-                todo!()
+                let result = self.dec8(self.e());
+                self.set_e(result);
             }
             0x1E => {
                 // LD E,d8
@@ -599,7 +622,8 @@ impl LR35902 {
             }
             0x25 => {
                 // DEC H
-                todo!()
+                let result = self.dec8(self.h());
+                self.set_h(result);
             }
             0x26 => {
                 // LD H,d8
@@ -628,7 +652,8 @@ impl LR35902 {
             }
             0x2B => {
                 // DEC HL
-                todo!()
+                let result = self.dec16(self.hl());
+                self.set_hl(result);
             }
             0x2C => {
                 // INC L
@@ -637,7 +662,8 @@ impl LR35902 {
             }
             0x2D => {
                 // DEC L
-                todo!()
+                let result = self.dec8(self.l());
+                self.set_l(result);
             }
             0x2E => {
                 // LD L,d8
@@ -707,7 +733,8 @@ impl LR35902 {
             }
             0x3B => {
                 // DEC SP
-                todo!()
+                let result = self.dec16(self.sp());
+                self.set_sp(result);
             }
             0x3C => {
                 // INC A
@@ -716,7 +743,8 @@ impl LR35902 {
             }
             0x3D => {
                 // DEC A
-                todo!()
+                let result = self.dec8(self.a());
+                self.set_a(result);
             }
             0x3E => {
                 // LD A,d8
