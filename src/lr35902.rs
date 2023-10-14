@@ -56,7 +56,7 @@ impl Default for LR35902 {
             de: 0,
             hl: 0,
             sp: 0,
-            pc: 0, // Should be 0x150, but I don't want pineman to complain to the union today because the tests broke
+            pc: 0, // TODO Should be 0x150, but I don't want pineman to complain to the union today because the tests broke
             mem: [0; 65536],
             next_cb: false,
             clock_cycles: 0,
@@ -511,7 +511,12 @@ impl LR35902 {
             }
             0x07 => {
                 // RLCA
-                todo!()
+                let result = self.a().rotate_left(1);
+                self.set_z_flag(false);
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_c_flag(bw::test_bit8::<7>(self.a()));
+                self.set_a(result);
             }
             0x08 => {
                 // LD (a16),SP
@@ -547,7 +552,12 @@ impl LR35902 {
             }
             0x0F => {
                 // RRCA
-                todo!()
+                let result = self.a().rotate_right(1);
+                self.set_z_flag(false);
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_c_flag(bw::test_bit8::<0>(self.a()));
+                self.set_a(result);
             }
             0x10 => {
                 // STOP 0
@@ -582,7 +592,12 @@ impl LR35902 {
             }
             0x17 => {
                 // RLA
-                todo!()
+                let result = self.a().rotate_left(1);
+                self.set_z_flag(false);
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_a(bw::set_bit8::<0>(result, self.c_flag()));
+                self.set_c_flag(bw::test_bit8::<0>(result));
             }
             0x18 => {
                 // JR r8
@@ -619,7 +634,12 @@ impl LR35902 {
             }
             0x1F => {
                 // RRA
-                todo!()
+                let result = self.a().rotate_right(1);
+                self.set_z_flag(false);
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_a(bw::set_bit8::<7>(result, self.c_flag()));
+                self.set_c_flag(bw::test_bit8::<7>(result));
             }
             0x20 => {
                 // JR NZ,r8
