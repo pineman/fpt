@@ -313,10 +313,7 @@ fn test_instr_0x021_ld_hl_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
 #[rstest]
 #[case(0xFF00, 0xFF01)]
 #[case(0xFFFF, 0x0000)]
-fn test_instr_0x022_ld_pointer_hl_increment_from_a(
-    #[case] hl: u16,
-    #[case] hl_inc: u16
-) {
+fn test_instr_0x022_ld_pointer_hl_increment_from_a(#[case] hl: u16, #[case] hl_inc: u16) {
     // Given
     let builder = LR35902Builder::new()
         .with_mem8(0x0000, 0x22)
@@ -386,10 +383,7 @@ fn test_instr_0x031_ld_sp_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
 #[rstest]
 #[case(0x100, 0xFF)]
 #[case(0x0, 0xFFFF)]
-fn test_instr_0x032_ld_hld_a(
-    #[case] hl: u16,
-    #[case] hl_after: u16
-) {
+fn test_instr_0x032_ld_hld_a(#[case] hl: u16, #[case] hl_after: u16) {
     // Given
     let builder = LR35902Builder::new()
         .with_mem8(0x0000, 0x32) // instruction LD (HL-), a

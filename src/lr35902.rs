@@ -2,10 +2,10 @@ use std::fmt;
 use std::{thread, time::Duration};
 
 pub mod instructions;
-
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use crate::bitwise as bw;
+use crate::ppu::Ppu;
 
 fn compute_relative_address(base: u16, offset: i8) -> u16 {
     let r = dbg!(base as i32 + offset as i32);
@@ -29,6 +29,7 @@ pub struct LR35902 {
     clock_cycles: u64,
     branch_taken: bool,
     debug: bool,
+    ppu: Ppu,
 }
 
 impl Default for LR35902 {
@@ -45,6 +46,7 @@ impl Default for LR35902 {
             clock_cycles: 0,
             branch_taken: false,
             debug: false,
+            ppu: Ppu::new(),
         }
     }
 }
@@ -300,6 +302,9 @@ impl LR35902 {
 
         thread::sleep(Duration::from_micros((cycles / 4) as u64));
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
+
+        let ppu = self.ppu;
+        ppu.render(self);
         // TODO: measure time and panic if cycle time exceeded
     }
 
@@ -1496,7 +1501,7 @@ impl LR35902 {
             }
             0xF0 => {
                 // LDH A,(a8)
-                self.set_a(self.mem8(0xFF00 | self.get_d8(0) as u16));
+                self.set_a(self.mem8(dbg!(0xFF00 | dbg!(self.get_d8(0)) as u16)));
             }
             0xF1 => {
                 // POP AF
@@ -1555,7 +1560,7 @@ impl LR35902 {
             }
             0xFE => {
                 // CP d8
-                self.sub8(self.a(), self.get_d8(0));
+                self.sub8(dbg!(self.a()), self.get_d8(0));
             }
             0xFF => {
                 // RST 38H
