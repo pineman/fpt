@@ -407,7 +407,6 @@ fn test_instr_0x032_ld_hld_a(#[case] hl: u16, #[case] hl_after: u16) {
 #[test]
 fn test_instr_0x3a_ld_register_a_from_hld() {
     // Given
-
     let hl = 0xFF00;
     let builder = LR35902Builder::new()
         .with_mem8(0x0000, 0x3a) // instruction LD (HL-), a
@@ -1061,6 +1060,43 @@ fn test_alu16_reg_reg(
         .with_hl(result)
         .with_f(flags_after << 4)
         .with_clock_cycles(8)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
+#[rustfmt::skip]
+// ADD SP,r8
+#[case(0xE8, 0x0FFF,    1i8, 0x1000, 0b0000, 0b0010)]
+#[case(0xE8, 0x0FFF, -128i8, 0x0F7F, 0b0000, 0b0000)]
+#[case(0xE8, 0x0FFF,  127i8, 0x107E, 0b0000, 0b0010)]
+#[case(0xE8, 0xFFFF,    1i8, 0x0000, 0b0000, 0b0011)]
+#[case(0xE8, 0x0000,   -1i8, 0xFFFF, 0b0000, 0b0011)]
+fn test_alu16_reg_imm(
+    #[case] opcode: u8,
+    #[case] sp: u16,
+    #[case] value: i8,
+    #[case] result: u16,
+    #[case] flags_before: u8,
+    #[case] flags_after: u8,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem8(0x0000, opcode)
+        .with_mem8(0x0001, value as u8)
+        .with_sp(sp)
+        .with_f(flags_before << 4);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(2)
+        .with_sp(result)
+        .with_f(flags_after << 4)
+        .with_clock_cycles(16)
         .build();
     assert_eq!(sut, expected);
 }

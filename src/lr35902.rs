@@ -321,7 +321,6 @@ impl LR35902 {
 
         let ppu = self.ppu;
         ppu.render(self);
-        // TODO: measure time and panic if cycle time exceeded
     }
 
     fn half_carry8(&self, x: u8, y: u8) -> bool {
@@ -336,8 +335,8 @@ impl LR35902 {
         ((x & 0x0fff) + (y & 0x0fff)) > 0x0fff
     }
 
-    fn _half_carry16i(&self, _x: u16, _y: i8) -> bool {
-        todo!();
+    fn half_carry16i(&self, x: u16, y: i8) -> bool {
+        (x & 0x0fff).wrapping_add_signed(y as i16) > 0x0fff
     }
 
     fn inc8(&mut self, x: u8) -> u8 {
@@ -410,11 +409,10 @@ impl LR35902 {
     }
 
     fn add16i(&mut self, x: u16, y: i8) -> u16 {
-        // TODO: write tests, check half carry
         let (result, overflow) = x.overflowing_add_signed(y as i16);
         self.set_z_flag(false);
         self.set_n_flag(false);
-        //self.set_h_flag(self.half_carry16i(x, y));
+        self.set_h_flag(self.half_carry16i(x, y));
         self.set_c_flag(overflow);
         result
     }
