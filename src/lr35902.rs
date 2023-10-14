@@ -1372,7 +1372,9 @@ impl LR35902 {
             }
             0xC9 => {
                 // RET
-                todo!()
+                self.set_sp(self.sp() + 2);
+                self.set_pc(self.mem16(self.sp()));
+                self.branch_taken = true;
             }
             0xCA => {
                 // JP Z,a16
