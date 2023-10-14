@@ -360,8 +360,26 @@ impl LR35902 {
         result
     }
 
-    fn xor8(&mut self, x: u8, y: u8) -> u8 {
-        let result = x ^ y;
+    fn xor8(&mut self, x: u8) -> u8 {
+        let result = self.a() ^ x;
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(false);
+        result
+    }
+
+    fn and8(&mut self, x: u8) -> u8 {
+        let result = self.a() & x;
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(true);
+        self.set_c_flag(false);
+        result
+    }
+
+    fn or8(&mut self, x: u8) -> u8 {
+        let result = self.a() | x;
         self.set_z_flag(result == 0);
         self.set_n_flag(false);
         self.set_h_flag(false);
@@ -901,6 +919,8 @@ impl LR35902 {
             }
             0x76 => {
                 // HALT
+                // Take care for halt bug: https://gbdev.io/pandocs/halt.html
+                // https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#HALT
                 todo!()
             }
             0x77 => {
@@ -1077,110 +1097,123 @@ impl LR35902 {
             }
             0xA0 => {
                 // AND B
-                todo!()
+                let result = self.and8(self.b());
+                self.set_a(result);
             }
             0xA1 => {
                 // AND C
-                todo!()
+                let result = self.and8(self.c());
+                self.set_a(result);
             }
             0xA2 => {
                 // AND D
-                todo!()
+                let result = self.and8(self.d());
+                self.set_a(result);
             }
             0xA3 => {
                 // AND E
-                todo!()
+                let result = self.and8(self.e());
+                self.set_a(result);
             }
             0xA4 => {
                 // AND H
-                todo!()
+                let result = self.and8(self.h());
+                self.set_a(result);
             }
             0xA5 => {
                 // AND L
-                todo!()
+                let result = self.and8(self.l());
+                self.set_a(result);
             }
             0xA6 => {
                 // AND (HL)
-                todo!()
+                let result = self.and8(self.mem8(self.hl()));
+                self.set_a(result);
             }
             0xA7 => {
                 // AND A
-                todo!()
+                let result = self.and8(self.a());
+                self.set_a(result);
             }
             0xA8 => {
                 // XOR B
-                let result = self.xor8(self.a(), self.b());
+                let result = self.xor8(self.b());
                 self.set_a(result);
             }
             0xA9 => {
                 // XOR C
-                let result = self.xor8(self.a(), self.c());
+                let result = self.xor8(self.c());
                 self.set_a(result);
             }
             0xAA => {
                 // XOR D
-                let result = self.xor8(self.a(), self.d());
+                let result = self.xor8(self.d());
                 self.set_a(result);
             }
             0xAB => {
                 // XOR E
-                let result = self.xor8(self.a(), self.e());
+                let result = self.xor8(self.e());
                 self.set_a(result);
             }
             0xAC => {
                 // XOR H
-                let result = self.xor8(self.a(), self.h());
+                let result = self.xor8(self.h());
                 self.set_a(result);
             }
             0xAD => {
                 // XOR L
-                let result = self.xor8(self.a(), self.l());
+                let result = self.xor8(self.l());
                 self.set_a(result);
             }
             0xAE => {
                 // XOR (HL)
-                let result = self.xor8(self.a(), self.mem8(self.hl()));
+                let result = self.xor8(self.mem8(self.hl()));
                 self.set_a(result);
             }
             0xAF => {
                 // XOR A
-                self.set_z_flag(true);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(false);
-                self.set_a(0);
+                let result = self.xor8(self.a());
+                self.set_a(result);
             }
             0xB0 => {
                 // OR B
-                todo!()
+                let result = self.or8(self.b());
+                self.set_a(result);
             }
             0xB1 => {
                 // OR C
-                todo!()
+                let result = self.or8(self.c());
+                self.set_a(result);
             }
             0xB2 => {
                 // OR D
-                todo!()
+                let result = self.or8(self.d());
+                self.set_a(result);
             }
             0xB3 => {
                 // OR E
-                todo!()
+                let result = self.or8(self.e());
+                self.set_a(result);
             }
             0xB4 => {
                 // OR H
-                todo!()
+                let result = self.or8(self.h());
+                self.set_a(result);
             }
             0xB5 => {
                 // OR L
-                todo!()
+                let result = self.or8(self.l());
+                self.set_a(result);
             }
             0xB6 => {
                 // OR (HL)
-                todo!()
+                let result = self.or8(self.mem8(self.hl()));
+                self.set_a(result);
             }
             0xB7 => {
                 // OR A
-                todo!()
+                let result = self.or8(self.a());
+                self.set_a(result);
             }
             0xB8 => {
                 // CP B
@@ -1386,7 +1419,8 @@ impl LR35902 {
             }
             0xE6 => {
                 // AND d8
-                todo!()
+                let result = self.and8(self.get_d8(0));
+                self.set_a(result);
             }
             0xE7 => {
                 // RST 20H
@@ -1419,7 +1453,8 @@ impl LR35902 {
             }
             0xEE => {
                 // XOR d8
-                todo!()
+                let result = self.xor8(self.get_d8(0));
+                self.set_a(result);
             }
             0xEF => {
                 // RST 28H
@@ -1452,7 +1487,8 @@ impl LR35902 {
             }
             0xF6 => {
                 // OR d8
-                todo!()
+                let result = self.or8(self.get_d8(0));
+                self.set_a(result);
             }
             0xF7 => {
                 // RST 30H
