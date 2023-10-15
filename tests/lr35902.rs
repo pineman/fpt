@@ -1167,10 +1167,68 @@ fn test_alu16_reg_imm(
 }
 
 #[rstest]
+// RLC r8
+#[case(0x00, "b", 0b10000101, 0b00001011, 0b0000, 0b0001)]
+#[case(0x00, "b", 0b01110101, 0b11101010, 0b0000, 0b0000)]
+#[case(0x00, "b", 0x00, 0x00, 0b0000, 0b1000)]
+#[case(0x01, "c", 0b10000101, 0b00001011, 0b0000, 0b0001)]
+#[case(0x01, "c", 0b01110101, 0b11101010, 0b0000, 0b0000)]
+#[case(0x01, "c", 0x00, 0x00, 0b0000, 0b1000)]
+#[case(0x02, "d", 0b10000101, 0b00001011, 0b0000, 0b0001)]
+#[case(0x02, "d", 0b01110101, 0b11101010, 0b0000, 0b0000)]
+#[case(0x02, "d", 0x00, 0x00, 0b0000, 0b1000)]
+#[case(0x03, "e", 0b10000101, 0b00001011, 0b0000, 0b0001)]
+#[case(0x03, "e", 0b01110101, 0b11101010, 0b0000, 0b0000)]
+#[case(0x03, "e", 0x00, 0x00, 0b0000, 0b1000)]
+#[case(0x04, "h", 0b10000101, 0b00001011, 0b0000, 0b0001)]
+#[case(0x04, "h", 0b01110101, 0b11101010, 0b0000, 0b0000)]
+#[case(0x04, "h", 0x00, 0x00, 0b0000, 0b1000)]
+#[case(0x05, "l", 0b10000101, 0b00001011, 0b0000, 0b0001)]
+#[case(0x05, "l", 0b01110101, 0b11101010, 0b0000, 0b0000)]
+#[case(0x05, "l", 0x00, 0x00, 0b0000, 0b1000)]
+#[case(0x07, "a", 0b10000101, 0b00001011, 0b0000, 0b0001)]
+#[case(0x07, "a", 0b01110101, 0b11101010, 0b0000, 0b0000)]
+#[case(0x07, "a", 0x00, 0x00, 0b0000, 0b1000)]
+// RRC r8
+// RL r8
+// RR r8
+// SLA r8
+// SRA r8
+// SRL r8
+fn test_rot_reg_reg(
+    #[case] opcode: u16,
+    #[case] src_reg: &str,
+    #[case] value: u8,
+    #[case] result: u8,
+    #[case] flags_before: u8,
+    #[case] flags_after: u8,
+) {
+    // Given
+    let builder = LR35902Builder::new()
+        .with_mem16(0x0000, (opcode << 8) + 0xCB)
+        .with_reg8(src_reg, value)
+        .with_f(flags_before << 4);
+    let mut sut = builder.clone().build();
+
+    // When
+    sut.step();
+    sut.step();
+
+    // Then
+    let expected = builder
+        .with_pc(2)
+        .with_reg8(src_reg, result)
+        .with_f(flags_after << 4)
+        .with_clock_cycles(8)
+        .build();
+    assert_eq!(sut, expected);
+}
+
+#[rstest]
 #[case::not_zero(0x1, 0b0001, 0b0011)]
 #[case::zero(0x0, 0b0000, 0b1010)]
 // BIT n,REG
-fn test_rsb8_reg(
+fn test_bit_reg(
     #[values(
     (0x40, "b", 0),
     (0x41, "c", 0),
@@ -1257,7 +1315,7 @@ fn test_rsb8_reg(
 #[case::not_zero(0x1, 0b0001, 0b0011)]
 #[case::zero(0x0, 0b0000, 0b1010)]
 // BIT n,(HL)
-fn test_rsb8_addr(
+fn test_bit_addr(
     #[values(
     (0x46, 0),
     (0x4E, 1),
@@ -1296,7 +1354,7 @@ fn test_rsb8_addr(
 #[rstest]
 #[case::not_zero(0x1, 0b0101, 0b0101)]
 #[case::zero(0x0, 0b1010, 0b1010)]
-fn test_rsb8_reg_reg(
+fn test_bit_reg_reg(
     #[values(
     // RES n,REG
     (0x80, "b", 0, 0),
@@ -1442,7 +1500,7 @@ fn test_rsb8_reg_reg(
 #[case::not_zero(0x1, 0b0101, 0b0101)]
 #[case::zero(0x0, 0b1010, 0b1010)]
 // RES n,(HL)
-fn test_rsb8_reg_addr(
+fn test_bit_reg_addr(
     #[values(
     (0x86, 0, 0),
     (0x8E, 1, 0),

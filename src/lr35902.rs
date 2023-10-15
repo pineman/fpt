@@ -281,6 +281,10 @@ impl LR35902 {
         self.mem8(self.hl())
     }
 
+    fn set_hl_ind(&mut self, value: u8) {
+        self.set_mem8(self.hl(), value);
+    }
+
     fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
         self.mem[..256].clone_from_slice(bootrom);
     }
@@ -1666,35 +1670,75 @@ impl LR35902 {
             }
             0x100 => {
                 // RLC B
-                todo!()
+                let result = self.b().rotate_left(1);
+                self.set_z_flag(result == 0);
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_c_flag(bw::test_bit8::<7>(self.b()));
+                self.set_b(result);
             }
             0x101 => {
                 // RLC C
-                todo!()
+                let result = self.c().rotate_left(1);
+                self.set_z_flag(result == 0);
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_c_flag(bw::test_bit8::<7>(self.c()));
+                self.set_c(result);
             }
             0x102 => {
                 // RLC D
-                todo!()
+                let result = self.d().rotate_left(1);
+                self.set_z_flag(result == 0);
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_c_flag(bw::test_bit8::<7>(self.d()));
+                self.set_d(result);
             }
             0x103 => {
                 // RLC E
-                todo!()
+                let result = self.e().rotate_left(1);
+                self.set_z_flag(result == 0);
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_c_flag(bw::test_bit8::<7>(self.e()));
+                self.set_e(result);
             }
             0x104 => {
                 // RLC H
-                todo!()
+                let result = self.h().rotate_left(1);
+                self.set_z_flag(result == 0);
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_c_flag(bw::test_bit8::<7>(self.h()));
+                self.set_h(result);
             }
             0x105 => {
                 // RLC L
-                todo!()
+                let result = self.l().rotate_left(1);
+                self.set_z_flag(result == 0);
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_c_flag(bw::test_bit8::<7>(self.l()));
+                self.set_l(result);
             }
             0x106 => {
                 // RLC (HL)
-                todo!()
+                let result = self.hl_ind().rotate_left(1);
+                self.set_z_flag(result == 0);
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_c_flag(bw::test_bit8::<7>(self.hl_ind()));
+                self.set_hl_ind(result);
             }
             0x107 => {
                 // RLC A
-                todo!()
+                let result = self.a().rotate_left(1);
+                self.set_z_flag(result == 0);
+                self.set_n_flag(false);
+                self.set_h_flag(false);
+                self.set_c_flag(bw::test_bit8::<7>(self.a()));
+                self.set_a(result);
             }
             0x108 => {
                 // RRC B
