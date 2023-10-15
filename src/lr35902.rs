@@ -55,86 +55,19 @@ impl LR35902 {
     pub fn new() -> Self {
         let mut m = Self::default();
         m.load_bootrom(include_bytes!("../dmg0.bin"));
-
-        m.set_mem8(0x104,0xce);
-        m.set_mem8(0x105,0xed);
-        m.set_mem8(0x106,0x66);
-        m.set_mem8(0x107,0x66);
-        m.set_mem8(0x108,0xcc);
-        m.set_mem8(0x109,0x0d);
-        m.set_mem8(0x10a,0x00);
-        m.set_mem8(0x10b,0x0b);
-        m.set_mem8(0x10c,0x03);
-        m.set_mem8(0x10d,0x73);
-        m.set_mem8(0x10e,0x00);
-        m.set_mem8(0x10f,0x83);
-        m.set_mem8(0x110,0x00);
-        m.set_mem8(0x111,0x0c);
-        m.set_mem8(0x112,0x00);
-        m.set_mem8(0x113,0x0d);
-        m.set_mem8(0x114,0x00);
-        m.set_mem8(0x115,0x08);
-        m.set_mem8(0x116,0x11);
-        m.set_mem8(0x117,0x1f);
-        m.set_mem8(0x118,0x88);
-        m.set_mem8(0x119,0x89);
-        m.set_mem8(0x11a,0x00);
-        m.set_mem8(0x11b,0x0e);
-        m.set_mem8(0x11c,0xdc);
-        m.set_mem8(0x11d,0xcc);
-        m.set_mem8(0x11e,0x6e);
-        m.set_mem8(0x11f,0xe6);
-        m.set_mem8(0x120,0xdd);
-        m.set_mem8(0x121,0xdd);
-        m.set_mem8(0x122,0xd9);
-        m.set_mem8(0x123,0x99);
-        m.set_mem8(0x124,0xbb);
-        m.set_mem8(0x125,0xbb);
-        m.set_mem8(0x126,0x67);
-        m.set_mem8(0x127,0x63);
-        m.set_mem8(0x128,0x6e);
-        m.set_mem8(0x129,0x0e);
-        m.set_mem8(0x12a,0xec);
-        m.set_mem8(0x12b,0xcc);
-        m.set_mem8(0x12c,0xdd);
-        m.set_mem8(0x12d,0xdc);
-        m.set_mem8(0x12e,0x99);
-        m.set_mem8(0x12f,0x9f);
-        m.set_mem8(0x130,0xbb);
-        m.set_mem8(0x131,0xb9);
-        m.set_mem8(0x132,0x33);
-        m.set_mem8(0x133,0x3e);
-        m.set_mem8(0x134, 0x50);
-        m.set_mem8(0x135, 0x4f);
-        m.set_mem8(0x136, 0x4b);
-        m.set_mem8(0x137, 0x45);
-        m.set_mem8(0x138, 0x4d);
-        m.set_mem8(0x139, 0x4f);
-        m.set_mem8(0x13a, 0x4e);
-        m.set_mem8(0x13b, 0x20);
-        m.set_mem8(0x13c, 0x52);
-        m.set_mem8(0x13d, 0x45);
-        m.set_mem8(0x13e, 0x44);
-        m.set_mem8(0x13f, 0x00);
-        m.set_mem8(0x140, 0x00);
-        m.set_mem8(0x141, 0x00);
-        m.set_mem8(0x142, 0x00);
-        m.set_mem8(0x143, 0x00);
-        m.set_mem8(0x144, 0x30);
-        m.set_mem8(0x145, 0x31);
-        m.set_mem8(0x146, 0x03);
-        m.set_mem8(0x147, 0x13);
-        m.set_mem8(0x148, 0x05);
-        m.set_mem8(0x149, 0x03);
-        m.set_mem8(0x14a, 0x01);
-        m.set_mem8(0x14b, 0x33);
-        m.set_mem8(0x14c, 0x00);
-        m.set_mem8(0x14d, 0x20);
         m
-
     }
+
     pub fn set_debug(&mut self, enabled: bool) {
         self.debug = enabled;
+    }
+
+    pub fn load_rom(&mut self, rom: Vec<u8>) {
+        for (address, byte) in rom.iter().enumerate() {
+            self.mem.write(address.try_into().unwrap(), *byte);
+        }
+
+        self.load_bootrom(include_bytes!("../dmg0.bin"));
     }
 
     pub fn a(&self) -> u8 {
@@ -634,7 +567,7 @@ impl LR35902 {
     fn ret(&mut self) {
         let address = self.pop();
         self.jump(address);
-            println!("ret");
+        println!("ret");
     }
 
     fn bit<const INDEX: u8>(&mut self, x: u8) {
@@ -1582,7 +1515,7 @@ impl LR35902 {
             }
             0xC7 => {
                 // RST 00H
-                todo!()
+                self.call(0x00);
             }
             0xC8 => {
                 // RET Z
@@ -1621,7 +1554,7 @@ impl LR35902 {
             }
             0xCF => {
                 // RST 08H
-                todo!()
+                self.call(0x08);
             }
             0xD0 => {
                 // RET NC
@@ -1661,7 +1594,7 @@ impl LR35902 {
             }
             0xD7 => {
                 // RST 10H
-                todo!()
+                self.call(0x10);
             }
             0xD8 => {
                 // RET C
@@ -1700,7 +1633,7 @@ impl LR35902 {
             }
             0xDF => {
                 // RST 18H
-                todo!()
+                self.call(0x18);
             }
             0xE0 => {
                 // LDH (a8),A
@@ -1734,7 +1667,7 @@ impl LR35902 {
             }
             0xE7 => {
                 // RST 20H
-                todo!()
+                self.call(0x20);
             }
             0xE8 => {
                 // ADD SP,r8
@@ -1768,7 +1701,7 @@ impl LR35902 {
             }
             0xEF => {
                 // RST 28H
-                todo!()
+                self.call(0x28);
             }
             0xF0 => {
                 // LDH A,(a8)
@@ -1785,7 +1718,7 @@ impl LR35902 {
             }
             0xF3 => {
                 // DI
-                todo!()
+                // todo!();
             }
             0xF4 => {
                 // Not implemented
@@ -1802,7 +1735,7 @@ impl LR35902 {
             }
             0xF7 => {
                 // RST 30H
-                todo!()
+                self.call(0x30);
             }
             0xF8 => {
                 // LD HL,SP+r8
@@ -1819,7 +1752,7 @@ impl LR35902 {
             }
             0xFB => {
                 // EI
-                todo!()
+                // todo!()
             }
             0xFC => {
                 // Not implemented
@@ -1839,7 +1772,7 @@ impl LR35902 {
             }
             0xFF => {
                 // RST 38H
-                todo!()
+                self.call(0x38);
             }
             0x100 => {
                 // RLC B
