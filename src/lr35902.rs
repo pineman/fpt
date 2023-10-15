@@ -485,6 +485,13 @@ impl LR35902 {
         match instruction.opcode {
             0x00 => {
                 // NOP
+                println!("memory:");
+                for i in 0..65536 {
+                    if self.mem[i] != 0 {
+                        println!("{:#02X}: {:#02X}", i, self.mem[i]);
+                    }
+                }
+                panic!()
             }
             0x01 => {
                 // LD BC,d16
