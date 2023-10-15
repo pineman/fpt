@@ -8,15 +8,6 @@ use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 use crate::bitwise as bw;
 use crate::ppu::Ppu;
 
-fn compute_relative_address(base: u16, offset: i8) -> u16 {
-    let r = base as i32 + offset as i32;
-    if !(0..=65535).contains(&r) {
-        panic!();
-    }
-
-    r as u16
-}
-
 #[derive(Clone)]
 pub struct LR35902 {
     af: u16,
@@ -535,9 +526,26 @@ impl LR35902 {
         result
     }
 
+    fn calc_jr_address(pc: u16, offset: i8) -> u16 {
+        // pc + 2 because relative address are based off
+        // the end of the JR instruction.
+        let r = (pc + 2) as i32 + offset as i32;
+        if !(0..=65535).contains(&r) {
+            panic!();
+        }
+
+        r as u16
+    }
+
     fn jump(&mut self, address: u16) {
         self.set_pc(address);
         self.branch_taken = true;
+    }
+
+    fn call(&mut self, address: u16) {
+        // pc + 3 because calls are 3 bytes long
+        self.push(self.pc() + 3);
+        self.jump(address);
     }
 
     fn push(&mut self, value: u16) {
@@ -681,8 +689,7 @@ impl LR35902 {
             }
             0x18 => {
                 // JR r8
-                self.jump(compute_relative_address(self.pc(), self.get_r8(0)));
-                self.set_pc(self.pc() + instruction.size as u16)
+                self.jump(self.calc_jr_address(self.pc(), self.get_r8(0)));
             }
             0x19 => {
                 // ADD HL,DE
@@ -721,8 +728,7 @@ impl LR35902 {
             0x20 => {
                 // JR NZ,r8
                 if !self.z_flag() {
-                    self.jump(compute_relative_address(self.pc(), self.get_r8(0)));
-                    self.set_pc(self.pc() + instruction.size as u16);
+                    self.jump(self.calc_jr_address(self.pc(), self.get_r8(0)));
                 }
             }
             0x21 => {
@@ -760,8 +766,7 @@ impl LR35902 {
             0x28 => {
                 // JR Z,r8
                 if self.z_flag() {
-                    self.jump(compute_relative_address(self.pc(), self.get_r8(0)));
-                    self.set_pc(self.pc() + instruction.size as u16);
+                    self.jump(self.calc_jr_address(self.pc(), self.get_r8(0)));
                 }
             }
             0x29 => {
@@ -802,8 +807,7 @@ impl LR35902 {
             0x30 => {
                 // JR NC,r8
                 if !self.c_flag() {
-                    self.jump(compute_relative_address(self.pc(), self.get_r8(0)));
-                    self.set_pc(self.pc() + instruction.size as u16);
+                    self.jump(self.calc_jr_address(self.pc(), self.get_r8(0)));
                 }
             }
             0x31 => {
@@ -843,8 +847,7 @@ impl LR35902 {
             0x38 => {
                 // JR C,r8
                 if self.c_flag() {
-                    self.jump(compute_relative_address(self.pc(), self.get_r8(0)));
-                    self.set_pc(self.pc() + instruction.size as u16);
+                    self.jump(self.calc_jr_address(self.pc(), self.get_r8(0)));
                 }
             }
             0x39 => {
@@ -1466,17 +1469,17 @@ impl LR35902 {
                 // JP NZ,a16
                 if !self.z_flag() {
                     self.jump(self.get_d16(0));
-                    self.set_pc(self.pc() + instruction.size as u16);
                 }
             }
             0xC3 => {
                 // JP a16
                 self.jump(self.get_d16(0));
-                self.set_pc(self.pc() + instruction.size as u16);
             }
             0xC4 => {
                 // CALL NZ,a16
-                todo!()
+                if !self.z_flag() {
+                    self.call(self.get_d16(0));
+                }
             }
             0xC5 => {
                 // PUSH BC
@@ -1505,7 +1508,6 @@ impl LR35902 {
                 // JP Z,a16
                 if self.z_flag() {
                     self.jump(self.get_d16(0));
-                    self.set_pc(self.pc() + instruction.size as u16);
                 }
             }
             0xCB => {
@@ -1514,15 +1516,13 @@ impl LR35902 {
             }
             0xCC => {
                 // CALL Z,a16
-                todo!()
+                if self.z_flag() {
+                    self.call(self.get_d16(0));
+                }
             }
             0xCD => {
                 // CALL a16
-                let nn = self.get_d16(0);
-                self.set_sp(self.sp() - 2);
-                self.set_mem16(self.sp(), self.pc() + 3);
-                self.set_pc(nn);
-                self.branch_taken = true;
+                self.call(self.get_d16(0));
             }
             0xCE => {
                 // ADC A,d8
@@ -1546,7 +1546,6 @@ impl LR35902 {
                 // JP NC,a16
                 if !self.c_flag() {
                     self.jump(self.get_d16(0));
-                    self.set_pc(self.pc() + instruction.size as u16);
                 }
             }
             0xD3 => {
@@ -1555,7 +1554,9 @@ impl LR35902 {
             }
             0xD4 => {
                 // CALL NC,a16
-                todo!()
+                if !self.c_flag() {
+                    self.call(self.get_d16(0));
+                }
             }
             0xD5 => {
                 // PUSH DE
@@ -1582,7 +1583,6 @@ impl LR35902 {
                 // JP C,a16
                 if self.c_flag() {
                     self.jump(self.get_d16(0));
-                    self.set_pc(self.pc() + instruction.size as u16);
                 }
             }
             0xDB => {
@@ -1591,7 +1591,9 @@ impl LR35902 {
             }
             0xDC => {
                 // CALL C,a16
-                todo!()
+                if self.c_flag() {
+                    self.call(self.get_d16(0));
+                }
             }
             0xDD => {
                 // Not implemented
@@ -1647,7 +1649,7 @@ impl LR35902 {
             }
             0xE9 => {
                 // JP (HL)
-                todo!()
+                self.jump(self.get_d16(0));
             }
             0xEA => {
                 // LD (a16),A
