@@ -526,7 +526,18 @@ impl LR35902 {
         result
     }
 
-    fn calc_jr_address(pc: u16, offset: i8) -> u16 {
+    fn push(&mut self, value: u16) {
+        self.set_sp(self.sp() - 2);
+        self.set_mem16(self.sp(), value);
+    }
+
+    fn pop(&mut self) -> u16 {
+        let r = self.mem16(self.sp());
+        self.set_sp(self.sp() + 2);
+        r
+    }
+
+    fn calc_jr_address(&self, pc: u16, offset: i8) -> u16 {
         // pc + 2 because relative address are based off
         // the end of the JR instruction.
         let r = (pc + 2) as i32 + offset as i32;
@@ -548,15 +559,9 @@ impl LR35902 {
         self.jump(address);
     }
 
-    fn push(&mut self, value: u16) {
-        self.set_sp(self.sp() - 2);
-        self.set_mem16(self.sp(), value);
-    }
-
-    fn pop(&mut self) -> u16 {
-        let r = self.mem16(self.sp());
-        self.set_sp(self.sp() + 2);
-        r
+    fn ret(&mut self) {
+        let address = self.pop();
+        self.jump(address);
     }
 
     fn bit<const INDEX: u8>(&mut self, x: u8) {
@@ -1458,7 +1463,9 @@ impl LR35902 {
             }
             0xC0 => {
                 // RET NZ
-                todo!()
+                if !self.z_flag() {
+                    self.ret()
+                }
             }
             0xC1 => {
                 // POP BC
@@ -1496,13 +1503,13 @@ impl LR35902 {
             }
             0xC8 => {
                 // RET Z
-                todo!()
+                if self.z_flag() {
+                    self.ret()
+                }
             }
             0xC9 => {
                 // RET
-                self.set_sp(self.sp() + 2);
-                self.set_pc(self.mem16(self.sp()));
-                self.branch_taken = true;
+                self.ret();
             }
             0xCA => {
                 // JP Z,a16
@@ -1535,7 +1542,9 @@ impl LR35902 {
             }
             0xD0 => {
                 // RET NC
-                todo!()
+                if !self.c_flag() {
+                    self.ret();
+                }
             }
             0xD1 => {
                 // POP DE
@@ -1573,7 +1582,9 @@ impl LR35902 {
             }
             0xD8 => {
                 // RET C
-                todo!()
+                if self.c_flag() {
+                    self.ret();
+                }
             }
             0xD9 => {
                 // RETI
