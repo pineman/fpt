@@ -5,10 +5,9 @@ pub mod instructions;
 
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
+use super::memory;
+use super::ppu::Ppu;
 use crate::bitwise as bw;
-use crate::ppu::Ppu;
-
-use super::memory::Bus;
 
 #[derive(Clone, PartialEq)]
 pub struct LR35902 {
@@ -18,7 +17,7 @@ pub struct LR35902 {
     hl: u16,
     sp: u16,
     pc: u16,
-    mem: Bus,
+    mem: memory::Bus,
     next_cb: bool,
     clock_cycles: u64,
     branch_taken: bool,
@@ -35,7 +34,7 @@ impl Default for LR35902 {
             hl: 0,
             sp: 0,
             pc: 0, // TODO Should be 0x150, but I don't want pineman to complain to the union today because the tests broke
-            mem: Bus::new(),
+            mem: memory::Bus::new(),
             next_cb: false,
             clock_cycles: 0,
             branch_taken: false,
@@ -63,9 +62,9 @@ impl LR35902 {
     }
 
     pub fn load_rom(&mut self, rom: Vec<u8>) {
-        for (address, byte) in rom.iter().enumerate() {
-            self.mem.write(address.try_into().unwrap(), *byte);
-        }
+        self.mem
+            .mut_slice(0..rom.len() as memory::Address)
+            .copy_from_slice(&rom);
 
         self.load_bootrom(include_bytes!("../dmg0.bin"));
     }
@@ -276,7 +275,9 @@ impl LR35902 {
     }
 
     fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
-        self.mem.load_bootrom(bootrom);
+        self.mem
+            .mut_slice(memory::map::BOOTROM)
+            .clone_from_slice(bootrom);
     }
 
     pub fn decode(&mut self) -> Instruction {
