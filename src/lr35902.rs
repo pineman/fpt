@@ -1300,7 +1300,6 @@ impl LR35902 {
             }
             0x9E => {
                 // SBC A,(HL)
-                dbg!(self.c_flag());
                 let result = self.subc8(self.a(), self.hl_ind());
                 self.set_a(result);
             }
