@@ -54,7 +54,7 @@ impl fmt::Debug for LR35902 {
 impl LR35902 {
     pub fn new() -> Self {
         let mut m = Self::default();
-        m.load_bootrom(include_bytes!("../dmg.bin"));
+        m.load_bootrom(include_bytes!("../dmg0.bin"));
 
         m.set_mem8(0x104,0xce);
         m.set_mem8(0x105,0xed);
@@ -104,7 +104,34 @@ impl LR35902 {
         m.set_mem8(0x131,0xb9);
         m.set_mem8(0x132,0x33);
         m.set_mem8(0x133,0x3e);
+        m.set_mem8(0x134, 0x50);
+        m.set_mem8(0x135, 0x4f);
+        m.set_mem8(0x136, 0x4b);
+        m.set_mem8(0x137, 0x45);
+        m.set_mem8(0x138, 0x4d);
+        m.set_mem8(0x139, 0x4f);
+        m.set_mem8(0x13a, 0x4e);
+        m.set_mem8(0x13b, 0x20);
+        m.set_mem8(0x13c, 0x52);
+        m.set_mem8(0x13d, 0x45);
+        m.set_mem8(0x13e, 0x44);
+        m.set_mem8(0x13f, 0x00);
+        m.set_mem8(0x140, 0x00);
+        m.set_mem8(0x141, 0x00);
+        m.set_mem8(0x142, 0x00);
+        m.set_mem8(0x143, 0x00);
+        m.set_mem8(0x144, 0x30);
+        m.set_mem8(0x145, 0x31);
+        m.set_mem8(0x146, 0x03);
+        m.set_mem8(0x147, 0x13);
+        m.set_mem8(0x148, 0x05);
+        m.set_mem8(0x149, 0x03);
+        m.set_mem8(0x14a, 0x01);
+        m.set_mem8(0x14b, 0x33);
+        m.set_mem8(0x14c, 0x00);
+        m.set_mem8(0x14d, 0x20);
         m
+
     }
     pub fn set_debug(&mut self, enabled: bool) {
         self.debug = enabled;
@@ -589,17 +616,25 @@ impl LR35902 {
     fn jump(&mut self, address: u16) {
         self.set_pc(address);
         self.branch_taken = true;
+        if address == 0x98 {
+            println!("Jumping to Lockup");
+        }
     }
 
     fn call(&mut self, address: u16) {
         // pc + 3 because calls are 3 bytes long
         self.push(self.pc() + 3);
         self.jump(address);
+        if address == 0x98 {
+            println!("Jumping to Lockup");
+        }
+        println!("call {:#02X}", address);
     }
 
     fn ret(&mut self) {
         let address = self.pop();
         self.jump(address);
+            println!("ret");
     }
 
     fn bit<const INDEX: u8>(&mut self, x: u8) {
@@ -614,13 +649,13 @@ impl LR35902 {
         match instruction.opcode {
             0x00 => {
                 // NOP
-                println!("memory:");
+                //println!("memory:");
 
-                for (address, byte) in self.mem.each_byte() {
-                    if byte != 0 {
-                        println!("{address:#02X}: {byte:#02X}");
-                    }
-                }
+                //for (address, byte) in self.mem.each_byte() {
+                //    if byte != 0 {
+                //        println!("{address:#02X}: {byte:#02X}");
+                //    }
+                //}
             }
             0x01 => {
                 // LD BC,d16
@@ -816,6 +851,10 @@ impl LR35902 {
                 // JR Z,r8
                 if self.z_flag() {
                     self.jump(self.calc_jr_address(self.pc(), self.get_r8(0)));
+                    let dst = self.calc_jr_address(self.pc(), self.get_r8(0));
+                    if dst == 0x55 {
+                        println!("jump to ScrollLogo");
+                    }
                 }
             }
             0x29 => {
@@ -937,6 +976,7 @@ impl LR35902 {
             0x40 => {
                 // LD B,B
                 self.set_b(self.b());
+                panic!();
             }
             0x41 => {
                 // LD B,C
@@ -1553,7 +1593,6 @@ impl LR35902 {
             0xC9 => {
                 // RET
                 self.ret();
-                println!("ret");
             }
             0xCA => {
                 // JP Z,a16
@@ -1793,6 +1832,10 @@ impl LR35902 {
             0xFE => {
                 // CP d8
                 self.sub8(self.a(), self.get_d8(0));
+
+                if self.get_d8(0) == 0x64 {
+                    println!("leaving the loop");
+                }
             }
             0xFF => {
                 // RST 38H
