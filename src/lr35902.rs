@@ -582,7 +582,7 @@ impl LR35902 {
                         println!("{:#02X}: {:#02X}", i, self.mem[i]);
                     }
                 }
-                panic!()
+                return;
             }
             0x01 => {
                 // LD BC,d16
