@@ -316,12 +316,6 @@ impl LR35902 {
 
         let ppu = self.ppu;
         ppu.render(self);
-
-        if self.clock_cycles() > 1000 {
-            println!("{:?}", self.mem.slice(0x8000..0x8010));
-            println!("{:?}", self.mem.slice(0x8800..0x8810));
-            panic!();
-        }
     }
 
     fn half_carry8(&self, x: u8, y: u8) -> bool {

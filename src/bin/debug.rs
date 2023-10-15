@@ -29,6 +29,7 @@ fn fmt_lua_value(lua_value: &LuaValue) -> String {
     }
 }
 
+#[derive(Debug)]
 enum Breakpoint {
     Breakpoint(u16),
     OnOpcode(u8),
@@ -151,7 +152,7 @@ fn main() -> Result<()> {
 
     let d1 = dbg_pointer.clone();
     lua.set(
-        "break",
+        "b",
         hlua::function1(move |opcode: u16| -> LuaValue {
             d1.borrow_mut()
                 .set_breakpoint(Breakpoint::Breakpoint(opcode));
@@ -180,16 +181,14 @@ fn main() -> Result<()> {
     let d1 = dbg_pointer.clone();
     lua.set(
         "pc",
-        hlua::function0(move || -> LuaValue {
-            LuaValue::LuaNumber(dbg!(d1.borrow_mut().pc().into()))
-        }),
+        hlua::function0(move || -> LuaValue { LuaValue::LuaNumber(d1.borrow_mut().pc().into()) }),
     );
 
     let d1 = dbg_pointer.clone();
     lua.set(
         "af",
         hlua::function0(move || -> LuaValue {
-            LuaValue::LuaNumber(dbg!(d1.borrow_mut().lr.af().into()))
+            LuaValue::LuaNumber(d1.borrow_mut().lr.af().into())
         }),
     );
 
@@ -197,7 +196,7 @@ fn main() -> Result<()> {
     lua.set(
         "bc",
         hlua::function0(move || -> LuaValue {
-            LuaValue::LuaNumber(dbg!(d1.borrow_mut().lr.bc().into()))
+            LuaValue::LuaNumber(d1.borrow_mut().lr.bc().into())
         }),
     );
 
@@ -205,7 +204,7 @@ fn main() -> Result<()> {
     lua.set(
         "de",
         hlua::function0(move || -> LuaValue {
-            LuaValue::LuaNumber(dbg!(d1.borrow_mut().lr.de().into()))
+            LuaValue::LuaNumber(d1.borrow_mut().lr.de().into())
         }),
     );
 
@@ -213,7 +212,7 @@ fn main() -> Result<()> {
     lua.set(
         "hl",
         hlua::function0(move || -> LuaValue {
-            LuaValue::LuaNumber(dbg!(d1.borrow_mut().lr.hl().into()))
+            LuaValue::LuaNumber(d1.borrow_mut().lr.hl().into())
         }),
     );
 
@@ -221,7 +220,7 @@ fn main() -> Result<()> {
     lua.set(
         "sp",
         hlua::function0(move || -> LuaValue {
-            LuaValue::LuaNumber(dbg!(d1.borrow_mut().lr.sp().into()))
+            LuaValue::LuaNumber(d1.borrow_mut().lr.sp().into())
         }),
     );
 
@@ -229,7 +228,7 @@ fn main() -> Result<()> {
     lua.set(
         "mem",
         hlua::function1(move |address: u16| -> LuaValue {
-            LuaValue::LuaNumber(dbg!(d1.borrow_mut().lr.mem8(address).into()))
+            LuaValue::LuaNumber(d1.borrow_mut().lr.mem8(address).into())
         }),
     );
 
@@ -237,7 +236,7 @@ fn main() -> Result<()> {
     lua.set(
         "next_cb",
         hlua::function0(move || -> LuaValue {
-            LuaValue::LuaNumber(dbg!(d1.borrow_mut().lr.next_cb().into()))
+            LuaValue::LuaNumber(d1.borrow_mut().lr.next_cb().into())
         }),
     );
 
@@ -245,7 +244,7 @@ fn main() -> Result<()> {
     lua.set(
         "clock_cycle",
         hlua::function0(move || -> LuaValue {
-            LuaValue::LuaString(dbg!(d1.borrow_mut().lr.clock_cycles().to_string()))
+            LuaValue::LuaString(d1.borrow_mut().lr.clock_cycles().to_string())
         }),
     );
 
@@ -254,8 +253,34 @@ fn main() -> Result<()> {
         "load_rom",
         hlua::function1(move |filename: String| -> LuaValue {
             let rom = std::fs::read(filename).unwrap();
-            dbg!(d1.borrow_mut().lr.load_rom(rom));
+            d1.borrow_mut().lr.load_rom(rom);
             LuaValue::LuaNil
+        }),
+    );
+
+    let d1 = dbg_pointer.clone();
+    lua.set(
+        "mem_dump",
+        hlua::function0(move || -> LuaValue {
+            LuaValue::LuaString(
+                (0..0xFFFF)
+                    .map(|i| format!("{:#02X} {:#02X}", i, d1.borrow_mut().lr.mem8(i)))
+                    .intersperse("\n".to_string())
+                    .collect::<String>(),
+            )
+        }),
+    );
+
+    let d1 = dbg_pointer.clone();
+    lua.set(
+        "mem_dump_ranged",
+        hlua::function2(move |start:u16, end: u16| -> LuaValue {
+            LuaValue::LuaString(
+                (start..end)
+                    .map(|i| format!("{:#02X} {:#02X}", i, d1.borrow_mut().lr.mem8(i)))
+                    .intersperse("\n".to_string())
+                    .collect::<String>(),
+            )
         }),
     );
 
@@ -277,7 +302,11 @@ fn main() -> Result<()> {
             Ok(line) => {
                 let cmd = String::from("return ") + &line;
                 rl.add_history_entry(&line)?;
-                println!("{}", fmt_lua_value(&lua.execute::<LuaValue>(&cmd).unwrap()));
+                let result = lua.execute::<LuaValue>(&cmd);
+                println!(
+                    "{}",
+                    fmt_lua_value(result.as_ref().expect("Failed to run function"))
+                );
             }
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");
