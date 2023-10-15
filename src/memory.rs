@@ -13,6 +13,9 @@ pub mod map {
     /// User Program Area (32 KB)
     pub const USER_PROGRAM: MemoryRange = 0x0150..0x8000;
 
+    /// Video RAM (8 KB)
+    pub const VRAM: MemoryRange = 0x8000..0xA000;
+
     /// External Expansion Working RAM (8 KB)
     pub const EXT_WRAM: MemoryRange = 0xA000..0xC000;
 
