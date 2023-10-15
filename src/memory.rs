@@ -28,6 +28,6 @@ pub mod map {
     /// Working & Stack RAM (127 bytes)
     pub const HRAM: MemoryRange = 0xFF80..0xFFFF;
 
-    /// Interrupt switch
-    pub const INTERRUPT_SWITCH: MemoryRange = 0xFFFF..=0xFFFF;
+    /// Address used to turn the interrupt system on or off
+    pub const INTERRUPT_SWITCH: Address = 0xFFFF;
 }
