@@ -1715,11 +1715,11 @@ impl LR35902 {
             }
             0xF9 => {
                 // LD SP,HL
-                todo!()
+                self.set_sp(self.hl());
             }
             0xFA => {
                 // LD A,(a16)
-                todo!()
+                self.set_a(self.mem8(self.get_d16(0)));
             }
             0xFB => {
                 // EI
