@@ -277,6 +277,10 @@ impl LR35902 {
         self.set_mem8(self.hl(), value);
     }
 
+    pub fn get_next_cb(&self) -> bool {
+        self.next_cb
+    }
+
     fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
         self.mem[..256].clone_from_slice(bootrom);
     }
@@ -582,7 +586,6 @@ impl LR35902 {
                         println!("{:#02X}: {:#02X}", i, self.mem[i]);
                     }
                 }
-                return;
             }
             0x01 => {
                 // LD BC,d16
