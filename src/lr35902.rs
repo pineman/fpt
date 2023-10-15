@@ -524,6 +524,17 @@ impl LR35902 {
         result
     }
 
+    fn swap8(&mut self, x: u8) -> u8 {
+        let lo = x & 0x0f;
+        let hi = x & 0xf0;
+        let result = (lo << 4) + (hi >> 4);
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(false);
+        result
+    }
+
     fn jump(&mut self, address: u16) {
         self.set_pc(address);
         self.branch_taken = true;
@@ -1972,35 +1983,43 @@ impl LR35902 {
             }
             0x130 => {
                 // SWAP B
-                todo!()
+                let result = self.swap8(self.b());
+                self.set_b(result);
             }
             0x131 => {
                 // SWAP C
-                todo!()
+                let result = self.swap8(self.c());
+                self.set_c(result);
             }
             0x132 => {
                 // SWAP D
-                todo!()
+                let result = self.swap8(self.d());
+                self.set_d(result);
             }
             0x133 => {
                 // SWAP E
-                todo!()
+                let result = self.swap8(self.e());
+                self.set_e(result);
             }
             0x134 => {
                 // SWAP H
-                todo!()
+                let result = self.swap8(self.h());
+                self.set_h(result);
             }
             0x135 => {
                 // SWAP L
-                todo!()
+                let result = self.swap8(self.l());
+                self.set_l(result);
             }
             0x136 => {
                 // SWAP (HL)
-                todo!()
+                let result = self.swap8(self.hl_ind());
+                self.set_hl_ind(result);
             }
             0x137 => {
                 // SWAP A
-                todo!()
+                let result = self.swap8(self.a());
+                self.set_a(result);
             }
             0x138 => {
                 // SRL B
