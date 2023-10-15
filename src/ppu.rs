@@ -9,6 +9,7 @@ impl Ppu {
 
     pub fn render(&self, lr: &mut LR35902) {
         // I just blindly increment the LY register for the lols
-        lr.set_mem8(0xFF44, lr.mem8(0xFF44).overflowing_add(1).0);
+        //lr.set_mem8(0xFF44, lr.mem8(0xFF44).overflowing_add(1).0);
+        lr.set_mem8(0xFF44, 144);
     }
 }

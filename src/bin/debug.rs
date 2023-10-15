@@ -29,11 +29,6 @@ fn fmt_lua_value(lua_value: &LuaValue) -> String {
     }
 }
 
-struct Debugger {
-    lr: LR35902,
-    breakpoints: Vec<Breakpoint>,
-}
-
 enum Breakpoint {
     Breakpoint(u16),
     OnOpcode(u8),
@@ -64,6 +59,11 @@ impl Breakpoint {
             Breakpoint::OnCB(opcode) => lr.mem8(lr.pc()) == *opcode && lr.get_next_cb(),
         }
     }
+}
+
+struct Debugger {
+    lr: LR35902,
+    breakpoints: Vec<Breakpoint>,
 }
 
 #[allow(dead_code)]
@@ -182,6 +182,80 @@ fn main() -> Result<()> {
         "pc",
         hlua::function0(move || -> LuaValue {
             LuaValue::LuaNumber(dbg!(d1.borrow_mut().pc().into()))
+        }),
+    );
+
+    let d1 = dbg_pointer.clone();
+    lua.set(
+        "af",
+        hlua::function0(move || -> LuaValue {
+            LuaValue::LuaNumber(dbg!(d1.borrow_mut().lr.af().into()))
+        }),
+    );
+
+    let d1 = dbg_pointer.clone();
+    lua.set(
+        "bc",
+        hlua::function0(move || -> LuaValue {
+            LuaValue::LuaNumber(dbg!(d1.borrow_mut().lr.bc().into()))
+        }),
+    );
+
+    let d1 = dbg_pointer.clone();
+    lua.set(
+        "de",
+        hlua::function0(move || -> LuaValue {
+            LuaValue::LuaNumber(dbg!(d1.borrow_mut().lr.de().into()))
+        }),
+    );
+
+    let d1 = dbg_pointer.clone();
+    lua.set(
+        "hl",
+        hlua::function0(move || -> LuaValue {
+            LuaValue::LuaNumber(dbg!(d1.borrow_mut().lr.hl().into()))
+        }),
+    );
+
+    let d1 = dbg_pointer.clone();
+    lua.set(
+        "sp",
+        hlua::function0(move || -> LuaValue {
+            LuaValue::LuaNumber(dbg!(d1.borrow_mut().lr.sp().into()))
+        }),
+    );
+
+    let d1 = dbg_pointer.clone();
+    lua.set(
+        "mem",
+        hlua::function1(move |address: u16| -> LuaValue {
+            LuaValue::LuaNumber(dbg!(d1.borrow_mut().lr.mem8(address).into()))
+        }),
+    );
+
+    let d1 = dbg_pointer.clone();
+    lua.set(
+        "next_cb",
+        hlua::function0(move || -> LuaValue {
+            LuaValue::LuaNumber(dbg!(d1.borrow_mut().lr.next_cb().into()))
+        }),
+    );
+
+    let d1 = dbg_pointer.clone();
+    lua.set(
+        "clock_cycle",
+        hlua::function0(move || -> LuaValue {
+            LuaValue::LuaString(dbg!(d1.borrow_mut().lr.clock_cycles().to_string()))
+        }),
+    );
+
+    let d1 = dbg_pointer.clone();
+    lua.set(
+        "load_rom",
+        hlua::function1(move |filename: String| -> LuaValue {
+            let rom = std::fs::read(filename).unwrap();
+            dbg!(d1.borrow_mut().lr.load_rom(rom));
+            LuaValue::LuaNil
         }),
     );
 
