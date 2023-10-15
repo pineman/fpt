@@ -457,6 +457,44 @@ impl LR35902 {
         result
     }
 
+    fn rlc8(&mut self, x: u8) -> u8 {
+        let result = x.rotate_left(1);
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(bw::test_bit8::<7>(x));
+        result
+    }
+
+    fn rl8(&mut self, x: u8) -> u8 {
+        let c_result = x.rotate_left(1);
+        let result = bw::set_bit8::<0>(c_result, self.c_flag());
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(bw::test_bit8::<0>(c_result));
+        result
+    }
+
+    fn rrc8(&mut self, x: u8) -> u8 {
+        let result = x.rotate_right(1);
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(bw::test_bit8::<0>(x));
+        result
+    }
+
+    fn rr8(&mut self, x: u8) -> u8 {
+        let c_result = x.rotate_right(1);
+        let result = bw::set_bit8::<7>(c_result, self.c_flag());
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(bw::test_bit8::<7>(c_result));
+        result
+    }
+
     fn jump(&mut self, address: u16) {
         self.set_pc(address);
         self.branch_taken = true;
@@ -522,11 +560,8 @@ impl LR35902 {
             }
             0x07 => {
                 // RLCA
-                let result = self.a().rotate_left(1);
+                let result = self.rlc8(self.a());
                 self.set_z_flag(false);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(self.a()));
                 self.set_a(result);
             }
             0x08 => {
@@ -563,11 +598,8 @@ impl LR35902 {
             }
             0x0F => {
                 // RRCA
-                let result = self.a().rotate_right(1);
+                let result = self.rrc8(self.a());
                 self.set_z_flag(false);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(self.a()));
                 self.set_a(result);
             }
             0x10 => {
@@ -603,12 +635,8 @@ impl LR35902 {
             }
             0x17 => {
                 // RLA
-                let c_result = self.a().rotate_left(1);
-                let result = bw::set_bit8::<0>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(c_result));
+                let result = self.rl8(self.a());
+                self.set_z_flag(false);
                 self.set_a(result);
             }
             0x18 => {
@@ -646,12 +674,8 @@ impl LR35902 {
             }
             0x1F => {
                 // RRA
-                let c_result = self.a().rotate_right(1);
-                let result = bw::set_bit8::<7>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(c_result));
+                let result = self.rr8(self.a());
+                self.set_z_flag(false);
                 self.set_a(result);
             }
             0x20 => {
@@ -1679,306 +1703,162 @@ impl LR35902 {
             }
             0x100 => {
                 // RLC B
-                let result = self.b().rotate_left(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(self.b()));
+                let result = self.rlc8(self.b());
                 self.set_b(result);
             }
             0x101 => {
                 // RLC C
-                let result = self.c().rotate_left(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(self.c()));
+                let result = self.rlc8(self.c());
                 self.set_c(result);
             }
             0x102 => {
                 // RLC D
-                let result = self.d().rotate_left(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(self.d()));
+                let result = self.rlc8(self.d());
                 self.set_d(result);
             }
             0x103 => {
                 // RLC E
-                let result = self.e().rotate_left(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(self.e()));
+                let result = self.rlc8(self.e());
                 self.set_e(result);
             }
             0x104 => {
                 // RLC H
-                let result = self.h().rotate_left(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(self.h()));
+                let result = self.rlc8(self.h());
                 self.set_h(result);
             }
             0x105 => {
                 // RLC L
-                let result = self.l().rotate_left(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(self.l()));
+                let result = self.rlc8(self.l());
                 self.set_l(result);
             }
             0x106 => {
                 // RLC (HL)
-                let result = self.hl_ind().rotate_left(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(self.hl_ind()));
+                let result = self.rlc8(self.hl_ind());
                 self.set_hl_ind(result);
             }
             0x107 => {
                 // RLC A
-                let result = self.a().rotate_left(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(self.a()));
+                let result = self.rlc8(self.a());
                 self.set_a(result);
             }
             0x108 => {
                 // RRC B
-                let result = self.b().rotate_right(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(self.b()));
+                let result = self.rrc8(self.b());
                 self.set_b(result);
             }
             0x109 => {
                 // RRC C
-                let result = self.c().rotate_right(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(self.c()));
+                let result = self.rrc8(self.c());
                 self.set_c(result);
             }
             0x10A => {
                 // RRC D
-                let result = self.d().rotate_right(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(self.d()));
+                let result = self.rrc8(self.d());
                 self.set_d(result);
             }
             0x10B => {
                 // RRC E
-                let result = self.e().rotate_right(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(self.e()));
+                let result = self.rrc8(self.e());
                 self.set_e(result);
             }
             0x10C => {
                 // RRC H
-                let result = self.h().rotate_right(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(self.h()));
+                let result = self.rrc8(self.h());
                 self.set_h(result);
             }
             0x10D => {
                 // RRC L
-                let result = self.l().rotate_right(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(self.l()));
+                let result = self.rrc8(self.l());
                 self.set_l(result);
             }
             0x10E => {
                 // RRC (HL)
-                let result = self.hl_ind().rotate_right(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(self.hl_ind()));
+                let result = self.rrc8(self.hl_ind());
                 self.set_hl_ind(result);
             }
             0x10F => {
                 // RRC A
-                let result = self.a().rotate_right(1);
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(self.a()));
+                let result = self.rrc8(self.a());
                 self.set_a(result);
             }
             0x110 => {
                 // RL B
-                let c_result = self.b().rotate_left(1);
-                let result = bw::set_bit8::<0>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(c_result));
+                let result = self.rl8(self.b());
                 self.set_b(result);
             }
             0x111 => {
                 // RL C
-                let c_result = self.c().rotate_left(1);
-                let result = bw::set_bit8::<0>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(c_result));
+                let result = self.rl8(self.c());
                 self.set_c(result);
             }
             0x112 => {
                 // RL D
-                let c_result = self.d().rotate_left(1);
-                let result = bw::set_bit8::<0>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(c_result));
+                let result = self.rl8(self.d());
                 self.set_d(result);
             }
             0x113 => {
                 // RL E
-                let c_result = self.e().rotate_left(1);
-                let result = bw::set_bit8::<0>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(c_result));
+                let result = self.rl8(self.e());
                 self.set_e(result);
             }
             0x114 => {
                 // RL H
-                let c_result = self.h().rotate_left(1);
-                let result = bw::set_bit8::<0>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(c_result));
+                let result = self.rl8(self.h());
                 self.set_h(result);
             }
             0x115 => {
                 // RL L
-                let c_result = self.l().rotate_left(1);
-                let result = bw::set_bit8::<0>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(c_result));
+                let result = self.rl8(self.l());
                 self.set_l(result);
             }
             0x116 => {
                 // RL (HL)
-                let c_result = self.hl_ind().rotate_left(1);
-                let result = bw::set_bit8::<0>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(c_result));
+                let result = self.rl8(self.hl_ind());
                 self.set_hl_ind(result);
             }
             0x117 => {
                 // RL A
-                let c_result = self.a().rotate_left(1);
-                let result = bw::set_bit8::<0>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<0>(c_result));
+                let result = self.rl8(self.a());
                 self.set_a(result);
             }
             0x118 => {
                 // RR B
-                let c_result = self.b().rotate_right(1);
-                let result = bw::set_bit8::<7>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(c_result));
+                let result = self.rr8(self.b());
                 self.set_b(result);
             }
             0x119 => {
                 // RR C
-                let c_result = self.c().rotate_right(1);
-                let result = bw::set_bit8::<7>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(c_result));
+                let result = self.rr8(self.c());
                 self.set_c(result);
             }
             0x11A => {
                 // RR D
-                let c_result = self.d().rotate_right(1);
-                let result = bw::set_bit8::<7>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(c_result));
+                let result = self.rr8(self.d());
                 self.set_d(result);
             }
             0x11B => {
                 // RR E
-                let c_result = self.e().rotate_right(1);
-                let result = bw::set_bit8::<7>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(c_result));
+                let result = self.rr8(self.e());
                 self.set_e(result);
             }
             0x11C => {
                 // RR H
-                let c_result = self.h().rotate_right(1);
-                let result = bw::set_bit8::<7>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(c_result));
+                let result = self.rr8(self.h());
                 self.set_h(result);
             }
             0x11D => {
                 // RR L
-                let c_result = self.l().rotate_right(1);
-                let result = bw::set_bit8::<7>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(c_result));
+                let result = self.rr8(self.l());
                 self.set_l(result);
             }
             0x11E => {
                 // RR (HL)
-                let c_result = self.hl_ind().rotate_right(1);
-                let result = bw::set_bit8::<7>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(c_result));
+                let result = self.rr8(self.hl_ind());
                 self.set_hl_ind(result);
             }
             0x11F => {
                 // RR A
-                let c_result = self.a().rotate_right(1);
-                let result = bw::set_bit8::<7>(c_result, self.c_flag());
-                self.set_z_flag(result == 0);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
-                self.set_c_flag(bw::test_bit8::<7>(c_result));
+                let result = self.rr8(self.a());
                 self.set_a(result);
             }
             0x120 => {
