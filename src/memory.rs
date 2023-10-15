@@ -26,8 +26,8 @@ pub mod map {
     pub const MANY_REGISTERS: MemoryRange = 0xFF00..0xFF80;
 
     /// Working & Stack RAM (127 bytes)
-    pub const STACK_RAM: MemoryRange = 0xFF80..0xFFFE;
+    pub const HRAM: MemoryRange = 0xFF80..0xFFFF;
 
-    /// "High RAM"? Correct me if I'm wrong
-    pub const HRAM: MemoryRange = 0xFFFE..0xFFFF;
+    /// Interrupt switch
+    pub const INTERRUPT_SWITCH: MemoryRange = 0xFFFF..=0xFFFF;
 }
