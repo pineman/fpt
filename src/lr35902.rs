@@ -8,7 +8,9 @@ use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 use crate::bitwise as bw;
 use crate::ppu::Ppu;
 
-#[derive(Clone)]
+use super::memory::Bus;
+
+#[derive(Clone, PartialEq)]
 pub struct LR35902 {
     af: u16,
     bc: u16,
@@ -16,28 +18,12 @@ pub struct LR35902 {
     hl: u16,
     sp: u16,
     pc: u16,
-    mem: [u8; 65536],
+    mem: Bus,
     next_cb: bool,
     clock_cycles: u64,
     branch_taken: bool,
     debug: bool,
     ppu: Ppu,
-}
-
-impl PartialEq for LR35902 {
-    fn eq(&self, other: &Self) -> bool {
-        self.af == other.af
-            && self.bc == other.bc
-            && self.de == other.de
-            && self.hl == other.hl
-            && self.sp == other.sp
-            && self.pc == other.pc
-            && self.mem[0xC000..0xE000] == other.mem[0xC000..0xE000]
-            && self.next_cb == other.next_cb
-            && self.clock_cycles == other.clock_cycles
-            && self.branch_taken == other.branch_taken
-            && self.debug == other.debug
-    }
 }
 
 impl Default for LR35902 {
@@ -49,7 +35,7 @@ impl Default for LR35902 {
             hl: 0,
             sp: 0,
             pc: 0, // TODO Should be 0x150, but I don't want pineman to complain to the union today because the tests broke
-            mem: [0; 65536],
+            mem: Bus::new(),
             next_cb: false,
             clock_cycles: 0,
             branch_taken: false,
@@ -277,7 +263,7 @@ impl LR35902 {
     }
 
     pub fn mem8(&self, index: u16) -> u8 {
-        self.mem[index as usize]
+        self.mem.read(index)
     }
 
     pub fn mem16(&self, index: u16) -> u16 {
@@ -285,7 +271,7 @@ impl LR35902 {
     }
 
     pub fn set_mem8(&mut self, index: u16, value: u8) {
-        self.mem[index as usize] = value;
+        self.mem.write(index, value);
     }
 
     pub fn set_mem16(&mut self, index: u16, value: u16) {
@@ -330,7 +316,7 @@ impl LR35902 {
     }
 
     fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
-        self.mem[..256].clone_from_slice(bootrom);
+        self.mem.load_bootrom(bootrom);
     }
 
     pub fn decode(&mut self) -> Instruction {
@@ -629,9 +615,10 @@ impl LR35902 {
             0x00 => {
                 // NOP
                 println!("memory:");
-                for i in 0..65536 {
-                    if self.mem[i] != 0 {
-                        println!("{:#02X}: {:#02X}", i, self.mem[i]);
+
+                for (address, byte) in self.mem.each_byte() {
+                    if byte != 0 {
+                        println!("{address:#02X}: {byte:#02X}");
                     }
                 }
             }
