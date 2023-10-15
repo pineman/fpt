@@ -1062,6 +1062,8 @@ fn test_alu8_reg_addr(
 #[case(0xCE, 0xfe, 0x01, 0x00, 0b0001, 0b1011)]
 // SUB A,d8
 #[case(0xD6, 0x3E, 0x0F, 0x2F, 0b0000, 0b0110)]
+#[case(0xD6, 99, 100, 0xFF, 0b0000, 0b0111)]
+#[case(0xD6, 100, 100, 0x00, 0b0000, 0b1100)]
 // SBC A,d8
 #[case(0xDE, 0x3E, 0x0F, 0x2E, 0b0001, 0b0110)]
 fn test_alu8_reg_imm(
