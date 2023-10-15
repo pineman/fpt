@@ -69,9 +69,57 @@ impl LR35902 {
     pub fn new() -> Self {
         let mut m = Self::default();
         m.load_bootrom(include_bytes!("../dmg.bin"));
+
+        m.set_mem8(0x104,0xce);
+        m.set_mem8(0x105,0xed);
+        m.set_mem8(0x106,0x66);
+        m.set_mem8(0x107,0x66);
+        m.set_mem8(0x108,0xcc);
+        m.set_mem8(0x109,0x0d);
+        m.set_mem8(0x10a,0x00);
+        m.set_mem8(0x10b,0x0b);
+        m.set_mem8(0x10c,0x03);
+        m.set_mem8(0x10d,0x73);
+        m.set_mem8(0x10e,0x00);
+        m.set_mem8(0x10f,0x83);
+        m.set_mem8(0x110,0x00);
+        m.set_mem8(0x111,0x0c);
+        m.set_mem8(0x112,0x00);
+        m.set_mem8(0x113,0x0d);
+        m.set_mem8(0x114,0x00);
+        m.set_mem8(0x115,0x08);
+        m.set_mem8(0x116,0x11);
+        m.set_mem8(0x117,0x1f);
+        m.set_mem8(0x118,0x88);
+        m.set_mem8(0x119,0x89);
+        m.set_mem8(0x11a,0x00);
+        m.set_mem8(0x11b,0x0e);
+        m.set_mem8(0x11c,0xdc);
+        m.set_mem8(0x11d,0xcc);
+        m.set_mem8(0x11e,0x6e);
+        m.set_mem8(0x11f,0xe6);
+        m.set_mem8(0x120,0xdd);
+        m.set_mem8(0x121,0xdd);
+        m.set_mem8(0x122,0xd9);
+        m.set_mem8(0x123,0x99);
+        m.set_mem8(0x124,0xbb);
+        m.set_mem8(0x125,0xbb);
+        m.set_mem8(0x126,0x67);
+        m.set_mem8(0x127,0x63);
+        m.set_mem8(0x128,0x6e);
+        m.set_mem8(0x129,0x0e);
+        m.set_mem8(0x12a,0xec);
+        m.set_mem8(0x12b,0xcc);
+        m.set_mem8(0x12c,0xdd);
+        m.set_mem8(0x12d,0xdc);
+        m.set_mem8(0x12e,0x99);
+        m.set_mem8(0x12f,0x9f);
+        m.set_mem8(0x130,0xbb);
+        m.set_mem8(0x131,0xb9);
+        m.set_mem8(0x132,0x33);
+        m.set_mem8(0x133,0x3e);
         m
     }
-
     pub fn set_debug(&mut self, enabled: bool) {
         self.debug = enabled;
     }
@@ -736,6 +784,12 @@ impl LR35902 {
             0x20 => {
                 // JR NZ,r8
                 if !self.z_flag() {
+                    if self.get_r8(0) == 0x6b {
+                        println!("jumping to lockup");
+                    }
+                    if self.get_r8(0) == 0x5a {
+                        println!("jumping to lockup from checksum");
+                    }
                     self.jump(self.calc_jr_address(self.pc(), self.get_r8(0)));
                 }
             }
@@ -1512,6 +1566,7 @@ impl LR35902 {
             0xC9 => {
                 // RET
                 self.ret();
+                println!("ret");
             }
             0xCA => {
                 // JP Z,a16
