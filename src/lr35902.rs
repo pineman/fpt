@@ -68,7 +68,7 @@ impl fmt::Debug for LR35902 {
 impl LR35902 {
     pub fn new() -> Self {
         let mut m = Self::default();
-        m.load_bootrom(include_bytes!("../dmg0.bin"));
+        m.load_bootrom(include_bytes!("../dmg.bin"));
         m
     }
 
