@@ -82,8 +82,4 @@ impl Bus {
     pub fn each_byte(&self) -> std::iter::Enumerate<std::array::IntoIter<u8, 65536>> {
         self.mem.into_iter().enumerate()
     }
-
-    pub fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
-        self.mem[..map::BOOTROM.end as usize].clone_from_slice(bootrom);
-    }
 }
