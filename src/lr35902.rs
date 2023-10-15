@@ -2,6 +2,7 @@ use std::fmt;
 use std::{thread, time::Duration};
 
 pub mod instructions;
+
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use crate::bitwise as bw;
@@ -492,6 +493,34 @@ impl LR35902 {
         self.set_n_flag(false);
         self.set_h_flag(false);
         self.set_c_flag(bw::test_bit8::<7>(c_result));
+        result
+    }
+
+    fn sla8(&mut self, x: u8) -> u8 {
+        let result = x << 1;
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(bw::test_bit8::<7>(x));
+        result
+    }
+
+    fn sra8(&mut self, x: u8) -> u8 {
+        let msb_result = x >> 1;
+        let result = bw::set_bit8::<7>(msb_result, bw::test_bit8::<7>(x));
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(bw::test_bit8::<0>(x));
+        result
+    }
+
+    fn srl8(&mut self, x: u8) -> u8 {
+        let result = x >> 1;
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(bw::test_bit8::<0>(x));
         result
     }
 
@@ -1863,67 +1892,83 @@ impl LR35902 {
             }
             0x120 => {
                 // SLA B
-                todo!()
+                let result = self.sla8(self.b());
+                self.set_b(result);
             }
             0x121 => {
                 // SLA C
-                todo!()
+                let result = self.sla8(self.c());
+                self.set_c(result);
             }
             0x122 => {
                 // SLA D
-                todo!()
+                let result = self.sla8(self.d());
+                self.set_d(result);
             }
             0x123 => {
                 // SLA E
-                todo!()
+                let result = self.sla8(self.e());
+                self.set_e(result);
             }
             0x124 => {
                 // SLA H
-                todo!()
+                let result = self.sla8(self.h());
+                self.set_h(result);
             }
             0x125 => {
                 // SLA L
-                todo!()
+                let result = self.sla8(self.l());
+                self.set_l(result);
             }
             0x126 => {
                 // SLA (HL)
-                todo!()
+                let result = self.sla8(self.hl_ind());
+                self.set_hl_ind(result);
             }
             0x127 => {
                 // SLA A
-                todo!()
+                let result = self.sla8(self.a());
+                self.set_a(result);
             }
             0x128 => {
                 // SRA B
-                todo!()
+                let result = self.sra8(self.b());
+                self.set_b(result);
             }
             0x129 => {
                 // SRA C
-                todo!()
+                let result = self.sra8(self.c());
+                self.set_c(result);
             }
             0x12A => {
                 // SRA D
-                todo!()
+                let result = self.sra8(self.d());
+                self.set_d(result);
             }
             0x12B => {
                 // SRA E
-                todo!()
+                let result = self.sra8(self.e());
+                self.set_e(result);
             }
             0x12C => {
                 // SRA H
-                todo!()
+                let result = self.sra8(self.h());
+                self.set_h(result);
             }
             0x12D => {
                 // SRA L
-                todo!()
+                let result = self.sra8(self.l());
+                self.set_l(result);
             }
             0x12E => {
                 // SRA (HL)
-                todo!()
+                let result = self.sra8(self.hl_ind());
+                self.set_hl_ind(result);
             }
             0x12F => {
                 // SRA A
-                todo!()
+                let result = self.sra8(self.a());
+                self.set_a(result);
             }
             0x130 => {
                 // SWAP B
@@ -1959,35 +2004,43 @@ impl LR35902 {
             }
             0x138 => {
                 // SRL B
-                todo!()
+                let result = self.srl8(self.b());
+                self.set_b(result);
             }
             0x139 => {
                 // SRL C
-                todo!()
+                let result = self.srl8(self.c());
+                self.set_c(result);
             }
             0x13A => {
                 // SRL D
-                todo!()
+                let result = self.srl8(self.d());
+                self.set_d(result);
             }
             0x13B => {
                 // SRL E
-                todo!()
+                let result = self.srl8(self.e());
+                self.set_e(result);
             }
             0x13C => {
                 // SRL H
-                todo!()
+                let result = self.srl8(self.h());
+                self.set_h(result);
             }
             0x13D => {
                 // SRL L
-                todo!()
+                let result = self.srl8(self.l());
+                self.set_l(result);
             }
             0x13E => {
                 // SRL (HL)
-                todo!()
+                let result = self.srl8(self.hl_ind());
+                self.set_hl_ind(result);
             }
             0x13F => {
                 // SRL A
-                todo!()
+                let result = self.srl8(self.a());
+                self.set_a(result);
             }
             0x140 => {
                 // BIT 0,B
