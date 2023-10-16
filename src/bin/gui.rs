@@ -1,69 +1,45 @@
-use fpt::lr35902::LR35902;
+extern crate sdl2;
 
-use std::{
-    sync::{Arc, Mutex},
-    thread, time,
-};
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
+use sdl2::pixels::Color;
+use std::time::Duration;
 
-use winit::{
-    event::{Event, WindowEvent},
-    event_loop::EventLoop,
-    window::WindowBuilder,
-};
+pub fn main() -> Result<(), String> {
+    let sdl_context = sdl2::init()?;
+    let video_subsystem = sdl_context.video()?;
 
-fn main() {
-    let lr: Arc<Mutex<LR35902>> = Arc::new(Mutex::new(LR35902::new()));
-    let lr_for_the_thing: Arc<Mutex<LR35902>> = Arc::clone(&lr);
+    let window = video_subsystem
+        .window("rust-sdl2 demo: Video", 800, 600)
+        .position_centered()
+        .opengl()
+        .build()
+        .map_err(|e| e.to_string())?;
 
-    let the_thing = thread::spawn(move || {
-        let mut loop_cycle: u64 = 0;
-        loop {
-            loop_cycle += 1;
-            println!("---[Loop cycle: {:#04}]---", loop_cycle);
+    let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
 
-            lr_for_the_thing.lock().unwrap().step();
+    canvas.set_draw_color(Color::RGB(255, 0, 0));
+    canvas.clear();
+    canvas.present();
+    let mut event_pump = sdl_context.event_pump()?;
 
-            println!();
-            thread::sleep(time::Duration::from_millis(100));
+    'running: loop {
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => break 'running,
+                _ => {}
+            }
         }
-    });
 
-    the_loop(lr.clone());
-    the_thing.join().unwrap();
-}
+        canvas.clear();
+        canvas.present();
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 30));
+        // The rest of the game loop goes here...
+    }
 
-fn the_loop(lr: Arc<Mutex<LR35902>>) {
-    let event_loop: EventLoop<()> = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
-
-    event_loop.run(move |event, _, control_flow| {
-        match event {
-            Event::WindowEvent {
-                event: WindowEvent::CloseRequested,
-                ..
-            } => {
-                println!("The close button was pressed; stopping");
-                control_flow.set_exit();
-            }
-            Event::MainEventsCleared => {
-                // Application update code.
-                lr.lock().unwrap().step();
-
-                // Queue a RedrawRequested event.
-                //
-                // You only need to call this if you've determined that you need to redraw, in
-                // applications which do not always need to. Applications that redraw continuously
-                // can just render here instead.
-                window.request_redraw();
-            }
-            Event::RedrawRequested(_) => {
-                // Redraw the application.
-                //
-                // It's preferable for applications that do not render continuously to render in
-                // this event rather than in MainEventsCleared, since rendering in here allows
-                // the program to gracefully handle redraws requested by the OS.
-            }
-            _ => (),
-        }
-    });
+    Ok(())
 }
