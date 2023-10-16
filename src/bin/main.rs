@@ -1,6 +1,6 @@
 use std::fs;
 
-use fpt::lr35902::LR35902;
+use fpt::Gameboy;
 
 use clap::Parser;
 
@@ -16,16 +16,16 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let mut lr = LR35902::new();
-    lr.set_debug(args.debug);
+    let mut gameboy = Gameboy::new();
+    //lr.set_debug(args.debug);
 
-    let rom = fs::read(args.rom).unwrap();
-    lr.load_rom(rom);
+    //let rom = fs::read(args.rom).unwrap();
+    //lr.load_rom(rom);
 
     loop {
-        if args.debug {
-            println!("pc: {:#02X}", lr.pc());
-        }
-        lr.step();
+        //if args.debug {
+        //    println!("pc: {:#02X}", lr.pc());
+        //}
+        gameboy.step();
     }
 }
