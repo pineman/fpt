@@ -904,7 +904,6 @@ impl LR35902 {
             0x40 => {
                 // LD B,B
                 self.set_b(self.b());
-                panic!();
             }
             0x41 => {
                 // LD B,C

@@ -14,12 +14,8 @@ use std::rc::Rc;
 
 fn fmt_lua_value(lua_value: &LuaValue) -> String {
     match lua_value {
-        LuaValue::LuaString(s) => {
-            format!("{}", s)
-        }
-        LuaValue::LuaNil => {
-            format!("")
-        }
+        LuaValue::LuaString(s) => s.to_string(),
+        LuaValue::LuaNil => String::new(),
         LuaValue::LuaNumber(i) => {
             format!("{}", i)
         }
@@ -31,7 +27,7 @@ fn fmt_lua_value(lua_value: &LuaValue) -> String {
 
 #[derive(Debug)]
 enum Breakpoint {
-    Breakpoint(u16),
+    OnPc(u16),
     OnOpcode(u8),
     OnCB(u8),
 }
@@ -39,7 +35,7 @@ enum Breakpoint {
 impl fmt::Display for Breakpoint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Breakpoint::Breakpoint(pc) => {
+            Breakpoint::OnPc(pc) => {
                 write!(f, "breakpoint: {}", pc)
             }
             Breakpoint::OnOpcode(opcode) => {
@@ -55,7 +51,7 @@ impl fmt::Display for Breakpoint {
 impl Breakpoint {
     fn check(&self, lr: &LR35902) -> bool {
         match self {
-            Breakpoint::Breakpoint(pc) => lr.pc() == *pc,
+            Breakpoint::OnPc(pc) => lr.pc() == *pc,
             Breakpoint::OnOpcode(opcode) => lr.mem8(lr.pc()) == *opcode,
             Breakpoint::OnCB(opcode) => lr.mem8(lr.pc()) == *opcode && lr.get_next_cb(),
         }
@@ -154,8 +150,7 @@ fn main() -> Result<()> {
     lua.set(
         "b",
         hlua::function1(move |opcode: u16| -> LuaValue {
-            d1.borrow_mut()
-                .set_breakpoint(Breakpoint::Breakpoint(opcode));
+            d1.borrow_mut().set_breakpoint(Breakpoint::OnPc(opcode));
             LuaValue::LuaNil
         }),
     );
