@@ -61,14 +61,6 @@ impl LR35902 {
         self.debug = enabled;
     }
 
-    pub fn load_rom(&mut self, rom: Vec<u8>) {
-        self.mem
-            .mut_slice(0..rom.len() as memory::Address)
-            .copy_from_slice(&rom);
-
-        self.load_bootrom(include_bytes!("../dmg0.bin"));
-    }
-
     pub fn a(&self) -> u8 {
         bw::get_byte16::<1>(self.af)
     }
@@ -272,50 +264,6 @@ impl LR35902 {
 
     pub fn get_next_cb(&self) -> bool {
         self.next_cb
-    }
-
-    fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
-        self.mem
-            .mut_slice(memory::map::BOOTROM)
-            .clone_from_slice(bootrom);
-    }
-
-    pub fn decode(&mut self) -> Instruction {
-        let mut opcode = self.mem8(self.pc()) as u16;
-        if self.next_cb() {
-            opcode += 0x100;
-            self.set_next_cb(false);
-        }
-        let instruction = INSTRUCTIONS[opcode as usize];
-        if self.debug {
-            println!("{}", instruction);
-        }
-
-        instruction
-    }
-
-    /// Run one cycle
-    pub fn step(&mut self) {
-        let instruction = self.decode();
-        self.execute(instruction);
-
-        let mut cycles = instruction.cycles;
-        if instruction.kind == InstructionKind::Jump {
-            if self.branch_taken {
-                self.branch_taken = false;
-            } else {
-                cycles = instruction.cycles_not_taken;
-                self.set_pc(self.pc() + instruction.size as u16);
-            }
-        } else {
-            self.set_pc(self.pc() + instruction.size as u16);
-        }
-
-        thread::sleep(Duration::from_micros((cycles / 4) as u64));
-        self.set_clock_cycles(self.clock_cycles() + cycles as u64);
-
-        let ppu = self.ppu;
-        ppu.render(self);
     }
 
     fn half_carry8(&self, x: u8, y: u8) -> bool {
@@ -577,6 +525,52 @@ impl LR35902 {
         }
         self.set_n_flag(false);
         self.set_h_flag(true);
+    }
+
+    pub fn load_rom(&mut self, rom: Vec<u8>) {
+        self.mem.load_cartridge(&rom);
+    }
+
+    fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
+        self.mem.load_bootrom(bootrom);
+    }
+
+    pub fn decode(&mut self) -> Instruction {
+        let mut opcode = self.mem8(self.pc()) as u16;
+        if self.next_cb() {
+            opcode += 0x100;
+            self.set_next_cb(false);
+        }
+        let instruction = INSTRUCTIONS[opcode as usize];
+        if self.debug {
+            println!("{}", instruction);
+        }
+
+        instruction
+    }
+
+    /// Run one cycle
+    pub fn step(&mut self) {
+        let instruction = self.decode();
+        self.execute(instruction);
+
+        let mut cycles = instruction.cycles;
+        if instruction.kind == InstructionKind::Jump {
+            if self.branch_taken {
+                self.branch_taken = false;
+            } else {
+                cycles = instruction.cycles_not_taken;
+                self.set_pc(self.pc() + instruction.size as u16);
+            }
+        } else {
+            self.set_pc(self.pc() + instruction.size as u16);
+        }
+
+        thread::sleep(Duration::from_micros((cycles / 4) as u64));
+        self.set_clock_cycles(self.clock_cycles() + cycles as u64);
+
+        let ppu = self.ppu;
+        ppu.render(self);
     }
 
     fn execute(&mut self, instruction: Instruction) {

@@ -274,7 +274,7 @@ fn main() -> Result<()> {
     let d1 = dbg_pointer.clone();
     lua.set(
         "mem_dump_ranged",
-        hlua::function2(move |start:u16, end: u16| -> LuaValue {
+        hlua::function2(move |start: u16, end: u16| -> LuaValue {
             LuaValue::LuaString(
                 (start..end)
                     .map(|i| format!("{:#02X} {:#02X}", i, d1.borrow_mut().lr.mem8(i)))
