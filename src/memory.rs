@@ -44,6 +44,8 @@ pub mod map {
 #[derive(Clone)]
 pub struct Bus {
     mem: [u8; 65536],
+    cartridge: Vec<u8>,
+    bootrom: [u8; 256],
 }
 
 impl PartialEq for Bus {
@@ -60,7 +62,22 @@ impl Default for Bus {
 
 impl Bus {
     pub fn new() -> Self {
-        Self { mem: [0; 65536] }
+        Self {
+            mem: [0; 65536],
+            cartridge: Vec::new(),
+            bootrom: [0; 256],
+        }
+    }
+
+    pub fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
+        self.bootrom.clone_from_slice(bootrom);
+        self.mut_slice(map::BOOTROM).clone_from_slice(bootrom);
+    }
+
+    pub fn load_cartridge(&mut self, cartridge: &Vec<u8>) {
+        self.cartridge = cartridge.to_vec();
+        self.mut_slice(0x100..0x8000)
+            .clone_from_slice(&cartridge[0x100..cartridge.len()]);
     }
 
     pub fn read(&self, address: Address) -> u8 {
