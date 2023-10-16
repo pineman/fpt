@@ -6,7 +6,6 @@ pub mod instructions;
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use super::memory;
-use super::ppu::Ppu;
 use crate::bitwise as bw;
 
 #[derive(Clone, PartialEq)]
@@ -22,7 +21,6 @@ pub struct LR35902 {
     clock_cycles: u64,
     branch_taken: bool,
     debug: bool,
-    ppu: Ppu,
 }
 
 impl Default for LR35902 {
@@ -39,7 +37,6 @@ impl Default for LR35902 {
             clock_cycles: 0,
             branch_taken: false,
             debug: false,
-            ppu: Ppu::new(),
         }
     }
 }
@@ -568,9 +565,6 @@ impl LR35902 {
 
         thread::sleep(Duration::from_micros((cycles / 4) as u64));
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
-
-        let ppu = self.ppu;
-        ppu.render(self);
     }
 
     fn execute(&mut self, instruction: Instruction) {
