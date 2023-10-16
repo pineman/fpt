@@ -99,4 +99,29 @@ impl Bus {
     pub fn each_byte(&self) -> std::iter::Enumerate<std::array::IntoIter<u8, 65536>> {
         self.mem.into_iter().enumerate()
     }
+
+    // registers
+    pub fn lcdc(&self) -> u8 {
+        self.read(0xFF40)
+    }
+
+    pub fn stat(&self) -> u8 {
+        self.read(0xFF41)
+    }
+
+    pub fn scy(&self) -> u8 {
+        self.read(0xFF42)
+    }
+
+    pub fn scx(&self) -> u8 {
+        self.read(0xFF43)
+    }
+
+    pub fn ly(&self) -> u8 {
+        self.read(0xFF44)
+    }
+
+    pub fn lyc(&self) -> u8 {
+        self.read(0xFF45)
+    }
 }
