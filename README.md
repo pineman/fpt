@@ -40,3 +40,16 @@ Running the debugger:
   ([Part 1](https://www.youtube.com/watch?v=RZUDEaLa5Nw),
   [Part 1.5](https://www.youtube.com/watch?v=t0V-D2YMhrs),
   [Part 2](https://www.youtube.com/watch?v=ecTQVa42sJc))
+
+## Resources
+
+### Test ROMs
+
+- [Blargg's tests](https://gbdev.gg8.se/wiki/articles/Test_ROMs)
+- [Mooneye Test Suite](https://github.com/Gekkio/mooneye-test-suite/tree/main)
+- [Wilbert Pol’s tests](https://github.com/wilbertpol/mooneye-gb/tree/master/tests/acceptance)
+
+### Debuggers
+
+- [BGB](https://bgb.bircd.org/)
+- [SameBoy](https://sameboy.github.io/)
