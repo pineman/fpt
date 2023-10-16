@@ -12,24 +12,24 @@ use winit::{
 };
 
 fn main() {
-    let lr: Arc<Mutex<LR35902>> = Arc::new(Mutex::new(LR35902::new()));
-    let lr_for_the_thing: Arc<Mutex<LR35902>> = Arc::clone(&lr);
+    //let lr: Arc<Mutex<LR35902>> = Arc::new(Mutex::new(LR35902::new()));
+    //let lr_for_the_thing: Arc<Mutex<LR35902>> = Arc::clone(&lr);
 
-    let the_thing = thread::spawn(move || {
-        let mut loop_cycle: u64 = 0;
-        loop {
-            loop_cycle += 1;
-            println!("---[Loop cycle: {:#04}]---", loop_cycle);
+    //let the_thing = thread::spawn(move || {
+    //    let mut loop_cycle: u64 = 0;
+    //    loop {
+    //        loop_cycle += 1;
+    //        println!("---[Loop cycle: {:#04}]---", loop_cycle);
 
-            lr_for_the_thing.lock().unwrap().step();
+    //        lr_for_the_thing.lock().unwrap().step();
 
-            println!();
-            thread::sleep(time::Duration::from_millis(100));
-        }
-    });
+    //        println!();
+    //        thread::sleep(time::Duration::from_millis(100));
+    //    }
+    //});
 
-    the_loop(lr.clone());
-    the_thing.join().unwrap();
+    //the_loop(lr.clone());
+    //the_thing.join().unwrap();
 }
 
 fn the_loop(lr: Arc<Mutex<LR35902>>) {

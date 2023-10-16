@@ -10,7 +10,6 @@ use crate::memory::Bus;
 use crate::ppu::Ppu;
 
 pub struct Gameboy {
-    memory: Box<Bus>,
     cpu: LR35902,
     ppu: Ppu,
 }
@@ -19,9 +18,8 @@ impl Gameboy {
     pub fn new() -> Self {
         let bus = Box::new(Bus::new());
         Self {
-            memory: bus.clone(),
-            cpu: LR35902::new(),
-            ppu: Ppu::new(bus.clone()),
+            cpu: LR35902::new(bus.clone()),
+            ppu: Ppu::new(bus),
         }
     }
 

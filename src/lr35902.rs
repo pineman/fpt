@@ -5,7 +5,7 @@ pub mod instructions;
 
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
-use super::memory;
+use super::memory::Bus;
 use crate::bitwise as bw;
 
 #[derive(Clone, PartialEq)]
@@ -16,7 +16,7 @@ pub struct LR35902 {
     hl: u16,
     sp: u16,
     pc: u16,
-    mem: memory::Bus,
+    mem: Box<Bus>,
     next_cb: bool,
     clock_cycles: u64,
     branch_taken: bool,
@@ -25,19 +25,7 @@ pub struct LR35902 {
 
 impl Default for LR35902 {
     fn default() -> Self {
-        Self {
-            af: 0,
-            bc: 0,
-            de: 0,
-            hl: 0,
-            sp: 0,
-            pc: 0, // TODO Should be 0x150, but I don't want pineman to complain to the union today because the tests broke
-            mem: memory::Bus::new(),
-            next_cb: false,
-            clock_cycles: 0,
-            branch_taken: false,
-            debug: false,
-        }
+        Self::new(Box::new(Bus::new()))
     }
 }
 
@@ -48,10 +36,22 @@ impl fmt::Debug for LR35902 {
 }
 
 impl LR35902 {
-    pub fn new() -> Self {
-        let mut m = Self::default();
-        m.load_bootrom(include_bytes!("../dmg0.bin"));
-        m
+    pub fn new(memory: Box<Bus>) -> Self {
+        let mut cpu = Self {
+            af: 0,
+            bc: 0,
+            de: 0,
+            hl: 0,
+            sp: 0,
+            pc: 0,
+            mem: memory,
+            next_cb: false,
+            clock_cycles: 0,
+            branch_taken: false,
+            debug: false,
+        };
+        cpu.load_bootrom(include_bytes!("../dmg0.bin"));
+        cpu
     }
 
     pub fn set_debug(&mut self, enabled: bool) {
