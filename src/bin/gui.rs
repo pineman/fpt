@@ -1,69 +1,98 @@
-use fpt::lr35902::LR35902;
-
-use std::{
-    sync::{Arc, Mutex},
-    thread, time,
-};
-
 use winit::{
-    event::{Event, WindowEvent},
+    dpi::LogicalSize,
+    event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::EventLoop,
     window::WindowBuilder,
 };
 
-fn main() {
-    //let lr: Arc<Mutex<LR35902>> = Arc::new(Mutex::new(LR35902::new()));
-    //let lr_for_the_thing: Arc<Mutex<LR35902>> = Arc::clone(&lr);
+use pixels::{Pixels, SurfaceTexture};
 
-    //let the_thing = thread::spawn(move || {
-    //    let mut loop_cycle: u64 = 0;
-    //    loop {
-    //        loop_cycle += 1;
-    //        println!("---[Loop cycle: {:#04}]---", loop_cycle);
+const GB_RESOLUTION: (u32, u32) = (160, 144);
 
-    //        lr_for_the_thing.lock().unwrap().step();
+fn main() -> Result<(), pixels::Error> {
+    let event_loop: EventLoop<()> = EventLoop::new();
+    let window = WindowBuilder::new()
+        .with_title("fpt (winit + pixels)")
+        .with_inner_size(LogicalSize::new(GB_RESOLUTION.0 * 3, GB_RESOLUTION.1 * 3)) // 2x scaling with thick padding
+        .with_min_inner_size(LogicalSize::new(GB_RESOLUTION.0, GB_RESOLUTION.1))
+        .build(&event_loop)
+        .unwrap();
 
-    //        println!();
-    //        thread::sleep(time::Duration::from_millis(100));
-    //    }
-    //});
+    let mut pixels = {
+        let window_size = window.inner_size();
+        let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
+        Pixels::new(GB_RESOLUTION.0, GB_RESOLUTION.1, surface_texture)?
+    };
 
-    //the_loop(lr.clone());
-    //the_thing.join().unwrap();
+    let mut frame_number = 0u32;
+
+    event_loop.run(move |event, _, control_flow| match event {
+        Event::WindowEvent {
+            event:
+                ref e @ (WindowEvent::CloseRequested
+                | WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        },
+                    ..
+                }),
+            ..
+        } => {
+            println!(
+                "{reason}; stopping",
+                reason = match e {
+                    WindowEvent::CloseRequested => "The close button was pressed",
+                    WindowEvent::KeyboardInput { .. } => "The ESC key was pressed",
+                    _ => "whatever",
+                }
+            );
+            control_flow.set_exit();
+        }
+        Event::WindowEvent {
+            event: WindowEvent::Resized(size),
+            ..
+        } => {
+            if let Err(err) = pixels.resize_surface(size.width, size.height) {
+                eprintln!("pixels.resize_surface() error! {err}");
+                control_flow.set_exit_with_code(1);
+                return;
+            }
+        }
+        Event::MainEventsCleared => {
+            for _ in 0..53 {
+                draw_something(pixels.frame_mut(), frame_number);
+                frame_number += 1;
+            }
+            if let Err(err) = pixels.render() {
+                eprintln!("pixels.render() error! {err}");
+                control_flow.set_exit_with_code(2);
+                return;
+            }
+            // window.request_redraw();
+        }
+        _ => (),
+    });
 }
 
-fn the_loop(lr: Arc<Mutex<LR35902>>) {
-    let event_loop: EventLoop<()> = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
-
-    event_loop.run(move |event, _, control_flow| {
-        match event {
-            Event::WindowEvent {
-                event: WindowEvent::CloseRequested,
-                ..
-            } => {
-                println!("The close button was pressed; stopping");
-                control_flow.set_exit();
-            }
-            Event::MainEventsCleared => {
-                // Application update code.
-                lr.lock().unwrap().step();
-
-                // Queue a RedrawRequested event.
-                //
-                // You only need to call this if you've determined that you need to redraw, in
-                // applications which do not always need to. Applications that redraw continuously
-                // can just render here instead.
-                window.request_redraw();
-            }
-            Event::RedrawRequested(_) => {
-                // Redraw the application.
-                //
-                // It's preferable for applications that do not render continuously to render in
-                // this event rather than in MainEventsCleared, since rendering in here allows
-                // the program to gracefully handle redraws requested by the OS.
-            }
-            _ => (),
-        }
-    });
+fn draw_something(frame: &mut [u8], frame_number: u32) {
+    // random arithmetics written at 2 AM
+    let pos = (frame_number % (frame.len() as u32 / 4)) as usize;
+    let pos = if pos / GB_RESOLUTION.0 as usize % 2 > 0 {
+        pos + 4 * GB_RESOLUTION.0 as usize
+    } else {
+        pos
+    };
+    let pos = pos % ((frame.len() / 8) - 4) as usize;
+    let rgba: [u8; 4] = [
+        (frame_number % 0xFF) as u8,
+        128_i32
+            .wrapping_sub_unsigned(2 * frame_number)
+            .rem_euclid(0xFF) as u8,
+        ((92 + 3 * frame_number) % 0xFF) as u8,
+        0xFF,
+    ];
+    let pixel = &mut frame[(8 * pos)..(8 * pos + 4)];
+    pixel.copy_from_slice(&rgba);
 }
