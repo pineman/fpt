@@ -6,18 +6,20 @@ pub mod memory;
 mod ppu;
 
 use crate::lr35902::LR35902;
-use crate::memory::Bus;
 use crate::ppu::Ppu;
 
+use memory::Bus;
 pub struct Gameboy {
+    bus: Bus,
     cpu: LR35902,
     ppu: Ppu,
 }
 
 impl Gameboy {
     pub fn new() -> Self {
-        let bus = Box::new(Bus::new());
+        let bus = Bus::new();
         Self {
+            bus: bus.clone(),
             cpu: LR35902::new(bus.clone()),
             ppu: Ppu::new(bus),
         }
@@ -27,8 +29,8 @@ impl Gameboy {
         self.cpu.set_debug(enabled);
     }
 
-    pub fn load_rom(&mut self, rom: Vec<u8>) {
-        self.cpu.load_rom(rom);
+    pub fn load_rom(&mut self, rom: &Vec<u8>) {
+        self.bus.load_cartridge(rom);
     }
 
     pub fn cpu(&self) -> &LR35902 {

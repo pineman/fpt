@@ -20,7 +20,7 @@ fn main() {
     gameboy.set_debug(args.debug);
 
     let rom = fs::read(args.rom).unwrap();
-    gameboy.load_rom(rom);
+    gameboy.load_rom(&rom);
 
     loop {
         if args.debug {

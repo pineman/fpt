@@ -3,12 +3,14 @@ use crate::memory::Bus;
 
 //#[derive(Clone, PartialEq)]
 pub struct Ppu {
-    bus: Box<Bus>,
+    bus: Bus,
     frame: Vec<u8>,
 }
 
+struct Tile {}
+
 impl Ppu {
-    pub fn new(bus: Box<Bus>) -> Self {
+    pub fn new(bus: Bus) -> Self {
         Ppu {
             bus,
             frame: Vec::new(),
