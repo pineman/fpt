@@ -23,6 +23,14 @@ impl Gameboy {
         }
     }
 
+    pub fn set_debug(&mut self, enabled: bool) {
+        self.cpu.set_debug(enabled);
+    }
+
+    pub fn load_rom(&mut self, rom: Vec<u8>) {
+        self.cpu.load_rom(rom);
+    }
+
     pub fn step(&mut self) {
         self.cpu.step();
         self.ppu.render(&mut self.cpu);

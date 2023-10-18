@@ -17,14 +17,14 @@ fn main() {
     let args = Args::parse();
 
     let mut gameboy = Gameboy::new();
-    //lr.set_debug(args.debug);
+    gameboy.set_debug(args.debug);
 
-    //let rom = fs::read(args.rom).unwrap();
-    //lr.load_rom(rom);
+    let rom = fs::read(args.rom).unwrap();
+    gameboy.load_rom(rom);
 
     loop {
         //if args.debug {
-        //    println!("pc: {:#02X}", lr.pc());
+        //  println!("pc: {:#02X}", lr.pc());
         //}
         gameboy.step();
     }
