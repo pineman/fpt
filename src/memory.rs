@@ -1,4 +1,6 @@
+use std::cell::{RefCell, RefMut};
 use std::ops::Range;
+use std::rc::Rc;
 
 pub type Address = u16;
 pub type MemoryRange = Range<Address>;
@@ -42,25 +44,25 @@ pub mod map {
 }
 
 #[derive(Clone)]
-pub struct Bus {
+pub struct Memory {
     mem: [u8; 65536],
     cartridge: Vec<u8>,
     bootrom: [u8; 256],
 }
 
-impl PartialEq for Bus {
+impl PartialEq for Memory {
     fn eq(&self, other: &Self) -> bool {
         self.slice(map::WRAM) == other.slice(map::WRAM)
     }
 }
 
-impl Default for Bus {
+impl Default for Memory {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Bus {
+impl Memory {
     pub fn new() -> Self {
         Self {
             mem: [0; 65536],
@@ -69,35 +71,55 @@ impl Bus {
         }
     }
 
-    pub fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
-        self.bootrom.clone_from_slice(bootrom);
-        self.mut_slice(map::BOOTROM).clone_from_slice(bootrom);
-    }
-
-    pub fn load_cartridge(&mut self, cartridge: &Vec<u8>) {
-        self.cartridge = cartridge.to_vec();
-        self.mut_slice(0x100..0x8000)
-            .clone_from_slice(&cartridge[0x100..cartridge.len()]);
-    }
-
-    pub fn read(&self, address: Address) -> u8 {
-        self.mem[address as usize]
-    }
-
-    pub fn write(&mut self, address: Address, value: u8) {
-        self.mem[address as usize] = value;
-    }
-
     pub fn slice(&self, range: MemoryRange) -> &[u8] {
         &self.mem[(range.start as usize)..(range.end as usize)]
     }
+}
 
-    pub fn mut_slice(&mut self, range: MemoryRange) -> &mut [u8] {
-        &mut self.mem[(range.start as usize)..(range.end as usize)]
+#[derive(Clone, PartialEq)]
+pub struct Bus(Rc<RefCell<Memory>>);
+
+impl Bus {
+    pub fn new() -> Self {
+        Bus(Rc::new(RefCell::new(Memory::new())))
     }
 
+    pub fn memory(&self) -> RefMut<Memory> {
+        self.0.borrow_mut()
+    }
+
+    pub fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
+        self.memory().bootrom.clone_from_slice(bootrom);
+        self.clone_from_slice(map::BOOTROM, bootrom);
+    }
+
+    pub fn load_cartridge(&mut self, cartridge: &Vec<u8>) {
+        self.memory().cartridge = cartridge.to_vec();
+        self.clone_from_slice(0x100..0x8000, &cartridge[0x100..cartridge.len()]);
+    }
+
+    pub fn read(&self, address: Address) -> u8 {
+        self.memory().mem[address as usize]
+    }
+
+    pub fn write(&mut self, address: Address, value: u8) {
+        self.memory().mem[address as usize] = value;
+    }
+
+    pub fn clone_from_slice(&mut self, range: MemoryRange, slice: &[u8]) {
+        self.memory().mem[(range.start as usize)..(range.end as usize)].clone_from_slice(slice);
+    }
+
+    //pub fn slice(&self, range: MemoryRange) -> &[u8] {
+    //    &self.memory().mem[(range.start as usize)..(range.end as usize)]
+    //}
+
+    //pub fn mut_slice(&mut self, range: MemoryRange) -> &mut [u8] {
+    //    &mut self.memory().mem[(range.start as usize)..(range.end as usize)]
+    //}
+
     pub fn each_byte(&self) -> std::iter::Enumerate<std::array::IntoIter<u8, 65536>> {
-        self.mem.into_iter().enumerate()
+        self.memory().mem.into_iter().enumerate()
     }
 
     // registers
