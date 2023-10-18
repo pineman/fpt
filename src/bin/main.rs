@@ -23,9 +23,9 @@ fn main() {
     gameboy.load_rom(rom);
 
     loop {
-        //if args.debug {
-        //  println!("pc: {:#02X}", lr.pc());
-        //}
+        if args.debug {
+            println!("pc: {:#02X}", gameboy.cpu().pc());
+        }
         gameboy.step();
     }
 }

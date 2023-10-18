@@ -31,6 +31,10 @@ impl Gameboy {
         self.cpu.load_rom(rom);
     }
 
+    pub fn cpu(&self) -> &LR35902 {
+        &self.cpu
+    }
+
     pub fn step(&mut self) {
         self.cpu.step();
         self.ppu.render(&mut self.cpu);
