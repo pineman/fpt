@@ -94,6 +94,10 @@ impl Bus {
     }
 
     pub fn load_cartridge(&mut self, cartridge: &Vec<u8>) {
+        if cartridge.len() < 0x8000 {
+            println!("This is not a  rom, fuck you!");
+            panic!();
+        }
         self.memory().cartridge = cartridge.to_vec();
         self.clone_from_slice(0x100..0x8000, &cartridge[0x100..cartridge.len()]);
     }
