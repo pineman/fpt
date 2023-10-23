@@ -1,10 +1,20 @@
 use crate::lr35902::LR35902;
-#[derive(Clone, PartialEq, Copy)]
-pub struct Ppu {}
+use crate::memory::Bus;
+
+//#[derive(Clone, PartialEq)]
+pub struct Ppu {
+    bus: Bus,
+    frame: Vec<u8>,
+}
+
+struct Tile {}
 
 impl Ppu {
-    pub fn new() -> Self {
-        Ppu {}
+    pub fn new(bus: Bus) -> Self {
+        Ppu {
+            bus,
+            frame: Vec::new(),
+        }
     }
 
     pub fn render(&self, lr: &mut LR35902) {
