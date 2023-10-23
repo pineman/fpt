@@ -771,7 +771,6 @@ impl LR35902 {
                 // JR Z,r8
                 if self.z_flag() {
                     self.jump(self.calc_jr_address(self.pc(), self.get_r8(0)));
-                    let dst = self.calc_jr_address(self.pc(), self.get_r8(0));
                 }
             }
             0x29 => {
