@@ -506,7 +506,6 @@ impl LR35902 {
     fn ret(&mut self) {
         let address = self.pop();
         self.jump(address);
-        println!("ret");
     }
 
     fn rst(&mut self, address: u16) {
