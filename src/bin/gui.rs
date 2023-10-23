@@ -8,12 +8,16 @@ use winit::{
 use pixels::{Pixels, SurfaceTexture};
 
 const GB_RESOLUTION: (u32, u32) = (160, 144);
+const SCALE: u32 = 3;
 
 fn main() -> Result<(), pixels::Error> {
     let event_loop: EventLoop<()> = EventLoop::new();
     let window = WindowBuilder::new()
         .with_title("fpt (winit + pixels)")
-        .with_inner_size(LogicalSize::new(GB_RESOLUTION.0 * 3, GB_RESOLUTION.1 * 3)) // 2x scaling with thick padding
+        .with_inner_size(LogicalSize::new(
+            SCALE * GB_RESOLUTION.0,
+            SCALE * GB_RESOLUTION.1,
+        ))
         .with_min_inner_size(LogicalSize::new(GB_RESOLUTION.0, GB_RESOLUTION.1))
         .build(&event_loop)
         .unwrap();
