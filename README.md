@@ -20,6 +20,7 @@ Running the debugger:
 
 ### Opcodes
 
+- [the best table - gbdev](https://gbdev.io/gb-opcodes/optables/)
 - [pastraiser.com — Gameboy CPU (LR35902) instruction set](https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html)
 - [RGBDS docs — gbz80(7) — CPU opcode reference](https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/)
 - [Dinu, Christian — Decoding Z80 Opcodes](http://z80.info/decoding.htm)

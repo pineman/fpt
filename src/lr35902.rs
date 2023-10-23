@@ -504,7 +504,7 @@ impl LR35902 {
     }
 
     fn call(&mut self, address: u16) {
-        // pc + 3 because calls are 3 bytes long
+        // pc + 3 because CALLs have size == 3 bytes
         self.push(self.pc() + 3);
         self.jump(address);
         if address == 0x98 {
@@ -517,6 +517,12 @@ impl LR35902 {
         let address = self.pop();
         self.jump(address);
         println!("ret");
+    }
+
+    fn rst(&mut self, address: u16) {
+        // pc + 1 because RSTs have size == 1 byte
+        self.push(self.pc() + 1);
+        self.jump(address);
     }
 
     fn bit<const INDEX: u8>(&mut self, x: u8) {
@@ -1509,7 +1515,7 @@ impl LR35902 {
             }
             0xC7 => {
                 // RST 00H
-                self.call(0x00);
+                self.rst(0x00);
             }
             0xC8 => {
                 // RET Z
@@ -1548,7 +1554,7 @@ impl LR35902 {
             }
             0xCF => {
                 // RST 08H
-                self.call(0x08);
+                self.rst(0x08);
             }
             0xD0 => {
                 // RET NC
@@ -1588,7 +1594,7 @@ impl LR35902 {
             }
             0xD7 => {
                 // RST 10H
-                self.call(0x10);
+                self.rst(0x10);
             }
             0xD8 => {
                 // RET C
@@ -1627,7 +1633,7 @@ impl LR35902 {
             }
             0xDF => {
                 // RST 18H
-                self.call(0x18);
+                self.rst(0x18);
             }
             0xE0 => {
                 // LDH (a8),A
@@ -1661,7 +1667,7 @@ impl LR35902 {
             }
             0xE7 => {
                 // RST 20H
-                self.call(0x20);
+                self.rst(0x20);
             }
             0xE8 => {
                 // ADD SP,r8
@@ -1695,7 +1701,7 @@ impl LR35902 {
             }
             0xEF => {
                 // RST 28H
-                self.call(0x28);
+                self.rst(0x28);
             }
             0xF0 => {
                 // LDH A,(a8)
@@ -1729,7 +1735,7 @@ impl LR35902 {
             }
             0xF7 => {
                 // RST 30H
-                self.call(0x30);
+                self.rst(0x30);
             }
             0xF8 => {
                 // LD HL,SP+r8
@@ -1766,7 +1772,7 @@ impl LR35902 {
             }
             0xFF => {
                 // RST 38H
-                self.call(0x38);
+                self.rst(0x38);
             }
             0x100 => {
                 // RLC B
