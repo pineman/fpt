@@ -14,7 +14,7 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let mut lr = LR35902::new();
+    let mut lr = LR35902::default();
     lr.set_debug(args.debug);
 
     loop {
