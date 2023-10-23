@@ -525,6 +525,12 @@ impl LR35902 {
         self.jump(address);
     }
 
+    fn reti(&mut self) {
+        let address = self.pop();
+        self.jump(address);
+        // TODO: The master interrupt enable flag is returned to its pre-interrupt status.
+    }
+
     fn bit<const INDEX: u8>(&mut self, x: u8) {
         if !bw::test_bit8::<INDEX>(x) {
             self.set_z_flag(true);
@@ -1604,7 +1610,7 @@ impl LR35902 {
             }
             0xD9 => {
                 // RETI
-                todo!()
+                self.reti();
             }
             0xDA => {
                 // JP C,a16
