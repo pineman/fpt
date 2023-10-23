@@ -498,19 +498,12 @@ impl LR35902 {
     fn jump(&mut self, address: u16) {
         self.set_pc(address);
         self.branch_taken = true;
-        if address == 0x98 {
-            println!("Jumping to Lockup");
-        }
     }
 
     fn call(&mut self, address: u16) {
         // pc + 3 because CALLs have size == 3 bytes
         self.push(self.pc() + 3);
         self.jump(address);
-        if address == 0x98 {
-            println!("Jumping to Lockup");
-        }
-        println!("call {:#02X}", address);
     }
 
     fn ret(&mut self) {
@@ -589,13 +582,6 @@ impl LR35902 {
         match instruction.opcode {
             0x00 => {
                 // NOP
-                //println!("memory:");
-
-                //for (address, byte) in self.mem.each_byte() {
-                //    if byte != 0 {
-                //        println!("{address:#02X}: {byte:#02X}");
-                //    }
-                //}
             }
             0x01 => {
                 // LD BC,d16
@@ -746,12 +732,6 @@ impl LR35902 {
             0x20 => {
                 // JR NZ,r8
                 if !self.z_flag() {
-                    if self.get_r8(0) == 0x6b {
-                        println!("jumping to lockup");
-                    }
-                    if self.get_r8(0) == 0x5a {
-                        println!("jumping to lockup from checksum");
-                    }
                     self.jump(self.calc_jr_address(self.pc(), self.get_r8(0)));
                 }
             }
@@ -792,9 +772,6 @@ impl LR35902 {
                 if self.z_flag() {
                     self.jump(self.calc_jr_address(self.pc(), self.get_r8(0)));
                     let dst = self.calc_jr_address(self.pc(), self.get_r8(0));
-                    if dst == 0x55 {
-                        println!("jump to ScrollLogo");
-                    }
                 }
             }
             0x29 => {
@@ -1724,7 +1701,7 @@ impl LR35902 {
             }
             0xF3 => {
                 // DI
-                // todo!();
+                todo!();
             }
             0xF4 => {
                 // Not implemented
@@ -1758,7 +1735,7 @@ impl LR35902 {
             }
             0xFB => {
                 // EI
-                // todo!()
+                todo!()
             }
             0xFC => {
                 // Not implemented
@@ -1771,10 +1748,6 @@ impl LR35902 {
             0xFE => {
                 // CP d8
                 self.sub8(self.a(), self.get_d8(0));
-
-                if self.get_d8(0) == 0x64 {
-                    println!("leaving the loop");
-                }
             }
             0xFF => {
                 // RST 38H
