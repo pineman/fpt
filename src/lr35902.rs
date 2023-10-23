@@ -2932,7 +2932,7 @@ mod tests {
     #[ignore]
     #[test]
     fn test_immediate8() {
-        let mut cpu = LR35902::default();
+        let cpu = LR35902::default();
         let mut bootrom = [0; 256];
         bootrom[0] = 1;
         bootrom[1] = 2;
@@ -2945,7 +2945,7 @@ mod tests {
     #[ignore]
     #[test]
     fn test_immediate16() {
-        let mut cpu = LR35902::default();
+        let cpu = LR35902::default();
         let mut bootrom = [0; 256];
         bootrom[0] = 1;
         bootrom[1] = 2;
