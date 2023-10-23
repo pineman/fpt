@@ -7,10 +7,11 @@ default-run = "main"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-winit = "0.28.7"
 clap = { version = "4.4.6", features = ["derive"] }
-hlua = {version = "0.4.1", optional = true}
-rustyline = {version = "12", optional = true}
+hlua = { version = "0.4.1", optional = true }
+rustyline = { version = "12", optional = true }
+winit = "0.28.7"
+pixels = "0.13.0"
 
 [dev-dependencies]
 rstest = "0.18"
