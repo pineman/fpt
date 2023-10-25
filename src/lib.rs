@@ -4,7 +4,7 @@
 mod bitwise;
 pub mod lr35902;
 pub mod memory;
-mod ppu;
+pub mod ppu;
 
 use crate::lr35902::LR35902;
 use crate::ppu::Ppu;
@@ -39,8 +39,13 @@ impl Gameboy {
         &self.cpu
     }
 
-    pub fn step(&mut self) {
+    pub fn step(&mut self) -> u8 {
         let cycles = self.cpu.step();
         self.ppu.step(cycles);
+        cycles
+    }
+
+    pub fn get_frame(&self) -> &ppu::Frame {
+        self.ppu.get_frame()
     }
 }

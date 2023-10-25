@@ -1,3 +1,9 @@
+#![feature(array_chunks)]
+
+use std::fs;
+
+use clap::Parser;
+
 use winit::{
     dpi::LogicalSize,
     event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
@@ -5,12 +11,38 @@ use winit::{
     window::WindowBuilder,
 };
 
+use fpt::Gameboy;
 use pixels::{Pixels, SurfaceTexture};
 
 const GB_RESOLUTION: (u32, u32) = (160, 144);
 const SCALE: u32 = 3;
+const PALETTE: [[u8; 4]; 4] = [
+    [0, 63, 0, 255],
+    [46, 115, 32, 255],
+    [140, 191, 10, 255],
+    [160, 207, 10, 255],
+];
+
+const FRAME_IN_M_CYCLES: u32 = 17556;
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    rom: String,
+    /// Flag to active debug output
+    #[arg(short, long)]
+    debug: bool,
+}
 
 fn main() -> Result<(), pixels::Error> {
+    let args = Args::parse();
+
+    let mut gameboy = Gameboy::new();
+    gameboy.set_debug(args.debug);
+
+    let rom = fs::read(args.rom).unwrap();
+    gameboy.load_rom(&rom);
+
     let event_loop: EventLoop<()> = EventLoop::new();
     let window = WindowBuilder::new()
         .with_title("fpt (winit + pixels)")
@@ -27,8 +59,6 @@ fn main() -> Result<(), pixels::Error> {
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
         Pixels::new(GB_RESOLUTION.0, GB_RESOLUTION.1, surface_texture)?
     };
-
-    let mut frame_number = 0u32;
 
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent {
@@ -64,10 +94,16 @@ fn main() -> Result<(), pixels::Error> {
             }
         }
         Event::MainEventsCleared => {
-            for _ in 0..53 {
-                draw_something(pixels.frame_mut(), frame_number);
-                frame_number += 1;
+            let mut m_cycles: u32 = 0;
+            while m_cycles < FRAME_IN_M_CYCLES {
+                m_cycles += gameboy.step() as u32;
             }
+
+            // Get the frame
+            let the_frame = gameboy.get_frame();
+
+            draw_something(pixels.frame_mut(), the_frame);
+
             if let Err(err) = pixels.render() {
                 eprintln!("pixels.render() error! {err}");
                 control_flow.set_exit_with_code(2);
@@ -78,23 +114,8 @@ fn main() -> Result<(), pixels::Error> {
     });
 }
 
-fn draw_something(frame: &mut [u8], frame_number: u32) {
-    // random arithmetics written at 2 AM
-    let pos = frame_number % (frame.len() as u32 / 4);
-    let pos = if pos / GB_RESOLUTION.0 % 2 > 0 {
-        pos + 4 * GB_RESOLUTION.0
-    } else {
-        pos
-    };
-    let pos = (pos % (((frame.len() as u32) / 8) - 4)) as usize;
-    let rgba: [u8; 4] = [
-        (frame_number % 0xFF) as u8,
-        128_i32
-            .wrapping_sub_unsigned(2 * frame_number)
-            .rem_euclid(0xFF) as u8,
-        ((92 + 3 * frame_number) % 0xFF) as u8,
-        0xFF,
-    ];
-    let pixel = &mut frame[(8 * pos)..(8 * pos + 4)];
-    pixel.copy_from_slice(&rgba);
+fn draw_something(pixels_frame: &mut [u8], gb_frame: &fpt::ppu::Frame) {
+    for (i, chunk) in pixels_frame.array_chunks_mut::<4>().enumerate() {
+        chunk.copy_from_slice(&PALETTE[gb_frame[i] as usize]);
+    }
 }

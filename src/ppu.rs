@@ -2,12 +2,13 @@ use crate::memory::Bus;
 
 const WIDTH: usize = 160;
 const HEIGHT: usize = 144;
+pub type Frame = [u8; WIDTH * HEIGHT];
 
 //#[derive(Clone, PartialEq)]
 #[allow(unused)]
 pub struct Ppu {
     bus: Bus,
-    frame: [u8; WIDTH * HEIGHT],
+    frame: Frame,
     dots_this_frame: u32,
 }
 
@@ -29,7 +30,7 @@ impl Ppu {
         }
     }
 
-    pub fn step(&mut self, cycles:u8) {
+    pub fn step(&mut self, cycles: u8) {
         for _ in 0..cycles {
             self.dot();
         }
@@ -52,7 +53,7 @@ impl Ppu {
             match self.dots_this_frame % 456 {
                 0..80 => Mode::OamScan,         // Mode 2
                 80..240 => Mode::PixelTransfer, // Mode 3 (TODO lasts between 172 and 289 dots)
-                240.. => Mode::HBlank,           // Mode 0
+                240.. => Mode::HBlank,          // Mode 0
             }
         } else {
             Mode::VBlank // Mode 1
@@ -81,7 +82,7 @@ impl Ppu {
         self.dots_this_frame = (self.dots_this_frame + 1) % 70224;
     }
 
-    pub fn get_frame(&self) -> &[u8; WIDTH * HEIGHT] {
+    pub fn get_frame(&self) -> &Frame {
         &self.frame
     }
 }
