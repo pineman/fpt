@@ -40,6 +40,8 @@ impl Gameboy {
 
     pub fn step(&mut self) {
         self.cpu.step();
-        self.ppu.render(&mut self.cpu);
+        for _ in 0..4 {
+            self.ppu.dot();
+        }
     }
 }
