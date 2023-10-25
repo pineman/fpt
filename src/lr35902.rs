@@ -551,7 +551,7 @@ impl LR35902 {
     }
 
     /// Run one cycle
-    pub fn step(&mut self) {
+    pub fn step(&mut self) -> u8 {
         let instruction = self.decode();
         self.execute(instruction);
 
@@ -569,6 +569,8 @@ impl LR35902 {
 
         thread::sleep(Duration::from_micros((cycles / 4) as u64));
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
+
+        cycles
     }
 
     fn execute(&mut self, instruction: Instruction) {

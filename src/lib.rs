@@ -1,4 +1,5 @@
 #![feature(bigint_helper_methods)]
+#![feature(exclusive_range_pattern)]
 
 mod bitwise;
 pub mod lr35902;
@@ -39,9 +40,7 @@ impl Gameboy {
     }
 
     pub fn step(&mut self) {
-        self.cpu.step();
-        for _ in 0..4 {
-            self.ppu.dot();
-        }
+        let cycles = self.cpu.step();
+        self.ppu.step(cycles);
     }
 }

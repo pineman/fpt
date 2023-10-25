@@ -36,6 +36,17 @@ pub mod map {
     /// Port/Mode Registers, Control Registers, Sound Registers
     pub const MANY_REGISTERS: MemoryRange = 0xFF00..0xFF80;
 
+    pub const LCDC: Address = 0xFF40;
+    pub const STAT: Address = 0xFF41;
+
+    pub const SCY: Address = 0xFF42;
+
+    pub const SCX: Address = 0xFF43;
+
+    pub const LY: Address = 0xFF44;
+
+    pub const LYC: Address = 0xFF45;
+
     /// Working & Stack RAM (127 bytes)
     pub const HRAM: MemoryRange = 0xFF80..0xFFFF;
 
@@ -129,38 +140,50 @@ impl Bus {
 
     // registers
     pub fn lcdc(&self) -> u8 {
-        self.read(0xFF40)
+        self.read(map::LCDC)
+    }
+
+    pub fn set_lcdc(&mut self, value: u8) {
+        self.write(map::LCDC, value);
     }
 
     pub fn stat(&self) -> u8 {
-        self.read(0xFF41)
+        self.read(map::LCDC)
     }
 
     pub fn set_stat(&mut self, value: u8) {
-        self.write(0xFF41, value);
+        self.write(map::STAT, value);
     }
 
     pub fn scy(&self) -> u8 {
-        self.read(0xFF42)
+        self.read(map::SCY)
+    }
+
+    pub fn set_scy(&mut self, value: u8) {
+        self.write(map::SCY, value);
     }
 
     pub fn scx(&self) -> u8 {
-        self.read(0xFF43)
+        self.read(map::SCX)
+    }
+
+    pub fn set_scx(&mut self, value: u8) {
+        self.write(map::SCX, value);
     }
 
     pub fn ly(&self) -> u8 {
-        self.read(0xFF44)
+        self.read(map::LY)
     }
 
     pub fn set_ly(&mut self, value: u8) {
-        self.write(0xFF44, value);
+        self.write(map::LY, value);
     }
 
     pub fn lyc(&self) -> u8 {
-        self.read(0xFF45)
+        self.read(map::LYC)
     }
 
     pub fn set_lyc(&mut self, value: u8) {
-        self.write(0xFF45, value);
+        self.write(map::LYC, value)
     }
 }
