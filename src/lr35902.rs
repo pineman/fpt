@@ -1695,7 +1695,7 @@ impl LR35902 {
             }
             0xF3 => {
                 // DI
-                todo!()
+                // todo!()
             }
             0xF4 => {
                 // Not implemented
