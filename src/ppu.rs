@@ -10,6 +10,7 @@ pub struct Ppu {
     bus: Bus,
     frame: Frame,
     dots_this_frame: u32,
+    counter: u32,
 }
 
 #[repr(u8)]
@@ -27,6 +28,7 @@ impl Ppu {
             bus,
             frame: [0b00; WIDTH * HEIGHT],
             dots_this_frame: 0,
+            counter: 0,
         }
     }
 
@@ -75,11 +77,36 @@ impl Ppu {
                 dbg!(self.dots_this_frame);
             }
 
-            self.frame[address] = 0b00;
+            //let column =  (address % WIDTH) as f32 - (WIDTH/2) as f32;
+            //let line = (address / WIDTH) as f32 - (HEIGHT/2) as f32;
+            //if ((line as f32).powf(2.0)) + ((column as f32).powf(2.0)).abs_sub(50.0f32.powf(2.0)) < 10.0 {
+            //    self.frame[address] = 1;
+            //}
+            //else {
+            //    self.frame[address] = 0;
+            //}
+
+
+            let column =  address % WIDTH;
+            let line = address / WIDTH;
+            let x = (column as f32) / WIDTH as f32;
+            let y = (line as f32) / HEIGHT as f32;
+
+            let freq = 20.0;
+
+            let c = self.counter as f32;
+            let theta = c / freq;
+
+
+            self.frame[address] = (2.0 + (freq*x).sin() + (((c*0.1).sin() + 2.0)*freq*y).cos()).floor() as u8;
+
         }
 
         // Advance one "dot"
         self.dots_this_frame = (self.dots_this_frame + 1) % 70224;
+        if self.dots_this_frame == 0 {
+            self.counter += 1;
+        }
     }
 
     pub fn get_frame(&self) -> &Frame {
