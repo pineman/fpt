@@ -17,7 +17,7 @@ enum Mode {
     HBlank = 0,
     VBlank = 1,
     OamScan = 2,
-    DrawingPixels = 3,
+    PixelTransfer = 3,
 }
 
 impl Ppu {
@@ -29,7 +29,12 @@ impl Ppu {
         }
     }
 
-    pub fn dot(&mut self) {
+    pub fn step(&mut self, cycles:u8) {
+        for _ in 0..cycles {
+            self.dot();
+        }
+    }
+    fn dot(&mut self) {
         //! Simulates a "dot", as described in https://gbdev.io/pandocs/Rendering.html.
         //! A "dot" either draws a single pixel (in Mode 3) or is stalled for $REASONS.
         //! A "dot" = one 2^22 Hz time unit, so there's 4 dots per (DMG, single-speed) CPU cycle
@@ -45,9 +50,9 @@ impl Ppu {
         //   * 10 "scanlines" (4560 dots) for mode 1 (V-blank)
         let ppu_mode = if self.bus.ly() < HEIGHT as u8 {
             match self.dots_this_frame % 456 {
-                0..=79 => Mode::OamScan,         // Mode 2
-                80..=251 => Mode::DrawingPixels, // Mode 3 (TODO lasts between 172 and 289 dots)
-                252.. => Mode::HBlank,           // Mode 0
+                0..80 => Mode::OamScan,         // Mode 2
+                80..240 => Mode::PixelTransfer, // Mode 3 (TODO lasts between 172 and 289 dots)
+                240.. => Mode::HBlank,           // Mode 0
             }
         } else {
             Mode::VBlank // Mode 1
@@ -61,9 +66,15 @@ impl Ppu {
         );
 
         // TODO actually draw some actual background, window and sprites
-        if ppu_mode == Mode::DrawingPixels {
+        if ppu_mode == Mode::PixelTransfer {
             let current_pixel = ((self.dots_this_frame % 456) - 80) as usize; // TODO I'm pretending the PPU never stalls
-            self.frame[WIDTH * self.bus.ly() as usize + current_pixel] = 0b00;
+            let address = WIDTH * self.bus.ly() as usize + current_pixel;
+            if address >= WIDTH * HEIGHT {
+                dbg!(self.bus.ly());
+                dbg!(self.dots_this_frame);
+            }
+
+            self.frame[address] = 0b00;
         }
 
         // Advance one "dot"
