@@ -136,6 +136,10 @@ impl Bus {
         self.read(0xFF41)
     }
 
+    pub fn set_stat(&mut self, value: u8) {
+        self.write(0xFF41, value);
+    }
+
     pub fn scy(&self) -> u8 {
         self.read(0xFF42)
     }
@@ -148,7 +152,15 @@ impl Bus {
         self.read(0xFF44)
     }
 
+    pub fn set_ly(&mut self, value: u8) {
+        self.write(0xFF44, value);
+    }
+
     pub fn lyc(&self) -> u8 {
         self.read(0xFF45)
+    }
+
+    pub fn set_lyc(&mut self, value: u8) {
+        self.write(0xFF45, value);
     }
 }
