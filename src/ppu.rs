@@ -50,12 +50,15 @@ impl Ppu {
         if self.dots_this_frame % 456 == 80 {
             self.tilemap = TileMap::load(&self.bus.vram());
             self.mode = dbg!(Mode::PixelTransfer);
+            dbg!(self.dots_this_frame);
+            return;
         }
     }
 
     fn pixel_transfer(&mut self) {
         if self.dots_this_frame % 456 == 239 {
             self.mode = dbg!(Mode::HBlank);
+            dbg!(self.dots_this_frame);
             return;
         }
 
@@ -69,31 +72,40 @@ impl Ppu {
         let column = address % WIDTH;
         let line = address / WIDTH;
 
-        let tile = line + column / 32;
+        let tile_address = 32*line/8 + column / 8;
 
-        let tile_data_address = self.tilemap.tile_map0[tile];
+        let tile_data_address = self.tilemap.tile_map0[tile_address];
 
         let tile_x = column % 8;
         let tile_y = line % 8;
 
         let tile_pixel_address = 8 * tile_y + tile_x;
-        self.frame[address] = (self.tilemap.tiles[tile].pixels[(tile_data_address >> 2) as usize]
-            >> (tile_data_address & 0b11))
-            & 0b11;
+
+        let tile = self.tilemap.tiles[tile_data_address as usize];
+
+        let low_bit = (tile.pixels[tile_y/2] >> tile_x) & 1;
+        let high_bit = (tile.pixels[tile_y/2 + 1] >> tile_x) & 1;
+
+
+        self.frame[address] = 2*high_bit + low_bit;
     }
 
     fn h_blank(&mut self) {
         if self.bus.ly() >= HEIGHT as u8 {
             self.mode = dbg!(Mode::VBlank);
+            dbg!(self.dots_this_frame);
             return;
         } else if self.dots_this_frame % 456 == 0 {
             self.mode = dbg!(Mode::OamScan);
+            dbg!(self.dots_this_frame);
+            return;
         }
     }
 
     fn v_blank(&mut self) {
         if self.dots_this_frame == 0 {
             self.mode = dbg!(Mode::OamScan);
+            dbg!(self.dots_this_frame);
             return;
         }
     }
