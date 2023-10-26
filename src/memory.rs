@@ -2,7 +2,8 @@ use std::cell::{RefCell, RefMut};
 use std::ops::Range;
 use std::rc::Rc;
 
-pub type Address = u16;
+pub type Address = usize;
+pub type MachineAddress = u16;
 pub type MemoryRange = Range<Address>;
 
 /// You can access these consts like this:
@@ -114,12 +115,20 @@ impl Bus {
         self.clone_from_slice(0x100..0x8000, &cartridge[0x100..cartridge.len()]);
     }
 
-    pub fn read(&self, address: Address) -> u8 {
-        self.memory().mem[address as usize]
+    pub fn read(&self, address: MachineAddress) -> u8 {
+        self.memory().mem[address as Address]
     }
 
-    pub fn write(&mut self, address: Address, value: u8) {
-        self.memory().mem[address as usize] = value;
+    pub fn write(&mut self, address: MachineAddress, value: u8) {
+        self.memory().mem[address as Address] = value;
+    }
+
+    fn _read(&self, address: Address) -> u8 {
+        self.memory().mem[address]
+    }
+
+    fn _write(&mut self, address: Address, value: u8) {
+        self.memory().mem[address] = value;
     }
 
     pub fn clone_from_slice(&mut self, range: MemoryRange, slice: &[u8]) {
@@ -140,50 +149,57 @@ impl Bus {
 
     // registers
     pub fn lcdc(&self) -> u8 {
-        self.read(map::LCDC)
+        self._read(map::LCDC)
     }
 
     pub fn set_lcdc(&mut self, value: u8) {
-        self.write(map::LCDC, value);
+        self._write(map::LCDC, value);
     }
 
     pub fn stat(&self) -> u8 {
-        self.read(map::LCDC)
+        self._read(map::LCDC)
     }
 
     pub fn set_stat(&mut self, value: u8) {
-        self.write(map::STAT, value);
+        self._write(map::STAT, value);
     }
 
     pub fn scy(&self) -> u8 {
-        self.read(map::SCY)
+        self._read(map::SCY)
     }
 
     pub fn set_scy(&mut self, value: u8) {
-        self.write(map::SCY, value);
+        self._write(map::SCY, value);
     }
 
     pub fn scx(&self) -> u8 {
-        self.read(map::SCX)
+        self._read(map::SCX)
     }
 
     pub fn set_scx(&mut self, value: u8) {
-        self.write(map::SCX, value);
+        self._write(map::SCX, value);
     }
 
     pub fn ly(&self) -> u8 {
-        self.read(map::LY)
+        self._read(map::LY)
     }
 
     pub fn set_ly(&mut self, value: u8) {
-        self.write(map::LY, value);
+        self._write(map::LY, value);
     }
 
     pub fn lyc(&self) -> u8 {
-        self.read(map::LYC)
+        self._read(map::LYC)
     }
 
     pub fn set_lyc(&mut self, value: u8) {
-        self.write(map::LYC, value)
+        self._write(map::LYC, value)
+    }
+
+    pub fn vram(&self) -> Vec<u8> {
+        self.memory().mem[map::VRAM]
+            .into_iter()
+            .map(|x| *x)
+            .collect()
     }
 }
