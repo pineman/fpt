@@ -8,9 +8,10 @@ pub struct Tile {
 
 impl Tile {
 
+    #[allow(unused)]
     pub fn load(data: &[u8; 16]) -> Tile {
         Tile {
-            pixels: data.clone(),
+            pixels: *data,
         }
     }
     pub fn get_pixel(&self, y: usize, x: usize) -> u8{
@@ -27,7 +28,7 @@ impl fmt::Debug for Tile {
             for j in 0..8 {
                 write!(f, "{}", self.get_pixel(i, j))?;
             }
-            write!(f, "\n")?;
+            writeln!(f)?;
 
         }
         write!(f, "")
@@ -49,7 +50,7 @@ impl TileMap {
         }
     }
 
-    pub fn load(vram: &Vec<u8>) -> TileMap {
+    pub fn load(vram: &[u8]) -> TileMap {
         let mut tilemap = TileMap::default();
 
         for i in 0..384 {
