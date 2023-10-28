@@ -84,7 +84,7 @@ impl Memory {
     }
 
     pub fn slice(&self, range: MemoryRange) -> &[u8] {
-        &self.mem[(range.start as usize)..(range.end as usize)]
+        &self.mem[range.start..range.end]
     }
 }
 
@@ -132,7 +132,7 @@ impl Bus {
     }
 
     pub fn clone_from_slice(&mut self, range: MemoryRange, slice: &[u8]) {
-        self.memory().mem[(range.start as usize)..(range.end as usize)].clone_from_slice(slice);
+        self.memory().mem[range.start..range.end].clone_from_slice(slice);
     }
 
     //pub fn slice(&self, range: MemoryRange) -> &[u8] {
@@ -197,9 +197,6 @@ impl Bus {
     }
 
     pub fn vram(&self) -> Vec<u8> {
-        self.memory().mem[map::VRAM]
-            .into_iter()
-            .map(|x| *x)
-            .collect()
+        self.memory().mem[map::VRAM].to_vec()
     }
 }
