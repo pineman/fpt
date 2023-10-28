@@ -20,7 +20,7 @@ pub struct LR35902 {
     next_cb: bool,
     clock_cycles: u64,
     branch_taken: bool,
-    debug: bool,
+    debug: bool, // TODO: remove this eventually
 }
 
 impl Default for LR35902 {
