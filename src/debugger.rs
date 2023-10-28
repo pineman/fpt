@@ -1,4 +1,3 @@
-
 use std::fmt;
 
 use hlua::AnyHashableLuaValue as LuaValue;
@@ -48,7 +47,9 @@ impl Breakpoint {
         match self {
             Breakpoint::OnPc(pc) => gameboy.cpu().pc() == *pc,
             Breakpoint::OnOpcode(opcode) => gameboy.cpu().mem8(gameboy.cpu().pc()) == *opcode,
-            Breakpoint::OnCB(opcode) => gameboy.cpu().mem8(gameboy.cpu().pc()) == *opcode && gameboy.cpu().get_next_cb(),
+            Breakpoint::OnCB(opcode) => {
+                gameboy.cpu().mem8(gameboy.cpu().pc()) == *opcode && gameboy.cpu().get_next_cb()
+            }
         }
     }
 }
@@ -185,7 +186,9 @@ impl DebuggerTextInterface<'_> {
         let d1 = dbg_pointer.clone();
         lua.set(
             "pc",
-            hlua::function0(move || -> LuaValue { LuaValue::LuaNumber(d1.borrow_mut().pc().into()) }),
+            hlua::function0(move || -> LuaValue {
+                LuaValue::LuaNumber(d1.borrow_mut().pc().into())
+            }),
         );
 
         let d1 = dbg_pointer.clone();
@@ -268,7 +271,9 @@ impl DebuggerTextInterface<'_> {
             hlua::function0(move || -> LuaValue {
                 LuaValue::LuaString(
                     (0..0xFFFF)
-                        .map(|i| format!("{:#02X} {:#02X}", i, d1.borrow_mut().gameboy.cpu().mem8(i)))
+                        .map(|i| {
+                            format!("{:#02X} {:#02X}", i, d1.borrow_mut().gameboy.cpu().mem8(i))
+                        })
                         .intersperse("\n".to_string())
                         .collect::<String>(),
                 )
@@ -281,7 +286,9 @@ impl DebuggerTextInterface<'_> {
             hlua::function2(move |start: u16, end: u16| -> LuaValue {
                 LuaValue::LuaString(
                     (start..end)
-                        .map(|i| format!("{:#02X} {:#02X}", i, d1.borrow_mut().gameboy.cpu().mem8(i)))
+                        .map(|i| {
+                            format!("{:#02X} {:#02X}", i, d1.borrow_mut().gameboy.cpu().mem8(i))
+                        })
                         .intersperse("\n".to_string())
                         .collect::<String>(),
                 )
@@ -296,14 +303,11 @@ impl DebuggerTextInterface<'_> {
             }),
         );
 
-        Self {
-            lua,
-        }
+        Self { lua }
     }
 
     pub fn run(&mut self, cmd: String) {
         let value = self.lua.execute::<LuaValue>(&cmd);
         println!("{}", fmt_lua_value(&value.unwrap()));
-
     }
 }
