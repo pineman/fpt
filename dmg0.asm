@@ -1,121 +1,235 @@
-0x0: 0x31 LD SP,d16
-0x3: 0xAF XOR A
-0x4: 0x21 LD HL,d16
-0x7: 0x32 LD (HL-),A
-0x8: 0xCB PREFIX CB
-0x9: 0x7C LD A,H
-0xA: 0x20 JR NZ,r8
-0xC: 0x21 LD HL,d16
-0xF: 0xE LD C,d8
-0x11: 0x3E LD A,d8
-0x13: 0x32 LD (HL-),A
-0x14: 0xE2 LD (C),A
-0x15: 0xC INC C
-0x16: 0x3E LD A,d8
-0x18: 0xE2 LD (C),A
-0x19: 0x32 LD (HL-),A
-0x1A: 0x3E LD A,d8
-0x1C: 0x77 LD (HL),A
-0x1D: 0x3E LD A,d8
-0x1F: 0xE0 LDH (a8),A
-0x21: 0x21 LD HL,d16
-0x24: 0xE5 PUSH HL
-0x25: 0x11 LD DE,d16
-0x28: 0x1A LD A,(DE)
-0x29: 0x13 INC DE
-0x2A: 0xBE CP (HL)
-0x2B: 0x20 JR NZ,r8
-0x2D: 0x23 INC HL
-0x2E: 0x7D LD A,L
-0x2F: 0xFE CP d8
-0x31: 0x20 JR NZ,r8
-0x33: 0x6 LD B,d8
-0x35: 0x78 LD A,B
-0x36: 0x86 ADD A,(HL)
-0x37: 0x23 INC HL
-0x38: 0x5 DEC B
-0x39: 0x20 JR NZ,r8
-0x3B: 0x86 ADD A,(HL)
-0x3C: 0x20 JR NZ,r8
-0x3E: 0xD1 POP DE
-0x3F: 0x21 LD HL,d16
-0x42: 0x1A LD A,(DE)
-0x43: 0xCD CALL a16
-0x46: 0xCD CALL a16
-0x49: 0x13 INC DE
-0x4A: 0x7B LD A,E
-0x4B: 0xFE CP d8
-0x4D: 0x20 JR NZ,r8
-0x4F: 0x3E LD A,d8
-0x51: 0x21 LD HL,d16
-0x54: 0xE LD C,d8
-0x56: 0x32 LD (HL-),A
-0x57: 0x3D DEC A
-0x58: 0x28 JR Z,r8
-0x5A: 0xD DEC C
-0x5B: 0x20 JR NZ,r8
-0x5D: 0x11 LD DE,d16
-0x60: 0x19 ADD HL,DE
-0x61: 0x18 JR r8
-0x63: 0x67 LD H,A
-0x64: 0x3E LD A,d8
-0x66: 0x57 LD D,A
-0x67: 0xE0 LDH (a8),A
-0x69: 0x3E LD A,d8
-0x6B: 0xE0 LDH (a8),A
-0x6D: 0x4 INC B
-0x6E: 0x1E LD E,d8
-0x70: 0xCD CALL a16
-0x73: 0xE LD C,d8
-0x75: 0x24 INC H
-0x76: 0x7C LD A,H
-0x77: 0x1E LD E,d8
-0x79: 0xFE CP d8
-0x7B: 0x28 JR Z,r8
-0x7D: 0x1E LD E,d8
-0x7F: 0xFE CP d8
-0x81: 0x20 JR NZ,r8
-0x83: 0x7B LD A,E
-0x84: 0xE2 LD (C),A
-0x85: 0xC INC C
-0x86: 0x3E LD A,d8
-0x88: 0xE2 LD (C),A
-0x89: 0xF0 LDH A,(a8)
-0x8B: 0x90 SUB B
-0x8C: 0xE0 LDH (a8),A
-0x8E: 0x15 DEC D
-0x8F: 0x20 JR NZ,r8
-0x91: 0x5 DEC B
-0x92: 0x20 JR NZ,r8
-0x94: 0x16 LD D,d8
-0x96: 0x18 JR r8
-0x98: 0x3E LD A,d8
-0x9A: 0xE0 LDH (a8),A
-0x9C: 0x1E LD E,d8
-0x9E: 0xCD CALL a16
-0xA1: 0xF0 LDH A,(a8)
-0xA3: 0xEE XOR d8
-0xA5: 0xE0 LDH (a8),A
-0xA7: 0x18 JR r8
-0xA9: 0x4F LD C,A
-0xAA: 0x6 LD B,d8
-0xAC: 0xC5 PUSH BC
-0xAD: 0xCB PREFIX CB
-0xAE: 0x11 LD DE,d16
-0xB1: 0xCB PREFIX CB
-0xB2: 0x11 LD DE,d16
-0xB5: 0x20 JR NZ,r8
-0xB7: 0x22 LD (HL+),A
-0xB8: 0x23 INC HL
-0xB9: 0x22 LD (HL+),A
-0xBA: 0x23 INC HL
-0xBB: 0xC9 RET
-0xBC: 0xE LD C,d8
-0xBE: 0xF0 LDH A,(a8)
-0xC0: 0xFE CP d8
-0xC2: 0x20 JR NZ,r8
-0xC4: 0xD DEC C
-0xC5: 0x20 JR NZ,r8
-0xC7: 0x1D DEC E
-0xC8: 0x20 JR NZ,r8
-0xCA: 0xC9 RET
+INCLUDE "hardware.inc/hardware.inc"
+INCLUDE "header.inc"
+
+
+SECTION "Boot ROM", ROM0[$000]
+
+EntryPoint:
+    ld sp, hStackBottom
+
+    xor a
+    ld hl, $9FFF
+.clearVRAM
+    ld [hld], a
+    bit 7, h
+    jr nz, .clearVRAM
+
+    ld hl, rNR52
+    ld c, LOW(rNR11) ; CH1 length
+    ; Enable APU
+    ; This sets (roughly) all audio registers to 0
+    ld a, $80
+    ld [hld], a
+    ; hl = rNR51
+    ; Set CH1 duty cycle to 25%
+    ldh [c], a
+    inc c ; ld c, LOW(rNR11) ; CH1 envelope
+    ld a, $F3 ; Initial volume 15, 3 decreasing sweep
+    ldh [c], a
+    ; Route all channels to left speaker, CH2 and CH1 to right speaker
+    ld [hld], a
+    ; hl = rNR50
+    ; Set volume on both speakers to 7, disable VIN on both speakers
+    ld a, $77
+    ld [hl], a
+
+    ld a, $FC
+    ldh [rBGP], a
+
+    ld hl, HeaderLogo
+    push hl
+    ld de, Logo
+.checkLogo
+    ld a, [de]
+    inc de
+    cp [hl]
+    jr nz, Lockup
+    inc hl
+    ld a, l
+    cp LOW(HeaderTitle)
+    jr nz, .checkLogo
+    ld b, HeaderChecksum - HeaderTitle
+    ld a, b
+.computeChecksum
+    add a, [hl]
+    inc hl
+    dec b
+    jr nz, .computeChecksum
+    add a, [hl]
+    jr nz, Lockup
+    pop de ; ld de, HeaderLogo
+    ld hl, vLogoTiles
+.decompressLogo
+    ld a, [de]
+    call DecompressFirstNibble
+    call DecompressSecondNibble
+    inc de
+    ld a, e
+    cp LOW(HeaderTitle)
+    jr nz, .decompressLogo
+
+    ld a, $18
+
+    ld hl, vMainTilemap + SCRN_VX_B * 9 + 15
+.writeTilemapRow
+    ld c, 12
+.writeTilemapByte
+    ld [hld], a
+    dec a
+    jr z, ScrollLogo
+    dec c
+    jr nz, .writeTilemapByte
+    ; Go to previous row
+    ld de, -(SCRN_VX_B - 12)
+    add hl, de
+    jr .writeTilemapRow
+
+
+ScrollLogo:
+    ; a = 0
+    ld h, a ; ld h, 0
+    ld a, $64
+    ld d, a
+    ldh [rSCY], a
+    ld a, LCDCF_ON | LCDCF_BLK01 | LCDCF_BGON
+    ldh [rLCDC], a
+    inc b ; ld b, 1
+
+    ; h = Number of times the logo was scrolled up
+    ; d = How many frames before exiting the loop
+    ; b = Whether to scroll the logo
+
+.loop
+    ld e, 2
+    call DelayFrames
+    ld c, LOW(rNR13) ; CH1 frequency low byte
+    inc h
+    ld a, h
+    ld e, $83
+    cp $62
+    jr z, .playSound
+    ld e, $C1
+    cp $64
+    jr nz, .dontPlaySound
+.playSound
+    ld a, e
+    ldh [c], a
+    inc c ; ld c, LOW(rNR14) ; CH1 frequency high byte
+    ; Set frequency to $7XX and restart channel
+    ld a, $87
+    ldh [c], a
+.dontPlaySound
+    ldh a, [rSCY]
+    sub b
+    ldh [rSCY], a
+    dec d
+    jr nz, .loop
+
+    dec b
+    jr nz, Done
+    ld d, $20
+    jr .loop
+
+
+Lockup:
+    ld a, LCDCF_ON | LCDCF_BLK01 | LCDCF_BGON
+    ldh [rLCDC], a
+.loop
+    ld e, 20
+    call DelayFrames
+    ldh a, [rBGP]
+    xor a, $FF
+    ldh [rBGP], a
+    jr .loop
+
+
+DecompressFirstNibble:
+    ld c, a
+DecompressSecondNibble:
+    ld b, 8 / 2 ; Set all 8 bits of a, "consuming" 4 bits of c
+.loop
+    push bc
+    rl c ; Extract MSB of c
+    rla ; Into LSB of a
+    pop bc
+    rl c ; Extract that same bit
+    rla ; So that bit is inserted twice in a (= horizontally doubled)
+    dec b
+    jr nz, .loop
+    ld [hli], a
+    inc hl ; Skip second plane
+    ld [hli], a ; Also double vertically
+    inc hl
+    ret
+
+
+DelayFrames:
+    ld c, 12
+.loop
+    ldh a, [rLY]
+    cp SCRN_Y
+    jr nz, .loop
+    dec c
+    jr nz, .loop
+    dec e
+    jr nz, DelayFrames
+    ret
+
+
+; Each tile is encoded using 2 (!) bytes
+; How to read: the logo is split into two halves (top and bottom), each half being encoded
+;              separately. Each half must be read in columns.
+;              So, the first byte is `db %XX.._XXX.`, then `db %XXX._XX.X`, matching the
+;              `db $CE, $ED` found in many places. And so on! :)
+MACRO logo_row_gfx
+    ASSERT _NARG % 4 == 0
+    PUSHO
+    OPT b.X
+    FOR N1, 1, _NARG / 4 + 1 ; N1, N2, N3, and N4 iterate through the 4 equally-sized rows
+        DEF N2 = N1 + _NARG / 4
+        DEF N3 = N2 + _NARG / 4
+        DEF N4 = N3 + _NARG / 4
+        db %\<N1>\<N2>, %\<N3>\<N4>
+    ENDR
+    POPO
+ENDM
+
+; Whitespace is not stripped after line continuations until RGBDS v0.6.0, so rows are not indented
+    Logo:  logo_row_gfx \
+XX.., .XX., XX.., ...., ...., ...., ...., ...., ...., ...X, X..., ...., \
+XXX., .XX., XX.., ...., ..XX, ...., ...., ...., ...., ...X, X..., ...., \
+XXX., .XX., ...., ...., .XXX, X..., ...., ...., ...., ...X, X..., ...., \
+XX.X, .XX., XX.X, X.XX, ..XX, ..XX, XX.., XX.X, X..., XXXX, X..X, XXX.
+           logo_row_gfx \
+XX.X, .XX., XX.X, XX.X, X.XX, .XX., .XX., XXX., XX.X, X..X, X.XX, ..XX, \
+XX.., XXX., XX.X, X..X, X.XX, .XXX, XXX., XX.., XX.X, X..X, X.XX, ..XX, \
+XX.., XXX., XX.X, X..X, X.XX, .XX., ...., XX.., XX.X, X..X, X.XX, ..XX, \
+XX.., .XX., XX.X, X..X, X.XX, ..XX, XXX., XX.., XX.., XXXX, X..X, XXX.
+
+
+    ds 2
+Done:
+    inc a
+    ldh [$FF50], a
+    assert @ == $100 ; Execution now falls through to the cartridge's header
+
+
+SECTION "VRAM tiles", VRAM[$8000],BANK[0]
+
+vBlankTile:
+    ds $10
+vLogoTiles:
+    ds $10 * (HeaderTitle - HeaderLogo) / 2
+vRTile:
+    ds $10
+
+SECTION "VRAM tilemap", VRAM[$9800],BANK[0]
+
+vMainTilemap:
+    ds SCRN_VX_B * SCRN_VY_B
+
+
+SECTION "HRAM", HRAM[$FFEE]
+
+    ds $10
+hStackBottom:
