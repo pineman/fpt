@@ -1,7 +1,6 @@
 use crate::memory::Bus;
 use tile::TileMap;
 
-
 mod tile;
 
 const WIDTH: usize = 160;
@@ -70,7 +69,7 @@ impl Ppu {
         let column = address % WIDTH;
         let line = address / WIDTH;
 
-        let tile_address = 32*line/8 + column / 8;
+        let tile_address = 32 * line / 8 + column / 8;
 
         let tile_data_address = self.tilemap.tile_map0[tile_address];
 

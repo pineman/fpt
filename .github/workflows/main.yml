@@ -36,7 +36,7 @@ jobs:
       steps:
         - uses: actions/checkout@v4
         - name: Run rustfmt
-          run: cargo fmt
+          run: cargo fmt --check
 
 
   test:

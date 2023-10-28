@@ -1,9 +1,9 @@
 use std::fs;
 
-use fpt::Gameboy;
 use fpt::DebuggerTextInterface;
+use fpt::Gameboy;
 
-use clap::{Parser, Subcommand, Args};
+use clap::{Args, Parser, Subcommand};
 
 use rustyline::error::ReadlineError;
 use rustyline::{DefaultEditor, Result};
@@ -26,7 +26,7 @@ struct Run {
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// debugger
-    Debug{},
+    Debug {},
     Run(Run),
 }
 
@@ -63,8 +63,7 @@ fn debug() -> Result<()> {
     Ok(())
 }
 
-
-fn run(args: Run) -> Result<()>{
+fn run(args: Run) -> Result<()> {
     let mut gameboy = Gameboy::new();
     gameboy.set_debug(args.debug.unwrap_or(false));
 
@@ -73,16 +72,16 @@ fn run(args: Run) -> Result<()>{
 
     loop {
         if args.debug.unwrap_or(false) {
-         println!("pc: {:#02X}", gameboy.cpu().pc());
+            println!("pc: {:#02X}", gameboy.cpu().pc());
         }
         gameboy.step();
     }
 }
-fn main() -> Result<()>{
+fn main() -> Result<()> {
     let args = Cli::parse();
 
     match args.command {
-        Commands::Debug{} => { debug()},
-        Commands::Run(args) => {run(args)},
+        Commands::Debug {} => debug(),
+        Commands::Run(args) => run(args),
     }
 }
