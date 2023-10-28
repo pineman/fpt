@@ -3,29 +3,31 @@ use std::fs;
 use fpt::Gameboy;
 use fpt::DebuggerTextInterface;
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, Args};
 
 use rustyline::error::ReadlineError;
 use rustyline::{DefaultEditor, Result};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-struct Args {
-    /// Flag to active debug output
-    #[arg(short, long)]
-    debug: bool,
-
+struct Cli {
     #[command(subcommand)]
     command: Commands,
+}
+
+#[derive(Debug, Args)]
+struct Run {
+    rom: String,
+    #[arg(short, long)]
+    /// Flag to active debug output
+    debug: Option<bool>,
 }
 
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// debugger
-    Debug {},
-    Run {
-        rom: String,
-    }
+    Debug{},
+    Run(Run),
 }
 
 fn debug() -> Result<()> {
@@ -41,7 +43,7 @@ fn debug() -> Result<()> {
             Ok(line) => {
                 let cmd = String::from("return ") + &line;
                 rl.add_history_entry(&line)?;
-                debugger_interface.run(line);
+                debugger_interface.run(cmd);
             }
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");
@@ -62,27 +64,25 @@ fn debug() -> Result<()> {
 }
 
 
-fn run(rom: String) {
+fn run(args: Run) -> Result<()>{
     let mut gameboy = Gameboy::new();
-    //gameboy.set_debug(args.debug);
+    gameboy.set_debug(args.debug.unwrap_or(false));
 
-    let rom = fs::read(rom).unwrap();
+    let rom = fs::read(args.rom).unwrap();
     gameboy.load_rom(&rom);
 
     loop {
-        //if args.debug {
-        // println!("pc: {:#02X}", gameboy.cpu().pc());
-        //}
+        if args.debug.unwrap_or(false) {
+         println!("pc: {:#02X}", gameboy.cpu().pc());
+        }
         gameboy.step();
     }
 }
-fn main() {
-    let args = Args::parse();
+fn main() -> Result<()>{
+    let args = Cli::parse();
 
     match args.command {
-        Commands::Debug{} => { debug();},
-        Commands::Run{rom} => {run(rom);},
-        _ => panic!(),
+        Commands::Debug{} => { debug()},
+        Commands::Run(args) => {run(args)},
     }
-
 }

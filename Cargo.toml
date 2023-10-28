@@ -20,7 +20,4 @@ rstest = "0.18"
 name = "main"
 
 [[bin]]
-name = "gui"
-
-[[bin]]
 name = "objdump"

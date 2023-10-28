@@ -25,9 +25,9 @@ impl fmt::Debug for Tile {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for i in 0..8 {
             for j in 0..8 {
-                write!(f, "{}", self.get_pixel(i, j));
+                write!(f, "{}", self.get_pixel(i, j))?;
             }
-            write!(f, "\n");
+            write!(f, "\n")?;
 
         }
         write!(f, "")
