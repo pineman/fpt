@@ -12,6 +12,7 @@ pub fn test_bit16<const INDEX: u8>(word: u16) -> bool {
     word & mask == mask
 }
 
+#[allow(unused)]
 pub fn get_bit8<const INDEX: u8>(word: u8) -> u8 {
     (word >> INDEX) & 0x1
 }

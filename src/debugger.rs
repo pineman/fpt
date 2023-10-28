@@ -63,14 +63,10 @@ impl Debugger {
         let mut gameboy = Gameboy::new();
         gameboy.set_debug(true);
 
-        let mut debugger = Debugger {
+        Debugger {
             gameboy,
             breakpoints: Vec::new(),
-        };
-
-
-
-        debugger
+        }
     }
 
     fn check(&self) -> bool {
@@ -127,6 +123,7 @@ pub struct DebuggerTextInterface<'a> {
 }
 
 impl DebuggerTextInterface<'_> {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         let debugger = Debugger::new();
         let mut lua = Lua::new();

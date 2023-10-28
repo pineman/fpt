@@ -1,4 +1,3 @@
-use crate::bitwise;
 use crate::memory::Bus;
 use tile::TileMap;
 
@@ -52,7 +51,6 @@ impl Ppu {
             self.tilemap = TileMap::load(&self.bus.vram());
             self.mode = dbg!(Mode::PixelTransfer);
             dbg!(self.dots_this_frame);
-            return;
         }
     }
 
@@ -67,7 +65,6 @@ impl Ppu {
         let address = WIDTH * self.bus.ly() as usize + current_pixel;
         if address >= WIDTH * HEIGHT {
             self.bus.ly();
-            self.dots_this_frame;
         }
 
         let column = address % WIDTH;
@@ -79,8 +76,6 @@ impl Ppu {
 
         let tile_x = column % 8;
         let tile_y = line % 8;
-
-        let tile_pixel_address = 8 * tile_y + tile_x;
 
         let tile = self.tilemap.tiles[tile_data_address as usize];
         println!("{:#02X?}", tile.pixels);
@@ -98,11 +93,9 @@ impl Ppu {
         if self.bus.ly() >= HEIGHT as u8 {
             self.mode = dbg!(Mode::VBlank);
             dbg!(self.dots_this_frame);
-            return;
         } else if self.dots_this_frame % 456 == 0 {
             self.mode = dbg!(Mode::OamScan);
             dbg!(self.dots_this_frame);
-            return;
         }
     }
 
@@ -110,7 +103,6 @@ impl Ppu {
         if self.dots_this_frame == 0 {
             self.mode = dbg!(Mode::OamScan);
             dbg!(self.dots_this_frame);
-            return;
         }
     }
 
