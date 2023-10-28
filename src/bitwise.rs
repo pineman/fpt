@@ -40,6 +40,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::bool_assert_comparison)]
     fn test_test_bit16() {
         assert_eq!(test_bit16::<0>(0x1234), false);
         assert_eq!(test_bit16::<1>(0x1234), false);
@@ -47,6 +48,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::bool_assert_comparison)]
     fn test_set_bit16() {
         assert_eq!(set_bit16::<0>(0x0000, true), 0x0001);
         assert_eq!(set_bit16::<1>(0x0000, true), 0x0002);

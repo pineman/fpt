@@ -2,11 +2,13 @@ use crate::lr35902::LR35902;
 use crate::memory::Bus;
 
 //#[derive(Clone, PartialEq)]
+#[allow(unused)]
 pub struct Ppu {
     bus: Bus,
     frame: Vec<u8>,
 }
 
+#[allow(unused)]
 struct Tile {}
 
 impl Ppu {
