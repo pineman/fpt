@@ -2,6 +2,7 @@ use crate::bitwise;
 use crate::memory::Bus;
 use tile::TileMap;
 
+
 mod tile;
 
 const WIDTH: usize = 160;
@@ -82,12 +83,15 @@ impl Ppu {
         let tile_pixel_address = 8 * tile_y + tile_x;
 
         let tile = self.tilemap.tiles[tile_data_address as usize];
+        println!("{:#02X?}", tile.pixels);
 
-        let low_bit = (tile.pixels[tile_y/2] >> tile_x) & 1;
-        let high_bit = (tile.pixels[tile_y/2 + 1] >> tile_x) & 1;
+        let pixel = tile.get_pixel(tile_y, tile_x);
 
+        println!("{:?}", tile);
 
-        self.frame[address] = 2*high_bit + low_bit;
+        //assert!(pixel == 0);
+
+        self.frame[address] = pixel;
     }
 
     fn h_blank(&mut self) {
