@@ -16,6 +16,7 @@ pub struct Gameboy {
 }
 
 impl Gameboy {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         let bus = Bus::new();
         Self {

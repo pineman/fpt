@@ -61,7 +61,6 @@ fn main() -> Result<(), pixels::Error> {
             if let Err(err) = pixels.resize_surface(size.width, size.height) {
                 eprintln!("pixels.resize_surface() error! {err}");
                 control_flow.set_exit_with_code(1);
-                return;
             }
         }
         Event::MainEventsCleared => {
@@ -72,7 +71,6 @@ fn main() -> Result<(), pixels::Error> {
             if let Err(err) = pixels.render() {
                 eprintln!("pixels.render() error! {err}");
                 control_flow.set_exit_with_code(2);
-                return;
             }
             // window.request_redraw();
         }
@@ -82,13 +80,13 @@ fn main() -> Result<(), pixels::Error> {
 
 fn draw_something(frame: &mut [u8], frame_number: u32) {
     // random arithmetics written at 2 AM
-    let pos = (frame_number % (frame.len() as u32 / 4)) as usize;
-    let pos = if pos / GB_RESOLUTION.0 as usize % 2 > 0 {
-        pos + 4 * GB_RESOLUTION.0 as usize
+    let pos = frame_number % (frame.len() as u32 / 4);
+    let pos = if pos / GB_RESOLUTION.0 % 2 > 0 {
+        pos + 4 * GB_RESOLUTION.0
     } else {
         pos
     };
-    let pos = pos % ((frame.len() / 8) - 4) as usize;
+    let pos = (pos % (((frame.len() as u32) / 8) - 4)) as usize;
     let rgba: [u8; 4] = [
         (frame_number % 0xFF) as u8,
         128_i32

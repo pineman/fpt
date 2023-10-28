@@ -80,6 +80,7 @@ impl Memory {
 pub struct Bus(Rc<RefCell<Memory>>);
 
 impl Bus {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Bus(Rc::new(RefCell::new(Memory::new())))
     }
