@@ -1,10 +1,14 @@
 #![feature(bigint_helper_methods)]
 #![feature(exclusive_range_pattern)]
+#![feature(iter_intersperse)]
 
 mod bitwise;
 pub mod lr35902;
 pub mod memory;
 pub mod ppu;
+
+pub mod debugger;
+pub use debugger::DebuggerTextInterface;
 
 use crate::lr35902::LR35902;
 use crate::ppu::Ppu;

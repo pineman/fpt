@@ -8,8 +8,8 @@ default-run = "main"
 
 [dependencies]
 clap = { version = "4.4.6", features = ["derive"] }
-hlua = { version = "0.4.1", optional = true }
-rustyline = { version = "12", optional = true }
+hlua = { version = "0.4.1" }
+rustyline = { version = "12"}
 winit = "0.28.7"
 pixels = "0.13.0"
 
@@ -21,10 +21,6 @@ name = "main"
 
 [[bin]]
 name = "gui"
-
-[[bin]]
-name = "debug"
-required-features = ["hlua", "rustyline"]
 
 [[bin]]
 name = "objdump"
