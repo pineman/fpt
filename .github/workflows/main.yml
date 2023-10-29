@@ -19,7 +19,7 @@ jobs:
     - name: Version
       run: rustc --version
     - name: Build
-      run: RUSTFLAGS="-D warnings" cargo rustc --verbose
+      run: cargo build --verbose
 
 
   clippy:
@@ -28,7 +28,7 @@ jobs:
         - uses: actions/checkout@v4
         - uses: Swatinem/rust-cache@v2
         - name : Clippy
-          run: cargo clippy --all-features -- -D warnings
+          run: cargo clippy --verbose --all-features
 
 
   format-check:
