@@ -20,7 +20,6 @@ pub struct LR35902 {
     next_cb: bool,
     clock_cycles: u64,
     branch_taken: bool,
-    debug: bool, // TODO: remove this eventually
 }
 
 impl Default for LR35902 {
@@ -48,14 +47,9 @@ impl LR35902 {
             next_cb: false,
             clock_cycles: 0,
             branch_taken: false,
-            debug: false,
         };
         cpu.mem.load_bootrom(include_bytes!("../dmg0.bin"));
         cpu
-    }
-
-    pub fn set_debug(&mut self, enabled: bool) {
-        self.debug = enabled;
     }
 
     pub fn a(&self) -> u8 {
@@ -536,23 +530,21 @@ impl LR35902 {
     //    self.mem.bus().load_bootrom(bootrom);
     //}
 
-    pub fn decode(&mut self) -> Instruction {
+    pub fn decode(&self) -> Instruction {
         let mut opcode = self.mem8(self.pc()) as u16;
         if self.next_cb() {
             opcode += 0x100;
-            self.set_next_cb(false);
         }
-        let instruction = INSTRUCTIONS[opcode as usize];
-        if self.debug {
-            println!("{}", instruction);
-        }
-
-        instruction
+        INSTRUCTIONS[opcode as usize]
     }
 
     /// Run one cycle
     pub fn step(&mut self) -> u8 {
         let instruction = self.decode();
+        if self.next_cb() {
+            self.set_next_cb(false);
+        }
+
         self.execute(instruction);
 
         let mut cycles = instruction.cycles;

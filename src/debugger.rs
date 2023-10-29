@@ -61,8 +61,7 @@ struct Debugger {
 #[allow(dead_code)]
 impl Debugger {
     fn new() -> Debugger {
-        let mut gameboy = Gameboy::new();
-        gameboy.set_debug(true);
+        let gameboy = Gameboy::new();
 
         Debugger {
             gameboy,
@@ -82,6 +81,11 @@ impl Debugger {
 
     fn start(&mut self) {
         loop {
+            println!(
+                "{:#02X}: {}",
+                self.gameboy.cpu().pc(),
+                self.gameboy.cpu().decode()
+            );
             if self.check() {
                 self.gameboy.step();
                 break;
@@ -91,6 +95,11 @@ impl Debugger {
     }
 
     fn next(&mut self) {
+        println!(
+            "{:#02X}: {}",
+            self.gameboy.cpu().pc(),
+            self.gameboy.cpu().decode()
+        );
         self.gameboy.step();
     }
 
@@ -159,8 +168,8 @@ impl DebuggerTextInterface<'_> {
         let d1 = dbg_pointer.clone();
         lua.set(
             "b",
-            hlua::function1(move |opcode: u16| -> LuaValue {
-                d1.borrow_mut().set_breakpoint(Breakpoint::OnPc(opcode));
+            hlua::function1(move |pc: u16| -> LuaValue {
+                d1.borrow_mut().set_breakpoint(Breakpoint::OnPc(pc));
                 LuaValue::LuaNil
             }),
         );

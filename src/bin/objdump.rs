@@ -15,18 +15,16 @@ fn main() {
     let args = Args::parse();
 
     let mut lr = LR35902::default();
-    lr.set_debug(args.debug);
 
     loop {
         if lr.pc() > 255 {
             break;
         }
-        if args.debug {
-            println!("pc: {}", lr.pc());
-        }
         let instruction = lr.decode();
 
-        println!("{:#02X}: {}", lr.pc(), instruction);
+        if args.debug {
+            println!("{:#02X}: {}", lr.pc(), instruction);
+        }
 
         if instruction.size == 0 {
             panic!();
