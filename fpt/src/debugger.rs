@@ -167,28 +167,28 @@ impl DebuggerTextInterface<'_> {
 
         let d1 = dbg_pointer.clone();
         lua.set(
-            "b",
+            "break",
             hlua::function1(move |pc: u16| -> LuaValue {
                 d1.borrow_mut().set_breakpoint(Breakpoint::OnPc(pc));
-                LuaValue::LuaNil
+                LuaValue::LuaString(format!("set breakpoint on pc: {}", pc))
             }),
         );
 
         let d1 = dbg_pointer.clone();
         lua.set(
-            "on_opcode",
+            "break_on_opcode",
             hlua::function1(move |opcode: u8| -> LuaValue {
                 d1.borrow_mut().set_breakpoint(Breakpoint::OnOpcode(opcode));
-                LuaValue::LuaNil
+                LuaValue::LuaString(format!("set breakpoint on opcode: {}", opcode))
             }),
         );
 
         let d1 = dbg_pointer.clone();
         lua.set(
-            "on_cb",
+            "break_on_cb",
             hlua::function1(move |opcode: u8| -> LuaValue {
                 d1.borrow_mut().set_breakpoint(Breakpoint::OnCB(opcode));
-                LuaValue::LuaNil
+                LuaValue::LuaString(format!("set breakpoint on cb: {}", opcode))
             }),
         );
 
@@ -317,6 +317,9 @@ impl DebuggerTextInterface<'_> {
 
     pub fn run(&mut self, cmd: String) {
         let value = self.lua.execute::<LuaValue>(&cmd);
-        println!("{}", fmt_lua_value(&value.unwrap()));
+        println!("{}", match value {
+            Ok(value) => fmt_lua_value(&value),
+            Err(err) => err.to_string(),
+        });
     }
 }
