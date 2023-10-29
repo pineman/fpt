@@ -81,7 +81,7 @@ fn dump(args: Dump) -> Result<()> {
             gb.cpu().pc(),
             inst,
             inst.opcode,
-            result.is_empty().then(|| "").unwrap_or(" "),
+            if result.is_empty() { "" } else { " " },
             result.join(" ")
         );
         let next_pc = gb.cpu().pc() + inst.size as u16;
