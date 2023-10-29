@@ -190,9 +190,16 @@ dependencies = [
 name = "fpt"
 version = "0.1.0"
 dependencies = [
- "clap",
  "hlua",
  "rstest",
+]
+
+[[package]]
+name = "fpt-cli"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "fpt",
  "rustyline",
 ]
 
