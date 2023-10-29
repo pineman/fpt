@@ -1,0 +1,9 @@
+[package]
+name = "fpt-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.4.6", features = ["derive"] }
+rustyline = { version = "12"}
+fpt = { path = "../fpt" }
