@@ -10,9 +10,10 @@ pub struct Instruction {
     pub kind: InstructionKind,
 }
 
+// TODO
 impl fmt::Display for Instruction {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:#02X} {}", self.opcode, self.mnemonic)
+        write!(f, "{}", self.mnemonic)
     }
 }
 
@@ -20,14 +21,15 @@ impl fmt::Display for Instruction {
 pub enum InstructionKind {
     Control,
     Jump,
-    LSM8Bit, // Load/store/move
+    LSM8Bit, // Load/Store/Move
     LSM16Bit,
     AL8Bit, // Arithmetic/Logic
     AL16Bit,
-    RSB8Bit, // Rotate/Shift and Bit
+    RSB8Bit, // Rotate, Shift and Bit
     NI,      // Not Implemented
 }
 
+// TODO: use better table json (better mnemonics) to gen code
 pub static INSTRUCTIONS: [Instruction; 512] = [
     Instruction {
         opcode: 0x00,

@@ -1,6 +1,6 @@
 use std::fs;
 
-use fpt::DebuggerTextInterface;
+use fpt::debugger::DebuggerTextInterface;
 use fpt::Gameboy;
 
 use clap::{Args, Parser, Subcommand};
@@ -15,19 +15,23 @@ struct Cli {
     command: Commands,
 }
 
+#[derive(Subcommand, Debug)]
+enum Commands {
+    Debug {},
+    Dump(Dump),
+    Run(Run),
+}
+
+#[derive(Debug, Args)]
+struct Dump {
+    rom: String,
+}
+
 #[derive(Debug, Args)]
 struct Run {
     rom: String,
     #[arg(short, long)]
-    /// Flag to active debug output
     debug: Option<bool>,
-}
-
-#[derive(Subcommand, Debug)]
-enum Commands {
-    /// debugger
-    Debug {},
-    Run(Run),
 }
 
 fn debug() -> Result<()> {
@@ -63,25 +67,48 @@ fn debug() -> Result<()> {
     Ok(())
 }
 
+fn dump(args: Dump) -> Result<()> {
+    let mut gb = Gameboy::new();
+    let rom = fs::read(args.rom).unwrap();
+    gb.load_rom(&rom);
+    loop {
+        let inst = gb.cpu().decode();
+        let result: Vec<String> = (1..inst.size)
+            .map(|i| format!("{:#02X}", gb.cpu().mem8(gb.cpu().pc() + i as u16)))
+            .collect();
+        println!(
+            "{:#02X}: {} ({:#02X}{}{})",
+            gb.cpu().pc(),
+            inst,
+            inst.opcode,
+            result.is_empty().then(|| "").unwrap_or(" "),
+            result.join(" ")
+        );
+        let next_pc = gb.cpu().pc() + inst.size as u16;
+        gb.cpu_mut().set_pc(next_pc);
+        if inst.size == 0 {
+            panic!();
+        }
+    }
+}
+
 fn run(args: Run) -> Result<()> {
     let mut gameboy = Gameboy::new();
-
     let rom = fs::read(args.rom).unwrap();
     gameboy.load_rom(&rom);
-
     loop {
         if args.debug.unwrap_or(false) {
-            println!("pc: {:#02X}", gameboy.cpu().pc());
-            println!("{}", gameboy.cpu().decode());
+            println!("{:#02X}: {}", gameboy.cpu().pc(), gameboy.cpu().decode());
         }
         gameboy.step();
     }
 }
+
 fn main() -> Result<()> {
     let args = Cli::parse();
-
     match args.command {
         Commands::Debug {} => debug(),
+        Commands::Dump(args) => dump(args),
         Commands::Run(args) => run(args),
     }
 }
