@@ -31,10 +31,6 @@ impl Gameboy {
         }
     }
 
-    pub fn set_debug(&mut self, enabled: bool) {
-        self.cpu.set_debug(enabled);
-    }
-
     pub fn load_rom(&mut self, rom: &Vec<u8>) {
         self.bus.load_cartridge(rom);
     }

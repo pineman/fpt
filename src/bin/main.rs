@@ -65,7 +65,6 @@ fn debug() -> Result<()> {
 
 fn run(args: Run) -> Result<()> {
     let mut gameboy = Gameboy::new();
-    gameboy.set_debug(args.debug.unwrap_or(false));
 
     let rom = fs::read(args.rom).unwrap();
     gameboy.load_rom(&rom);
@@ -73,6 +72,7 @@ fn run(args: Run) -> Result<()> {
     loop {
         if args.debug.unwrap_or(false) {
             println!("pc: {:#02X}", gameboy.cpu().pc());
+            println!("{}", gameboy.cpu().decode());
         }
         gameboy.step();
     }
