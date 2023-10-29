@@ -2,15 +2,15 @@
 
 ## Running
 
-`cargo run`
+`cargo run run <rom>`
 
 Running the disassembler:
 
-`cargo run --bin objdump`
+`cargo run dump <rom>`
 
 Running the debugger:
 
-`cargo run --bin debug`
+`cargo run debug`
 
 ## Testing
 
