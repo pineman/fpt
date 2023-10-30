@@ -317,9 +317,12 @@ impl DebuggerTextInterface<'_> {
 
     pub fn run(&mut self, cmd: String) {
         let value = self.lua.execute::<LuaValue>(&cmd);
-        println!("{}", match value {
-            Ok(value) => fmt_lua_value(&value),
-            Err(err) => err.to_string(),
-        });
+        println!(
+            "{}",
+            match value {
+                Ok(value) => fmt_lua_value(&value),
+                Err(err) => err.to_string(),
+            }
+        );
     }
 }
