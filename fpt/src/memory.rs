@@ -86,6 +86,10 @@ impl Memory {
     pub fn slice(&self, range: MemoryRange) -> &[u8] {
         &self.mem[range.start..range.end]
     }
+
+    pub fn slice_mut(&mut self, range: MemoryRange) -> &mut [u8] {
+        &mut self.mem[range.start..range.end]
+    }
 }
 
 #[derive(Clone, PartialEq)]
