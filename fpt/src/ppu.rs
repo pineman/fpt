@@ -77,7 +77,7 @@ impl Ppu {
         let tile_y = line % 8;
 
         let tile = self.tilemap.tiles[tile_data_address as usize];
-        println!("{:#02X?}", tile.pixels);
+        println!("{:#02X?}", tile.bytes);
 
         let pixel = tile.get_pixel(tile_y, tile_x);
 

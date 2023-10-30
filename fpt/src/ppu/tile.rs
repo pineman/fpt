@@ -1,18 +1,20 @@
 use std::fmt;
 
+/// Holds a 8x8 tile image as it appears in VRAM
+/// (2 bytes for each 8 pixel row)
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Tile {
-    pub pixels: [u8; 16],
+    pub bytes: [u8; 16],
 }
 
 impl Tile {
-    #[allow(unused)]
     pub fn load(data: &[u8; 16]) -> Tile {
-        Tile { pixels: *data }
+        Tile { bytes: *data }
     }
+
     pub fn get_pixel(&self, y: usize, x: usize) -> u8 {
-        let low_bit = (self.pixels[2 * y] >> (7 - x)) & 1;
-        let high_bit = (self.pixels[2 * y + 1] >> (7 - x)) & 1;
+        let low_bit = (self.bytes[2 * y] >> (7 - x)) & 1;
+        let high_bit = (self.bytes[2 * y + 1] >> (7 - x)) & 1;
 
         (high_bit << 1) + low_bit
     }
@@ -30,10 +32,12 @@ impl fmt::Debug for Tile {
     }
 }
 
+/// Represents the data that lives in VRAM:
+/// 3 * 128 tile blocks and two 32x32 tile maps
 pub struct TileMap {
+    pub tiles: [Tile; 384],
     pub tile_map0: [u8; 1024],
     pub tile_map1: [u8; 1024],
-    pub tiles: [Tile; 384],
 }
 
 impl TileMap {
@@ -41,7 +45,7 @@ impl TileMap {
         TileMap {
             tile_map0: [0; 1024],
             tile_map1: [0; 1024],
-            tiles: [Tile { pixels: [0; 16] }; 384],
+            tiles: [Tile { bytes: [0; 16] }; 384],
         }
     }
 
@@ -50,7 +54,7 @@ impl TileMap {
 
         for i in 0..384 {
             tilemap.tiles[i]
-                .pixels
+                .bytes
                 .clone_from_slice(&vram[(16 * i)..(16 * (i + 1))]);
         }
 
