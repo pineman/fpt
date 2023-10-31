@@ -5,24 +5,3 @@ members = [
     "fpt",
     "fpt-cli",
 ]
-## See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-#
-#[dependencies]
-#clap = { version = "4.4.6", features = ["derive"] }
-#hlua = { version = "0.4.1" }
-#rustyline = { version = "12"}
-#winit = "0.28.7"
-#pixels = "0.13.0"
-#zmq = "0.10"
-#
-#[dev-dependencies]
-#rstest = "0.18"
-#
-#[[bin]]
-#name = "main"
-#
-#[[bin]]
-#name = "objdump"
-#
-#[[bin]]
-#name = "gui"

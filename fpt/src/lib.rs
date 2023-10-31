@@ -26,7 +26,13 @@ impl Gameboy {
         Self {
             bus: bus.clone(),
             cpu: LR35902::new(bus.clone()),
-            ppu: Ppu::new(bus),
+            ppu: Ppu::new(bus, |socket: &zmq::Socket, frame: ppu::Frame| {
+                dbg!(frame);
+                let message = zmq::Message::from(frame.to_vec());
+                socket.send("frame", zmq::SNDMORE);
+                socket.send(message, 0);
+                println!("send frame");
+            }),
         }
     }
 
