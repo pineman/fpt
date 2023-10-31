@@ -2,8 +2,20 @@
 name = "fpt-cli"
 version = "0.1.0"
 edition = "2021"
+default-run = "main"
 
 [dependencies]
 clap = { version = "4.4.6", features = ["derive"] }
-rustyline = { version = "12"}
 fpt = { path = "../fpt" }
+rustyline = "12"
+zmq = "0.10"
+winit = "0.28.7"
+pixels = "0.13.0"
+
+[[bin]]
+name="gui"
+path = "src/gui.rs"
+
+[[bin]]
+name="main"
+path = "src/main.rs"

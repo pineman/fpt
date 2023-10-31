@@ -1,7 +1,5 @@
 #![feature(array_chunks)]
 
-use std::fs;
-
 use clap::Parser;
 
 use winit::{
@@ -11,7 +9,7 @@ use winit::{
     window::WindowBuilder,
 };
 
-use fpt::Gameboy;
+//use fpt::Gameboy;
 use pixels::{Pixels, SurfaceTexture};
 
 const GB_RESOLUTION: (u32, u32) = (160, 144);
@@ -34,12 +32,13 @@ struct Args {
 }
 
 fn main() -> Result<(), pixels::Error> {
-    let args = Args::parse();
-
+    //let args = Args::parse();
 
     let ctx = zmq::Context::new();
-    let socket = ctx.socket(zmq::REP).unwrap();
-    socket.bind("tcp://127.0.0.1:5000");
+    let socket = ctx.socket(zmq::SUB).unwrap();
+    socket.connect("tcp://127.0.0.1:5000").unwrap();
+    let topic = "frame".to_owned().into_bytes();
+    socket.set_subscribe(&topic).unwrap();
 
     let event_loop: EventLoop<()> = EventLoop::new();
     let window = WindowBuilder::new()
@@ -94,12 +93,12 @@ fn main() -> Result<(), pixels::Error> {
         }
         Event::MainEventsCleared => {
             println!("wait");
-            let mut message: zmq::Message = zmq::Message::new();
-            socket.recv(&mut message, 0);
+            let topic = socket.recv_msg(0).unwrap();
+            let data = socket.recv_msg(0).unwrap();
             println!("after");
-            dbg!(message.as_str());
+            let frame = dbg!(data.iter().copied().collect::<Vec<u8>>());
 
-            //draw(pixels.frame_mut(), the_frame);
+            draw(pixels.frame_mut(), &frame.try_into().unwrap());
 
             if let Err(err) = pixels.render() {
                 eprintln!("pixels.render() error! {err}");
