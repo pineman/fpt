@@ -1,24 +1,27 @@
 use std::fmt;
 
-use hlua::AnyHashableLuaValue as LuaValue;
-use hlua::Lua;
+//use hlua::AnyHashableLuaValue as LuaValue;
+//use hlua::Lua;
+
+use std::sync::{Arc, Mutex};
+//use std::cell::RefCell;
+
+use rlua::{Lua, Value};
 
 use crate::Gameboy;
-use std::cell::RefCell;
-use std::rc::Rc;
 
-fn fmt_lua_value(lua_value: &LuaValue) -> String {
-    match lua_value {
-        LuaValue::LuaString(s) => s.to_string(),
-        LuaValue::LuaNil => String::new(),
-        LuaValue::LuaNumber(i) => {
-            format!("{}", i)
-        }
-        _ => {
-            panic!();
-        }
-    }
-}
+//fn fmt_lua_value(lua_value: &Value) -> String {
+//    match lua_value {
+//        LuaValue::LuaString(s) => s.to_string(),
+//        LuaValue::LuaNil => String::new(),
+//        LuaValue::LuaNumber(i) => {
+//            format!("{}", i)
+//        }
+//        _ => {
+//            panic!();
+//        }
+//    }
+//}
 
 #[derive(Debug)]
 enum Breakpoint {
@@ -128,198 +131,209 @@ impl Debugger {
     //}
 }
 
-pub struct DebuggerTextInterface<'a> {
-    lua: Lua<'a>,
+pub struct DebuggerTextInterface {
+    lua: Lua,
 }
 
-impl DebuggerTextInterface<'_> {
+impl DebuggerTextInterface {
+    fn load_context(&mut self) {
+        self.lua.context(|lua_ctx| {
+            lua_ctx.create_function(|_, _: ()| {
+                Ok(())
+            })
+        });
+    }
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        let debugger = Debugger::new();
-        let mut lua = Lua::new();
+        //let debugger = Debugger::new();
+        //let dbg_pointer = Arc::new(Mutex::new(debugger));
+        //let d1 = dbg_pointer.clone();
+        let lua = Lua::new();
+        //let dbg_pointer = Rc::new(RefCell::new(debugger));
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "continue",
+        //    hlua::function0(move || -> LuaValue {
+        //        d1.borrow_mut().start();
+        //        LuaValue::LuaNil
+        //    }),
+        //);
 
-        let dbg_pointer = Rc::new(RefCell::new(debugger));
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "continue",
-            hlua::function0(move || -> LuaValue {
-                d1.borrow_mut().start();
-                LuaValue::LuaNil
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "next",
+        //    hlua::function0(move || -> LuaValue {
+        //        d1.borrow_mut().next();
+        //        LuaValue::LuaNil
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "next",
-            hlua::function0(move || -> LuaValue {
-                d1.borrow_mut().next();
-                LuaValue::LuaNil
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "breakpoints",
+        //    hlua::function0(move || -> LuaValue {
+        //        LuaValue::LuaString(d1.borrow_mut().list_breakpoints())
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "breakpoints",
-            hlua::function0(move || -> LuaValue {
-                LuaValue::LuaString(d1.borrow_mut().list_breakpoints())
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "break",
+        //    hlua::function1(move |pc: u16| -> LuaValue {
+        //        d1.borrow_mut().set_breakpoint(Breakpoint::OnPc(pc));
+        //        LuaValue::LuaString(format!("set breakpoint on pc: {}", pc))
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "break",
-            hlua::function1(move |pc: u16| -> LuaValue {
-                d1.borrow_mut().set_breakpoint(Breakpoint::OnPc(pc));
-                LuaValue::LuaString(format!("set breakpoint on pc: {}", pc))
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "break_on_opcode",
+        //    hlua::function1(move |opcode: u8| -> LuaValue {
+        //        d1.borrow_mut().set_breakpoint(Breakpoint::OnOpcode(opcode));
+        //        LuaValue::LuaString(format!("set breakpoint on opcode: {}", opcode))
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "break_on_opcode",
-            hlua::function1(move |opcode: u8| -> LuaValue {
-                d1.borrow_mut().set_breakpoint(Breakpoint::OnOpcode(opcode));
-                LuaValue::LuaString(format!("set breakpoint on opcode: {}", opcode))
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "break_on_cb",
+        //    hlua::function1(move |opcode: u8| -> LuaValue {
+        //        d1.borrow_mut().set_breakpoint(Breakpoint::OnCB(opcode));
+        //        LuaValue::LuaString(format!("set breakpoint on cb: {}", opcode))
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "break_on_cb",
-            hlua::function1(move |opcode: u8| -> LuaValue {
-                d1.borrow_mut().set_breakpoint(Breakpoint::OnCB(opcode));
-                LuaValue::LuaString(format!("set breakpoint on cb: {}", opcode))
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "pc",
+        //    hlua::function0(move || -> LuaValue {
+        //        LuaValue::LuaNumber(d1.borrow_mut().pc().into())
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "pc",
-            hlua::function0(move || -> LuaValue {
-                LuaValue::LuaNumber(d1.borrow_mut().pc().into())
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "af",
+        //    hlua::function0(move || -> LuaValue {
+        //        LuaValue::LuaNumber(d1.borrow_mut().gameboy.cpu().af().into())
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "af",
-            hlua::function0(move || -> LuaValue {
-                LuaValue::LuaNumber(d1.borrow_mut().gameboy.cpu().af().into())
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "bc",
+        //    hlua::function0(move || -> LuaValue {
+        //        LuaValue::LuaNumber(d1.borrow_mut().gameboy.cpu().bc().into())
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "bc",
-            hlua::function0(move || -> LuaValue {
-                LuaValue::LuaNumber(d1.borrow_mut().gameboy.cpu().bc().into())
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "de",
+        //    hlua::function0(move || -> LuaValue {
+        //        LuaValue::LuaNumber(d1.borrow_mut().gameboy.cpu().de().into())
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "de",
-            hlua::function0(move || -> LuaValue {
-                LuaValue::LuaNumber(d1.borrow_mut().gameboy.cpu().de().into())
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "hl",
+        //    hlua::function0(move || -> LuaValue {
+        //        LuaValue::LuaNumber(d1.borrow_mut().gameboy.cpu().hl().into())
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "hl",
-            hlua::function0(move || -> LuaValue {
-                LuaValue::LuaNumber(d1.borrow_mut().gameboy.cpu().hl().into())
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "sp",
+        //    hlua::function0(move || -> LuaValue {
+        //        LuaValue::LuaNumber(d1.borrow_mut().gameboy.cpu().sp().into())
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "sp",
-            hlua::function0(move || -> LuaValue {
-                LuaValue::LuaNumber(d1.borrow_mut().gameboy.cpu().sp().into())
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "mem",
+        //    hlua::function1(move |address: u16| -> LuaValue {
+        //        LuaValue::LuaNumber(d1.borrow_mut().gameboy.cpu().mem8(address).into())
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "mem",
-            hlua::function1(move |address: u16| -> LuaValue {
-                LuaValue::LuaNumber(d1.borrow_mut().gameboy.cpu().mem8(address).into())
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "next_cb",
+        //    hlua::function0(move || -> LuaValue {
+        //        LuaValue::LuaNumber(d1.borrow_mut().gameboy.cpu().next_cb().into())
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "next_cb",
-            hlua::function0(move || -> LuaValue {
-                LuaValue::LuaNumber(d1.borrow_mut().gameboy.cpu().next_cb().into())
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "clock_cycle",
+        //    hlua::function0(move || -> LuaValue {
+        //        LuaValue::LuaString(d1.borrow_mut().gameboy.cpu().clock_cycles().to_string())
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "clock_cycle",
-            hlua::function0(move || -> LuaValue {
-                LuaValue::LuaString(d1.borrow_mut().gameboy.cpu().clock_cycles().to_string())
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "load_rom",
+        //    hlua::function1(move |filename: String| -> LuaValue {
+        //        let rom = std::fs::read(filename).unwrap();
+        //        d1.borrow_mut().gameboy.load_rom(&rom);
+        //        LuaValue::LuaNil
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "load_rom",
-            hlua::function1(move |filename: String| -> LuaValue {
-                let rom = std::fs::read(filename).unwrap();
-                d1.borrow_mut().gameboy.load_rom(&rom);
-                LuaValue::LuaNil
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "mem_dump",
+        //    hlua::function0(move || -> LuaValue {
+        //        LuaValue::LuaString(
+        //            (0..0xFFFF)
+        //                .map(|i| {
+        //                    format!("{:#02X} {:#02X}", i, d1.borrow_mut().gameboy.cpu().mem8(i))
+        //                })
+        //                .intersperse("\n".to_string())
+        //                .collect::<String>(),
+        //        )
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "mem_dump",
-            hlua::function0(move || -> LuaValue {
-                LuaValue::LuaString(
-                    (0..0xFFFF)
-                        .map(|i| {
-                            format!("{:#02X} {:#02X}", i, d1.borrow_mut().gameboy.cpu().mem8(i))
-                        })
-                        .intersperse("\n".to_string())
-                        .collect::<String>(),
-                )
-            }),
-        );
+        //let d1 = dbg_pointer.clone();
+        //lua.set(
+        //    "mem_dump_ranged",
+        //    hlua::function2(move |start: u16, end: u16| -> LuaValue {
+        //        LuaValue::LuaString(
+        //            (start..end)
+        //                .map(|i| {
+        //                    format!("{:#02X} {:#02X}", i, d1.borrow_mut().gameboy.cpu().mem8(i))
+        //                })
+        //                .intersperse("\n".to_string())
+        //                .collect::<String>(),
+        //        )
+        //    }),
+        //);
 
-        let d1 = dbg_pointer.clone();
-        lua.set(
-            "mem_dump_ranged",
-            hlua::function2(move |start: u16, end: u16| -> LuaValue {
-                LuaValue::LuaString(
-                    (start..end)
-                        .map(|i| {
-                            format!("{:#02X} {:#02X}", i, d1.borrow_mut().gameboy.cpu().mem8(i))
-                        })
-                        .intersperse("\n".to_string())
-                        .collect::<String>(),
-                )
-            }),
-        );
-
-        lua.set(
-            "print",
-            hlua::function1(move |s: String| -> LuaValue {
-                println!("{}", s);
-                LuaValue::LuaNil
-            }),
-        );
+        //lua.set(
+        //    "print",
+        //    hlua::function1(move |s: String| -> LuaValue {
+        //        println!("{}", s);
+        //        LuaValue::LuaNil
+        //    }),
+        //);
 
         Self { lua }
     }
 
     pub fn run(&mut self, cmd: String) {
-        let value = self.lua.execute::<LuaValue>(&cmd);
-        println!("{}", match value {
-            Ok(value) => fmt_lua_value(&value),
-            Err(err) => err.to_string(),
+        self.lua.context(|lua_ctx| {
+            lua_ctx.load(&cmd).eval::<Value>().unwrap();
         });
+        //let value = self.lua.execute::<LuaValue>(&cmd);
+        //println!("{}", match value {
+        //    Ok(value) => fmt_lua_value(&value),
+        //    Err(err) => err.to_string(),
+        //});
     }
 }

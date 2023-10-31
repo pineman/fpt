@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-hlua = { version = "0.4.1" }
+hlua = "0.4.1"
+rlua = "0.19"
 
 [dev-dependencies]
 rstest = "0.18"

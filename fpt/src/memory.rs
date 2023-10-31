@@ -1,6 +1,5 @@
 use std::cell::{RefCell, RefMut};
 use std::ops::Range;
-use std::rc::Rc;
 
 pub type Address = usize;
 pub type MachineAddress = u16;
@@ -89,12 +88,12 @@ impl Memory {
 }
 
 #[derive(Clone, PartialEq)]
-pub struct Bus(Rc<RefCell<Memory>>);
+pub struct Bus(RefCell<Memory>);
 
 impl Bus {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        Bus(Rc::new(RefCell::new(Memory::new())))
+        Bus(RefCell::new(Memory::new()))
     }
 
     pub fn memory(&self) -> RefMut<Memory> {
