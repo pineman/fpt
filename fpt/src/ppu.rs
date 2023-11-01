@@ -83,8 +83,6 @@ impl Ppu {
 
         println!("{:?}", tile);
 
-        //assert!(pixel == 0);
-
         self.frame[address] = pixel;
     }
 
