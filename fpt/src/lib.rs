@@ -1,6 +1,7 @@
 #![feature(bigint_helper_methods)]
 #![feature(exclusive_range_pattern)]
 #![feature(iter_intersperse)]
+#![feature(array_chunks)]
 
 mod bitwise;
 pub mod debugger;

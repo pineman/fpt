@@ -8,6 +8,7 @@ pub struct Tile {
 }
 
 impl Tile {
+    #[allow(unused)]
     pub fn load(data: &[u8; 16]) -> Tile {
         Tile { bytes: *data }
     }
@@ -89,16 +90,14 @@ mod tests {
 
         assert_eq!(
             formatted,
-            vec![
-                "02333320",
+            ["02333320",
                 "03000030",
                 "03000030",
                 "03000030",
                 "03133330",
                 "01113130",
                 "03131320",
-                "02333200\n"
-            ].join("\n")
+                "02333200\n"].join("\n")
         )
     }
 
