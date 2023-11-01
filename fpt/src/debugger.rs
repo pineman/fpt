@@ -139,6 +139,7 @@ impl DebuggerTextInterface<'_> {
     pub fn new() -> Self {
         let debugger = Debugger::new();
         let mut lua = Lua::new();
+        lua.openlibs();
 
         let dbg_pointer = Rc::new(RefCell::new(debugger));
         let d1 = dbg_pointer.clone();
@@ -335,14 +336,6 @@ impl DebuggerTextInterface<'_> {
 
                 // Report success
                 LuaValue::LuaString(format!("Screenshot written to {filename}\n"))
-            }),
-        );
-
-        lua.set(
-            "print",
-            hlua::function1(move |s: String| -> LuaValue {
-                println!("{}", s);
-                LuaValue::LuaNil
             }),
         );
 
