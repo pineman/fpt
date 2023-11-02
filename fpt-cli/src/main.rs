@@ -45,9 +45,8 @@ fn debug() -> Result<()> {
         let readline = rl.readline(">> ");
         match readline {
             Ok(line) => {
-                let cmd = String::from("return ") + &line;
                 rl.add_history_entry(&line)?;
-                debugger_interface.run(cmd);
+                debugger_interface.run(line);
             }
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");

@@ -7,19 +7,34 @@ use crate::Gameboy;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-pub mod utilities;
+mod utilities;
 
-fn fmt_lua_value(lua_value: &LuaValue) -> String {
-    match lua_value {
-        LuaValue::LuaString(s) => s.to_string(),
-        LuaValue::LuaNil => String::new(),
-        LuaValue::LuaNumber(i) => {
-            format!("{}", i)
+const ALIASES: [(&str, &str); 5] = [
+    ("b", "_G['break']"),
+    ("break", "_G['break']"),
+    ("c", "continue"),
+    ("load", "load_rom"),
+    ("n", "next"),
+];
+
+fn alias_expand(cmd: String) -> String {
+    ALIASES.iter().fold(cmd, |cmd, (name, value)| {
+        let name_with_space = name.to_string() + " ";
+        let name_with_paren = name.to_string() + "(";
+        let value_with_paren = value.to_string() + "(";
+
+        if cmd.starts_with(&name_with_space) {
+            if !cmd.starts_with(&(name_with_space.clone() + "'")) {
+                cmd.replacen(&name_with_space, &(value_with_paren.clone() + "'"), 1) + "')"
+            } else {
+                cmd.replacen(&name_with_space, &value_with_paren, 1) + ")"
+            }
+        } else if cmd.starts_with(&name_with_paren) {
+            cmd.replace(&name_with_paren, &value_with_paren)
+        } else {
+            cmd
         }
-        _ => {
-            panic!();
-        }
-    }
+    })
 }
 
 #[derive(Debug)]
@@ -120,14 +135,6 @@ impl Debugger {
     fn pc(&mut self) -> u16 {
         self.gameboy.cpu().pc()
     }
-
-    //fn step(&mut self, cmd: String) {
-    //    let result = self.lua.execute::<LuaValue>(&cmd);
-    //    println!(
-    //        "{}",
-    //        fmt_lua_value(result.as_ref().expect("Failed to run function"))
-    //    );
-    //}
 }
 
 pub struct DebuggerTextInterface<'a> {
@@ -326,13 +333,15 @@ impl DebuggerTextInterface<'_> {
     }
 
     pub fn run(&mut self, cmd: String) {
-        let value = self.lua.execute::<LuaValue>(&cmd);
-        println!(
-            "{}",
-            match value {
-                Ok(value) => fmt_lua_value(&value),
-                Err(err) => err.to_string(),
-            }
-        );
+        let expanded_cmd = alias_expand(cmd.clone());
+        let expanded_cmd = format!("print({expanded_cmd})");
+        eprintln!("[VERBOSE]    input command: {}", &cmd);
+        eprintln!("[VERBOSE] expanded command: {}", &expanded_cmd);
+
+        let result = self.lua.execute::<LuaValue>(&expanded_cmd);
+
+        if let Err(err) = result {
+            eprintln!("{}", err);
+        }
     }
 }
