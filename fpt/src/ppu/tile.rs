@@ -41,15 +41,17 @@ pub struct TileMap {
     pub tile_map1: [u8; 1024],
 }
 
-impl TileMap {
-    pub fn default() -> TileMap {
+impl Default for TileMap {
+    fn default() -> TileMap {
         TileMap {
             tile_map0: [0; 1024],
             tile_map1: [0; 1024],
             tiles: [Tile { bytes: [0; 16] }; 384],
         }
     }
+}
 
+impl TileMap {
     pub fn load(vram: &[u8]) -> TileMap {
         let mut tilemap = TileMap::default();
 
