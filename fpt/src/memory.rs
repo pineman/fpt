@@ -161,7 +161,7 @@ impl Bus {
     }
 
     pub fn stat(&self) -> u8 {
-        self._read(map::LCDC)
+        self._read(map::STAT)
     }
 
     pub fn set_stat(&mut self, value: u8) {
