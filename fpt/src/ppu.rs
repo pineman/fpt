@@ -1,7 +1,9 @@
 use crate::memory::Bus;
+use crate::ppu::Mode::{HBlank, OamScan, PixelTransfer, VBlank};
+use std::fmt::{Display, Formatter};
 use tile::TileMap;
 
-mod tile;
+pub mod tile;
 
 const WIDTH: usize = 160;
 const HEIGHT: usize = 144;
@@ -20,15 +22,38 @@ pub struct Ppu {
 
 #[repr(u8)]
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
-enum Mode {
+pub enum Mode {
     HBlank = 0,
     VBlank = 1,
     OamScan = 2,
     PixelTransfer = 3,
 }
 
+impl Display for Mode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Mode {} ({:#?})", *self as u8, self)
+    }
+}
+
+impl From<u8> for Mode {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => HBlank,
+            1 => VBlank,
+            2 => OamScan,
+            3 => PixelTransfer,
+            n => panic!("Tried to convert {n} to a ppu::Mode (valid values are 0, 1, 2 and 3)"),
+        }
+    }
+}
+
+const DOTS_IN_ONE_FRAME: u32 = 70224;
+
 impl Ppu {
-    pub fn new(bus: Bus) -> Self {
+    pub fn new(mut bus: Bus) -> Self {
+        // Make STAT's MODE bits consistent with the PPU's initial mode
+        bus.set_stat(bus.stat() & 0b11111100 | Mode::OamScan as u8);
+
         Ppu {
             bus,
             frame: [0b00; WIDTH * HEIGHT],
@@ -39,31 +64,30 @@ impl Ppu {
         }
     }
 
-    pub fn step(&mut self, cycles: u8) {
+    pub fn step(&mut self, cycles: u32) {
         for _ in 0..cycles {
             self.dot();
         }
     }
 
     fn oam_scan(&mut self) {
-        if self.dots_this_frame % 456 == 80 {
+        if self.dots_this_frame % 456 == 79 {
             self.tilemap = TileMap::load(&self.bus.vram());
-            self.mode = dbg!(Mode::PixelTransfer);
-            dbg!(self.dots_this_frame);
+            self.mode = Mode::PixelTransfer;
         }
     }
 
+    #[allow(clippy::format_collect)]
     fn pixel_transfer(&mut self) {
-        if self.dots_this_frame % 456 == 239 {
-            self.mode = dbg!(Mode::HBlank);
-            dbg!(self.dots_this_frame);
+        if self.dots_this_frame % 456 == 238 {
+            self.mode = Mode::HBlank;
             return;
         }
 
         let current_pixel = ((self.dots_this_frame % 456) - 80) as usize; // TODO I'm pretending the PPU never stalls
         let address = WIDTH * self.bus.ly() as usize + current_pixel;
         if address >= WIDTH * HEIGHT {
-            self.bus.ly();
+            dbg!(self.bus.ly());
         }
 
         let column = address % WIDTH;
@@ -77,29 +101,22 @@ impl Ppu {
         let tile_y = line % 8;
 
         let tile = self.tilemap.tiles[tile_data_address as usize];
-        println!("{:#02X?}", tile.bytes);
-
         let pixel = tile.get_pixel(tile_y, tile_x);
-
-        println!("{:?}", tile);
 
         self.frame[address] = pixel;
     }
 
     fn h_blank(&mut self) {
-        if self.bus.ly() >= HEIGHT as u8 {
-            self.mode = dbg!(Mode::VBlank);
-            dbg!(self.dots_this_frame);
-        } else if self.dots_this_frame % 456 == 0 {
-            self.mode = dbg!(Mode::OamScan);
-            dbg!(self.dots_this_frame);
+        if self.dots_this_frame >= (456 * HEIGHT - 1) as u32 {
+            self.mode = Mode::VBlank;
+        } else if self.dots_this_frame % 456 == 455 {
+            self.mode = Mode::OamScan;
         }
     }
 
     fn v_blank(&mut self) {
-        if self.dots_this_frame == 0 {
-            self.mode = dbg!(Mode::OamScan);
-            dbg!(self.dots_this_frame);
+        if self.dots_this_frame == DOTS_IN_ONE_FRAME - 1 {
+            self.mode = Mode::OamScan;
         }
     }
 
@@ -148,7 +165,7 @@ impl Ppu {
         // TODO actually draw some actual background, window and sprites
 
         // Advance one "dot"
-        self.dots_this_frame = (self.dots_this_frame + 1) % 70224;
+        self.dots_this_frame = (self.dots_this_frame + 1) % DOTS_IN_ONE_FRAME;
         if self.dots_this_frame == 0 {
             self.counter += 1;
         }
@@ -156,5 +173,27 @@ impl Ppu {
 
     pub fn get_frame(&self) -> &Frame {
         &self.frame
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Gameboy;
+
+    #[test]
+    fn test_ppu_modes() {
+        let mut gb: Gameboy = Gameboy::new();
+        assert_eq!(gb.ppu.mode, Mode::OamScan);
+        gb.ppu.step(80);
+        assert_eq!(gb.ppu.mode, Mode::PixelTransfer);
+        gb.ppu.step(300);
+        assert_eq!(gb.ppu.mode, Mode::HBlank);
+        gb.ppu.step(76);
+        assert_eq!(gb.ppu.mode, Mode::OamScan);
+        gb.ppu.step(65208);
+        assert_eq!(gb.ppu.mode, Mode::VBlank);
+        gb.ppu.step(4560);
+        assert_eq!(gb.ppu.mode, Mode::OamScan);
     }
 }
