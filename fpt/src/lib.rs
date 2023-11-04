@@ -42,8 +42,8 @@ impl Gameboy {
         &mut self.cpu
     }
 
-    pub fn step(&mut self) -> u8 {
-        let cycles = self.cpu.step();
+    pub fn step(&mut self) -> u32 {
+        let cycles = self.cpu.step() as u32;
         self.ppu.step(cycles);
         cycles
     }
