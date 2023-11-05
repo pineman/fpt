@@ -5,9 +5,9 @@ use hlua::Lua;
 
 use crate::Gameboy;
 use std::cell::RefCell;
-use std::fs::File;
-use std::io::Write;
 use std::rc::Rc;
+
+mod utilities;
 
 fn fmt_lua_value(lua_value: &LuaValue) -> String {
     match lua_value {
@@ -311,31 +311,14 @@ impl DebuggerTextInterface<'_> {
         lua.set(
             "screenshot",
             hlua::function1(move |filename: String| -> LuaValue {
-                // Assumes the user wants a .pgm file
-                let mut file = File::create(&filename)
-                    .unwrap_or_else(|_| panic!("Couldn't open file \"{filename}\""));
-
-                // Write the header for a 160x144 PGM image with 4 shades of gray
-                write!(file, "P2\n# Game Boy screenshot: {filename}\n160 140\n3\n")
-                    .expect("Couldn't write PGM header");
-
-                // Our Game Boy's framebuffer seems to have a direct correspondence to this!
-                let d1 = d1.borrow_mut();
-                let frame = d1.gameboy.get_frame();
-
-                for line in frame.array_chunks::<160>() {
-                    let pgm_line = line
-                        .iter()
-                        .map(|p| (b'3' - *p) as char) // ASCII from '0' to '3'
-                        .intersperse(' ')
-                        .collect::<String>()
-                        + "\n";
-                    file.write_all(pgm_line.as_bytes())
-                        .expect("Couldn't write PGM line");
+                let d = d1.borrow();
+                let frame = d.gameboy.get_frame();
+                match utilities::write_pgm_screenshot(frame, &filename) {
+                    Ok(_) => LuaValue::LuaString(format!("Screenshot written to {filename}\n")),
+                    Err(e) => LuaValue::LuaString(format!(
+                        "Failed to write screenshot to {filename}:\n{e:#}"
+                    )),
                 }
-
-                // Report success
-                LuaValue::LuaString(format!("Screenshot written to {filename}\n"))
             }),
         );
 
