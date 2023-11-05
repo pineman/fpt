@@ -35,28 +35,31 @@ impl fmt::Debug for Tile {
 
 /// Represents the data that lives in VRAM:
 /// 3 * 128 tile blocks and two 32x32 tile maps
-pub struct TileMap {
-    pub tiles: [Tile; 384],
+pub struct VRamContents {
+    /// Three blocks of 128 tiles shared by the BG/Win tiles and OBJ tiles
+    pub tile_data: [Tile; 384],
+    /// The first 32x32 tile map, accessed when either LCDC.3 or LCDC.6 are 0
     pub tile_map0: [u8; 1024],
+    /// The second 32x32 tile map, accessed when either LCDC.3 or LCDC.6 are 1
     pub tile_map1: [u8; 1024],
 }
 
-impl Default for TileMap {
-    fn default() -> TileMap {
-        TileMap {
+impl Default for VRamContents {
+    fn default() -> VRamContents {
+        VRamContents {
             tile_map0: [0; 1024],
             tile_map1: [0; 1024],
-            tiles: [Tile { bytes: [0; 16] }; 384],
+            tile_data: [Tile { bytes: [0; 16] }; 384],
         }
     }
 }
 
-impl TileMap {
-    pub fn load(vram: &[u8]) -> TileMap {
-        let mut tilemap = TileMap::default();
+impl VRamContents {
+    pub fn load(vram: &[u8]) -> VRamContents {
+        let mut tilemap = VRamContents::default();
 
         for i in 0..384 {
-            tilemap.tiles[i]
+            tilemap.tile_data[i]
                 .bytes
                 .clone_from_slice(&vram[(16 * i)..(16 * (i + 1))]);
         }
@@ -117,8 +120,11 @@ mod tests {
             .clone_from_slice(&THE_TILE[..]);
 
         // Parse the VRAM with our structs
-        let tm: TileMap = TileMap::load(gb.bus.memory().slice(VRAM));
+        let tm: VRamContents = VRamContents::load(gb.bus.memory().slice(VRAM));
 
-        assert_eq!(tm.tiles[tm.tile_map0[0] as usize], Tile::load(&THE_TILE));
+        assert_eq!(
+            tm.tile_data[tm.tile_map0[0] as usize],
+            Tile::load(&THE_TILE)
+        );
     }
 }
