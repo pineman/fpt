@@ -3,7 +3,7 @@ use std::ops::Range;
 use std::rc::Rc;
 
 pub type Address = usize;
-pub type MachineAddress = u16;
+pub type GBAddress = u16;
 pub type MemoryRange = Range<Address>;
 
 /// You can access these consts like this:
@@ -35,7 +35,7 @@ pub mod map {
     pub const OAM: MemoryRange = 0xFE00..0xFEA0;
 
     /// Port/Mode Registers, Control Registers, Sound Registers
-    pub const MANY_REGISTERS: MemoryRange = 0xFF00..0xFF80;
+    pub const IO_REGISTERS: MemoryRange = 0xFF00..0xFF80;
 
     pub const LCDC: Address = 0xFF40;
     pub const STAT: Address = 0xFF41;
@@ -119,11 +119,11 @@ impl Bus {
         self.clone_from_slice(0x100..0x8000, &cartridge[0x100..cartridge.len()]);
     }
 
-    pub fn read(&self, address: MachineAddress) -> u8 {
+    pub fn read(&self, address: GBAddress) -> u8 {
         self.memory().mem[address as Address]
     }
 
-    pub fn write(&mut self, address: MachineAddress, value: u8) {
+    pub fn write(&mut self, address: GBAddress, value: u8) {
         self.memory().mem[address as Address] = value;
     }
 
