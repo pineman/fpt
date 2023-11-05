@@ -74,19 +74,23 @@ mod tests {
     use crate::memory::map::VRAM;
     use crate::Gameboy;
 
+    // Looks like a game boy
+    #[rustfmt::skip]
+    const THE_TILE: [u8; 16] = [
+        0x3c, 0x7e,
+        0x42, 0x42,
+        0x42, 0x42,
+        0x42, 0x42,
+        0x7e, 0x5e,
+        0x7e, 0x0a,
+        0x7c, 0x56,
+        0x38, 0x7c,
+    ];
+
     #[test]
     #[rustfmt::skip]
     fn test_pixel_render() {
-        let tile = Tile::load(&[
-            0x3c, 0x7e,
-            0x42, 0x42,
-            0x42, 0x42,
-            0x42, 0x42,
-            0x7e, 0x5e,
-            0x7e, 0x0a,
-            0x7c, 0x56,
-            0x38, 0x7c,
-        ]);
+        let tile = Tile::load(&THE_TILE);
 
         let formatted = format!("{:?}", tile);
 
@@ -105,22 +109,16 @@ mod tests {
 
     #[test]
     fn test_one_tile_to_vram() {
-        // A 8x8 Game Boy icon tile
-        let one_tile: [u8; 16] = [
-            0x3c, 0x7e, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x7e, 0x5e, 0x7e, 0x0a, 0x7c, 0x56,
-            0x38, 0x7c,
-        ];
-
         // Set up the Game Boy
         let gb: Gameboy = Gameboy::new();
         gb.bus
             .memory()
             .slice_mut(VRAM.start..VRAM.start + 16)
-            .clone_from_slice(&one_tile[..]);
+            .clone_from_slice(&THE_TILE[..]);
 
         // Parse the VRAM with our structs
         let tm: TileMap = TileMap::load(gb.bus.memory().slice(VRAM));
 
-        assert_eq!(tm.tiles[tm.tile_map0[0] as usize], Tile::load(&one_tile));
+        assert_eq!(tm.tiles[tm.tile_map0[0] as usize], Tile::load(&THE_TILE));
     }
 }
