@@ -1,7 +1,7 @@
 use crate::memory::Bus;
 use crate::ppu::Mode::{HBlank, OamScan, PixelTransfer, VBlank};
 use std::fmt::{Display, Formatter};
-use tile::TileMap;
+use tile::VRamContents;
 
 pub mod tile;
 
@@ -17,7 +17,7 @@ pub struct Ppu {
     dots_this_frame: u32,
     counter: u32,
     mode: Mode,
-    tilemap: TileMap,
+    tilemap: VRamContents,
 }
 
 #[repr(u8)]
@@ -60,7 +60,7 @@ impl Ppu {
             dots_this_frame: 0,
             counter: 0,
             mode: Mode::OamScan,
-            tilemap: TileMap::default(),
+            tilemap: VRamContents::default(),
         }
     }
 
@@ -72,7 +72,7 @@ impl Ppu {
 
     fn oam_scan(&mut self) {
         if self.dots_this_frame % 456 == 79 {
-            self.tilemap = TileMap::load(&self.bus.vram());
+            self.tilemap = VRamContents::load(&self.bus.vram());
             self.mode = Mode::PixelTransfer;
         }
     }
@@ -100,7 +100,7 @@ impl Ppu {
         let tile_x = column % 8;
         let tile_y = line % 8;
 
-        let tile = self.tilemap.tiles[tile_data_address as usize];
+        let tile = self.tilemap.tile_data[tile_data_address as usize];
         let pixel = tile.get_pixel(tile_y, tile_x);
 
         self.frame[address] = pixel;
