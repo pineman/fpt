@@ -112,7 +112,6 @@ mod tests {
 
     #[test]
     fn test_one_tile_to_vram() {
-        // Set up the Game Boy
         let gb: Gameboy = Gameboy::new();
         gb.bus
             .memory()
@@ -126,5 +125,24 @@ mod tests {
             tm.tile_data[tm.tile_map0[0] as usize],
             Tile::load(&THE_TILE)
         );
+    }
+
+    #[test]
+    fn test_photograph_ppu_frame_rendering_progress() {
+        let mut gb: Gameboy = Gameboy::new();
+        gb.bus
+            .memory()
+            .slice_mut(VRAM.start..VRAM.start + 16)
+            .clone_from_slice(&THE_TILE[..]);
+
+        std::fs::create_dir_all("screenshots").unwrap();
+        for ly in 0..154 {
+            crate::debugger::utilities::write_pgm_screenshot(
+                gb.get_frame(),
+                &format!("screenshots/test_one_tile_to_vram-ly_{ly:05}.pgm"),
+            )
+            .unwrap();
+            gb.ppu.step(1); // 456
+        }
     }
 }

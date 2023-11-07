@@ -1,5 +1,4 @@
 use crate::memory::Bus;
-use crate::ppu::Mode::{HBlank, OamScan, PixelTransfer, VBlank};
 use std::fmt::{Display, Formatter};
 use tile::VRamContents;
 
@@ -38,10 +37,10 @@ impl Display for Mode {
 impl From<u8> for Mode {
     fn from(value: u8) -> Self {
         match value {
-            0 => HBlank,
-            1 => VBlank,
-            2 => OamScan,
-            3 => PixelTransfer,
+            0 => Mode::HBlank,
+            1 => Mode::VBlank,
+            2 => Mode::OamScan,
+            3 => Mode::PixelTransfer,
             n => panic!("Tried to convert {n} to a ppu::Mode (valid values are 0, 1, 2 and 3)"),
         }
     }

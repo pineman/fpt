@@ -7,7 +7,7 @@ use crate::Gameboy;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-mod utilities;
+pub mod utilities;
 
 fn fmt_lua_value(lua_value: &LuaValue) -> String {
     match lua_value {
