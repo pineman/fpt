@@ -142,7 +142,7 @@ mod tests {
                 &format!("screenshots/test_one_tile_to_vram-ly_{ly:05}.pgm"),
             )
             .unwrap();
-            gb.ppu.step(1); // 456
+            gb.ppu.step(456);
         }
     }
 }
