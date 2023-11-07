@@ -1,7 +1,5 @@
 #![feature(array_chunks)]
 
-use clap::Parser;
-
 use winit::{
     dpi::LogicalSize,
     event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
@@ -9,7 +7,6 @@ use winit::{
     window::WindowBuilder,
 };
 
-//use fpt::Gameboy;
 use pixels::{Pixels, SurfaceTexture};
 
 const GB_RESOLUTION: (u32, u32) = (160, 144);
@@ -21,19 +18,7 @@ const PALETTE: [[u8; 4]; 4] = [
     [160, 207, 10, 255],
 ];
 
-const FRAME_IN_M_CYCLES: u32 = 17556;
-
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    /// Flag to active debug output
-    #[arg(short, long)]
-    debug: bool,
-}
-
 fn main() -> Result<(), pixels::Error> {
-    //let args = Args::parse();
-
     let ctx = zmq::Context::new();
     let socket = ctx.socket(zmq::SUB).unwrap();
     socket.connect("tcp://127.0.0.1:5000").unwrap();
@@ -57,57 +42,55 @@ fn main() -> Result<(), pixels::Error> {
         Pixels::new(GB_RESOLUTION.0, GB_RESOLUTION.1, surface_texture)?
     };
 
-    event_loop.run(move |event, _, control_flow| match event {
-        Event::WindowEvent {
-            event:
-                ref e @ (WindowEvent::CloseRequested
-                | WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(VirtualKeyCode::Escape),
-                            ..
-                        },
-                    ..
-                }),
-            ..
-        } => {
-            println!(
-                "{reason}; stopping",
-                reason = match e {
-                    WindowEvent::CloseRequested => "The close button was pressed",
-                    WindowEvent::KeyboardInput { .. } => "The ESC key was pressed",
-                    _ => "whatever",
+    event_loop.run(move |event, _, control_flow| {
+        match event {
+            Event::WindowEvent {
+                event:
+                    ref e @ (WindowEvent::CloseRequested
+                    | WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                virtual_keycode: Some(VirtualKeyCode::Escape),
+                                ..
+                            },
+                        ..
+                    }),
+                ..
+            } => {
+                println!(
+                    "{reason}; stopping",
+                    reason = match e {
+                        WindowEvent::CloseRequested => "The close button was pressed",
+                        WindowEvent::KeyboardInput { .. } => "The ESC key was pressed",
+                        _ => "whatever",
+                    }
+                );
+                control_flow.set_exit();
+            }
+            Event::WindowEvent {
+                event: WindowEvent::Resized(size),
+                ..
+            } => {
+                if let Err(err) = pixels.resize_surface(size.width, size.height) {
+                    eprintln!("pixels.resize_surface() error! {err}");
+                    control_flow.set_exit_with_code(1);
+                    return;
                 }
-            );
-            control_flow.set_exit();
-        }
-        Event::WindowEvent {
-            event: WindowEvent::Resized(size),
-            ..
-        } => {
-            if let Err(err) = pixels.resize_surface(size.width, size.height) {
-                eprintln!("pixels.resize_surface() error! {err}");
-                control_flow.set_exit_with_code(1);
-                return;
             }
-        }
-        Event::MainEventsCleared => {
-            println!("wait");
-            let topic = socket.recv_msg(0).unwrap();
-            let data = socket.recv_msg(0).unwrap();
-            println!("after");
-            let frame = dbg!(data.iter().copied().collect::<Vec<u8>>());
+            Event::MainEventsCleared => {
+                let _topic = socket.recv_msg(0).unwrap();
+                let data = socket.recv_msg(0).unwrap();
+                let frame = data.iter().copied().collect::<Vec<u8>>();
+                draw(pixels.frame_mut(), &frame.try_into().unwrap());
 
-            draw(pixels.frame_mut(), &frame.try_into().unwrap());
-
-            if let Err(err) = pixels.render() {
-                eprintln!("pixels.render() error! {err}");
-                control_flow.set_exit_with_code(2);
-                return;
+                if let Err(err) = pixels.render() {
+                    eprintln!("pixels.render() error! {err}");
+                    control_flow.set_exit_with_code(2);
+                    return;
+                }
             }
-            // window.request_redraw();
+            _ => (),
         }
-        _ => (),
     });
 }
 

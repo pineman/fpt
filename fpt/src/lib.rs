@@ -11,7 +11,7 @@ pub mod ppu;
 
 use lr35902::LR35902;
 use memory::Bus;
-use ppu::Ppu;
+use ppu::{Ppu, Frame};
 
 pub struct Gameboy {
     bus: Bus,
@@ -22,17 +22,30 @@ pub struct Gameboy {
 impl Gameboy {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
+        Self::new_with_hook(Box::new(|_frame: ppu::Frame| {}))
+    }
+
+    pub fn new_with_zmq() -> Self {
+        let ctx = zmq::Context::new();
+        let socket = ctx.socket(zmq::PUB).unwrap();
+        socket.bind("tcp://127.0.0.1:5000").unwrap();
+
+        Self::new_with_hook(Box::new(move |frame: ppu::Frame| {
+            let message = zmq::Message::from(frame.to_vec());
+            socket.send("frame", zmq::SNDMORE).unwrap();
+            socket.send(message, 0).unwrap();
+        }))
+    }
+
+    fn new_with_hook(frame_hook: Box<dyn Fn(Frame)->()>) -> Self {
         let bus = Bus::new();
         Self {
             bus: bus.clone(),
             cpu: LR35902::new(bus.clone()),
-            ppu: Ppu::new(bus, |socket: &zmq::Socket, frame: ppu::Frame| {
-                dbg!(frame);
-                let message = zmq::Message::from(frame.to_vec());
-                socket.send("frame", zmq::SNDMORE);
-                socket.send(message, 0);
-                println!("send frame");
-            }),
+            ppu: Ppu::new(
+                bus,
+                frame_hook,
+            ),
         }
     }
 
