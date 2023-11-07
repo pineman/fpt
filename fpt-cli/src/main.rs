@@ -93,7 +93,7 @@ fn dump(args: Dump) -> Result<()> {
 }
 
 fn run(args: Run) -> Result<()> {
-    let mut gameboy = Gameboy::new();
+    let mut gameboy = Gameboy::new_with_zmq();
     let rom = fs::read(args.rom).unwrap();
     gameboy.load_rom(&rom);
     loop {
