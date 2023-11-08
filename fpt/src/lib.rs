@@ -11,7 +11,7 @@ pub mod ppu;
 
 use lr35902::LR35902;
 use memory::Bus;
-use ppu::{Ppu, Frame};
+use ppu::{Frame, Ppu};
 
 pub struct Gameboy {
     bus: Bus,
@@ -37,15 +37,12 @@ impl Gameboy {
         }))
     }
 
-    fn new_with_hook(frame_hook: Box<dyn Fn(Frame)->()>) -> Self {
+    fn new_with_hook(frame_hook: Box<dyn Fn(Frame)>) -> Self {
         let bus = Bus::new();
         Self {
             bus: bus.clone(),
             cpu: LR35902::new(bus.clone()),
-            ppu: Ppu::new(
-                bus,
-                frame_hook,
-            ),
+            ppu: Ppu::new(bus, frame_hook),
         }
     }
 

@@ -17,7 +17,7 @@ pub struct Ppu {
     counter: u32,
     mode: Mode,
     tilemap: VRamContents,
-    draw_frame: Box<dyn Fn(Frame) -> ()>,
+    draw_frame: Box<dyn Fn(Frame)>,
 }
 
 #[repr(u8)]
@@ -50,7 +50,7 @@ impl From<u8> for Mode {
 const DOTS_IN_ONE_FRAME: u32 = 70224;
 
 impl Ppu {
-    pub fn new(mut bus: Bus, draw_frame: Box<dyn Fn(Frame) -> ()>) -> Self {
+    pub fn new(mut bus: Bus, draw_frame: Box<dyn Fn(Frame)>) -> Self {
         // Make STAT's MODE bits consistent with the PPU's initial mode
         bus.set_stat(bus.stat() & 0b11111100 | Mode::OamScan as u8);
 
@@ -117,7 +117,7 @@ impl Ppu {
 
     fn v_blank(&mut self) {
         if self.dots_this_frame == DOTS_IN_ONE_FRAME - 1 {
-            (self.draw_frame)(self.get_frame().clone());
+            (self.draw_frame)(*self.get_frame());
             self.mode = Mode::OamScan;
         }
     }

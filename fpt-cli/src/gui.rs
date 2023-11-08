@@ -42,55 +42,51 @@ fn main() -> Result<(), pixels::Error> {
         Pixels::new(GB_RESOLUTION.0, GB_RESOLUTION.1, surface_texture)?
     };
 
-    event_loop.run(move |event, _, control_flow| {
-        match event {
-            Event::WindowEvent {
-                event:
-                    ref e @ (WindowEvent::CloseRequested
-                    | WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                virtual_keycode: Some(VirtualKeyCode::Escape),
-                                ..
-                            },
-                        ..
-                    }),
-                ..
-            } => {
-                println!(
-                    "{reason}; stopping",
-                    reason = match e {
-                        WindowEvent::CloseRequested => "The close button was pressed",
-                        WindowEvent::KeyboardInput { .. } => "The ESC key was pressed",
-                        _ => "whatever",
-                    }
-                );
-                control_flow.set_exit();
-            }
-            Event::WindowEvent {
-                event: WindowEvent::Resized(size),
-                ..
-            } => {
-                if let Err(err) = pixels.resize_surface(size.width, size.height) {
-                    eprintln!("pixels.resize_surface() error! {err}");
-                    control_flow.set_exit_with_code(1);
-                    return;
+    event_loop.run(move |event, _, control_flow| match event {
+        Event::WindowEvent {
+            event:
+                ref e @ (WindowEvent::CloseRequested
+                | WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            ..
+                        },
+                    ..
+                }),
+            ..
+        } => {
+            println!(
+                "{reason}; stopping",
+                reason = match e {
+                    WindowEvent::CloseRequested => "The close button was pressed",
+                    WindowEvent::KeyboardInput { .. } => "The ESC key was pressed",
+                    _ => "whatever",
                 }
-            }
-            Event::MainEventsCleared => {
-                let _topic = socket.recv_msg(0).unwrap();
-                let data = socket.recv_msg(0).unwrap();
-                let frame = data.iter().copied().collect::<Vec<u8>>();
-                draw(pixels.frame_mut(), &frame.try_into().unwrap());
-
-                if let Err(err) = pixels.render() {
-                    eprintln!("pixels.render() error! {err}");
-                    control_flow.set_exit_with_code(2);
-                    return;
-                }
-            }
-            _ => (),
+            );
+            control_flow.set_exit();
         }
+        Event::WindowEvent {
+            event: WindowEvent::Resized(size),
+            ..
+        } => {
+            if let Err(err) = pixels.resize_surface(size.width, size.height) {
+                eprintln!("pixels.resize_surface() error! {err}");
+                control_flow.set_exit_with_code(1);
+            }
+        }
+        Event::MainEventsCleared => {
+            let _topic = socket.recv_msg(0).unwrap();
+            let data = socket.recv_msg(0).unwrap();
+            let frame = data.iter().copied().collect::<Vec<u8>>();
+            draw(pixels.frame_mut(), &frame.try_into().unwrap());
+
+            if let Err(err) = pixels.render() {
+                eprintln!("pixels.render() error! {err}");
+                control_flow.set_exit_with_code(2);
+            }
+        }
+        _ => (),
     });
 }
 
