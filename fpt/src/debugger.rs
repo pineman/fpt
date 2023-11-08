@@ -85,7 +85,7 @@ struct Debugger {
 #[allow(dead_code)]
 impl Debugger {
     fn new() -> Debugger {
-        let gameboy = Gameboy::new();
+        let gameboy = Gameboy::new_with_zmq();
 
         Debugger {
             gameboy,
