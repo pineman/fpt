@@ -83,11 +83,9 @@ fn dump(args: Dump) -> Result<()> {
             if result.is_empty() { "" } else { " " },
             result.join(" ")
         );
+        // TODO: this is very, very stupid
         let next_pc = gb.cpu().pc() + inst.size as u16;
         gb.cpu_mut().set_pc(next_pc);
-        if inst.size == 0 {
-            panic!();
-        }
     }
 }
 

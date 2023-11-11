@@ -171,20 +171,20 @@ impl DebuggerTextInterface<'_> {
                   table.insert(available_functions, name)
                 end
                 table.sort(available_functions)
-                
+
                 s = "Available debugging functions"
                 s = "\n" .. s .. "\n" .. ("-"):rep(#s) .. "\n"
                 for _i, name in ipairs(available_functions) do
                   s = s .. "  - " .. name .. "\n"
                 end
-                
+
                 s = s .. "\nAlias    Expansion\n-------- -----------\n"
                 for alias, expansion in pairs(_aliases) do
                   s = s .. string.format("%-8s %s\n", alias, expansion)
                 end
                 return s
             end
-            
+
             setmetatable(_G, {
               __index = function(_, key)
                 if debug_commands[key] then
