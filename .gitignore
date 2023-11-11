@@ -7,3 +7,4 @@ TODO.md
 *.pgm
 *.ppm
 screenshots/
+.DS_Store
