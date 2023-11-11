@@ -19,7 +19,7 @@ jobs:
     - name: Version
       run: rustc --version
     - name: Build
-      run: cargo build --verbose
+      run: for i in $(awk '/members = \[/{flag=1; next} /\]/{flag=0} flag' Cargo.toml | tr -d '",'); do cd $i; cargo rustc -- -D warnings; cd -; done
 
 
   clippy:
@@ -28,7 +28,7 @@ jobs:
         - uses: actions/checkout@v4
         - uses: Swatinem/rust-cache@v2
         - name : Clippy
-          run: cargo clippy --verbose --all-features
+          run: cargo clippy --all-features -- -D warnings
 
 
   format-check:
