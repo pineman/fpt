@@ -4,8 +4,8 @@ use sha2::Digest;
 const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
 
 pub struct TemplateApp {
-    value: u64,
-    frame_count: u64,
+    egui_frame_count: u64,
+    gb_frame_count: u64,
     last_time: f64,
     accum_time: f64,
 }
@@ -14,8 +14,8 @@ impl Default for TemplateApp {
     fn default() -> Self {
         Self {
             // Example stuff:
-            value: 0,
-            frame_count: 0,
+            egui_frame_count: 0,
+            gb_frame_count: 0,
             last_time: 0.0,
             accum_time: 0.0,
         }
@@ -65,12 +65,10 @@ impl eframe::App for TemplateApp {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             let time = ui.input(|i| i.time);
-            let unstable_dt = ui.input(|i| i.unstable_dt);
-            // let delta_time = time - self.last_time;
-            let delta_time = unstable_dt as f64;
+            let delta_time = ui.input(|i| i.unstable_dt) as f64;
             self.accum_time += delta_time;
             while self.accum_time >= GB_FRAME_IN_SECONDS {
-                self.frame_count += 1;
+                self.gb_frame_count += 1;
                 // ... RENDER GAME BOY SCREEN ...
                 // uncomment to make Tito's fans slightly noisier
                 // for _ in 0..1000 {
@@ -78,7 +76,6 @@ impl eframe::App for TemplateApp {
                 // }
                 self.accum_time -= GB_FRAME_IN_SECONDS;
             }
-            // self.last_time = now() / 1000.0;
             self.last_time = time;
 
             egui::Grid::new("my_grid").striped(true).show(ui, |ui| {
@@ -92,19 +89,18 @@ impl eframe::App for TemplateApp {
                 }
                 stat!("time"        : format!("{:.8}", time));
                 stat!("dt"          : format!("{:.8}", delta_time));
-                stat!("unstable_dt" : format!("{:.8}", unstable_dt));
                 stat!("accum. time" : format!("{:.8}", self.accum_time));
                 stat!("last time"   : format!("{:.8}", self.last_time));
                 stat!("Ideal count" : format!("{}"   , time / GB_FRAME_IN_SECONDS));
-                stat!("Frame count" : format!("{}"   , self.frame_count));
-                stat!("UI updates"  : format!("{}"   , self.value));
+                stat!("Frame count" : format!("{}"   , self.gb_frame_count));
+                stat!("UI updates"  : format!("{}"   , self.egui_frame_count));
             });
 
             ui.separator();
 
             ui.heading("fpt");
-            self.value += 1;
-            ui.add(egui::Label::new(self.value.to_string()));
+            self.egui_frame_count += 1;
+            ui.add(egui::Label::new(self.egui_frame_count.to_string()));
         });
 
         ctx.request_repaint();
