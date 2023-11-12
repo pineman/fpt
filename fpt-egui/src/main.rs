@@ -1,6 +1,8 @@
 use egui::Color32;
+use log::info;
+use sha2::Digest;
 
-const GB_FRAME_IN_SECONDS: f64 = 0.016667;
+const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
 
 pub struct TemplateApp {
     value: u64,
@@ -30,6 +32,23 @@ impl TemplateApp {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
+fn now() -> f64 {
+    use wasm_bindgen::JsCast;
+    use wasm_bindgen::JsValue;
+    js_sys::Reflect::get(&js_sys::global(), &JsValue::from_str("performance"))
+        .expect("failed to get performance from global object")
+        .unchecked_into::<web_sys::Performance>()
+        .now()
+}
+
+fn calc_sha256(input: &str) -> String {
+    let mut hasher = sha2::Sha256::new();
+    hasher.update(input);
+    let result = hasher.finalize();
+    format!("{:x}", result)
+}
+
 impl eframe::App for TemplateApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
@@ -47,13 +66,19 @@ impl eframe::App for TemplateApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             let time = ui.input(|i| i.time);
             let unstable_dt = ui.input(|i| i.unstable_dt);
-            let delta_time = time - self.last_time;
+            // let delta_time = time - self.last_time;
+            let delta_time = unstable_dt as f64;
             self.accum_time += delta_time;
             while self.accum_time >= GB_FRAME_IN_SECONDS {
                 self.frame_count += 1;
                 // ... RENDER GAME BOY SCREEN ...
+                for _ in 0..1000 {
+                    calc_sha256("hello world");
+                }
                 self.accum_time -= GB_FRAME_IN_SECONDS;
             }
+            // self.last_time = now() / 1000.0;
+            self.last_time = time;
 
             egui::Grid::new("my_grid").striped(true).show(ui, |ui| {
                 macro_rules! stat {
@@ -73,7 +98,6 @@ impl eframe::App for TemplateApp {
                 stat!("Frame count" : format!("{}"   , self.frame_count));
                 stat!("UI updates"  : format!("{}"   , self.value));
             });
-            self.last_time = time;
 
             ui.separator();
 
