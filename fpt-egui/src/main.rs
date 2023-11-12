@@ -1,4 +1,4 @@
-use egui::Color32;
+use egui::{Color32, Rect, Vec2, Widget};
 use sha2::Digest;
 
 const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
@@ -8,6 +8,7 @@ pub struct TemplateApp {
     gb_frame_count: u64,
     last_time: f64,
     accum_time: f64,
+    texture: Option<egui::TextureHandle>,
 }
 
 impl Default for TemplateApp {
@@ -18,6 +19,7 @@ impl Default for TemplateApp {
             gb_frame_count: 0,
             last_time: 0.0,
             accum_time: 0.0,
+            texture: None,
         }
     }
 }
@@ -104,6 +106,13 @@ impl eframe::App for TemplateApp {
             ui.heading("fpt");
             self.egui_frame_count += 1;
             ui.add(egui::Label::new(self.egui_frame_count.to_string()));
+
+            let mut image = egui::ColorImage::new([128, 64], Color32::RED);
+            for i in 0..(((self.egui_frame_count as usize) * 10) % (128 * 64)) {
+                image.pixels[i] = Color32::YELLOW;
+            }
+            let texture = ui.ctx().load_texture("my-image", image, Default::default());
+            ui.image((texture.id(), texture.size_vec2()));
         });
 
         ctx.request_repaint();
