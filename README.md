@@ -1,16 +1,28 @@
 # Supposedly some ~~forth implementation~~ gameboy color emulator
 
-## Running
+## GUI
 
-`cargo run run <rom>`
+Natively:
 
-Running the disassembler:
+`cargo run -p fpt-egui`
 
-`cargo run dump <rom>`
+WASM:
+```
+cargo install trunk
+trunk serve fpt-egui/index.html
+```
+
+## CLI
+
+`cargo run -p fpt-cli run <rom>`
+
+Running the naive disassembler:
+
+`cargo run -p fpt-cli dump <rom>`
 
 Running the debugger:
 
-`cargo run debug`
+`cargo run -p fpt-cli debug`
 
 ## Testing
 
