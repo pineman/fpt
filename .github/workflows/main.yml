@@ -12,38 +12,16 @@ env:
 
 
 jobs:
-  build:
+  CI:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - uses: Swatinem/rust-cache@v2
     - name: Version
       run: rustc --version
-    - name: Build
-      run: cargo build
-
-
-  clippy:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v4
-        - uses: Swatinem/rust-cache@v2
-        - name : Clippy
-          run: cargo clippy --all-features
-
-
-  format-check:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v4
-        - name: Run rustfmt
-          run: cargo fmt --check
-
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: Swatinem/rust-cache@v2
+    - name: Run rustfmt
+      run: cargo fmt --check
     - name: Unit tests
       run: cargo test -- --nocapture
+    - name : Clippy
+      run: cargo clippy --all-features
