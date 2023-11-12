@@ -8,3 +8,4 @@ TODO.md
 *.ppm
 screenshots/
 .DS_Store
+dist/

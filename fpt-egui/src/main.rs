@@ -1,6 +1,12 @@
+use egui::{Color32, RichText, Vec2};
+
+const GB_FRAME_IN_SECONDS: f64 = 0.016667;
+
 pub struct TemplateApp {
     value: u64,
+    frame_count: u64,
     last_time: f64,
+    accum_time: f64,
 }
 
 impl Default for TemplateApp {
@@ -8,7 +14,9 @@ impl Default for TemplateApp {
         Self {
             // Example stuff:
             value: 0,
+            frame_count: 0,
             last_time: 0.0,
+            accum_time: 0.0,
         }
     }
 }
@@ -36,21 +44,46 @@ impl eframe::App for TemplateApp {
                 ui.add_space(16.0);
             });
         });
-
         egui::CentralPanel::default().show(ctx, |ui| {
             let time = ui.input(|i| i.time);
-            ui.add(egui::Label::new(format!("{:.8}", time)));
-            ui.add(egui::Label::new(format!("{:.8}", self.last_time)));
-            ui.add(egui::Label::new(format!("{:.8}", time - self.last_time)));
-            ui.add(egui::Label::new(ui.input(|i| i.unstable_dt).to_string()));
+            let unstable_dt = ui.input(|i| i.unstable_dt);
+            let delta_time = time - self.last_time;
+            self.accum_time += delta_time;
+            while self.accum_time >= GB_FRAME_IN_SECONDS {
+                self.frame_count += 1;
+                // ... RENDER GAME BOY SCREEN ...
+                self.accum_time -= GB_FRAME_IN_SECONDS;
+            }
+
+            ui.exp
+            egui::Grid::new("my_grid").striped(true).show(ui, |ui| {
+                macro_rules! stat {
+                    ($label:literal : $value:expr) => {
+                        ui.colored_label(Color32::LIGHT_GRAY, $label);
+                        ui.monospace(stringify!($value));
+                        ui.monospace($value);
+                        ui.end_row();
+                    };
+                }
+                stat!("time"        : format!("{:.8}", time));
+                stat!("dt"          : format!("{:.8}", delta_time));
+                stat!("unstable_dt" : format!("{:.8}", unstable_dt));
+                stat!("accum. time" : format!("{:.8}", self.accum_time));
+                stat!("last time"   : format!("{:.8}", self.last_time));
+                stat!("Ideal count" : format!("{}"   , time / GB_FRAME_IN_SECONDS));
+                stat!("Frame count" : format!("{}"   , self.frame_count));
+                stat!("UI updates"  : format!("{}"   , self.value));
+            });
             self.last_time = time;
-            // ui.add(egui::Label::new(ui.input(|i| i.stable_dt).to_string()));
-            // ui.add(egui::Label::new(ui.input(|i| i.predicted_dt).to_string()));
-            // The central panel the region left after adding TopPanel's and SidePanel's
+
+            ui.separator();
+
             ui.heading("fpt");
             self.value += 1;
             ui.add(egui::Label::new(self.value.to_string()));
         });
+
+        ctx.request_repaint();
     }
 }
 
