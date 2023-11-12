@@ -63,6 +63,7 @@ impl eframe::App for TemplateApp {
                 ui.add_space(16.0);
             });
         });
+
         egui::CentralPanel::default().show(ctx, |ui| {
             let time = ui.input(|i| i.time);
             let unstable_dt = ui.input(|i| i.unstable_dt);
