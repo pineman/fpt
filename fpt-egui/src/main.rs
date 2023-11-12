@@ -1,4 +1,4 @@
-use egui::{Color32, RichText, Vec2};
+use egui::Color32;
 
 const GB_FRAME_IN_SECONDS: f64 = 0.016667;
 
