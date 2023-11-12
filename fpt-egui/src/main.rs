@@ -1,5 +1,4 @@
 use egui::Color32;
-use log::info;
 use sha2::Digest;
 
 const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
