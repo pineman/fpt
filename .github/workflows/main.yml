@@ -19,7 +19,7 @@ jobs:
     - name: Version
       run: rustc --version
     - name: Build
-      run: for i in $(awk '/members = \[/{flag=1; next} /\]/{flag=0} flag' Cargo.toml | tr -d '",'); do cd $i; cargo rustc -- -D warnings; cd -; done
+      run: RUSTFLAGS="-D warnings" cargo build
 
 
   clippy:
