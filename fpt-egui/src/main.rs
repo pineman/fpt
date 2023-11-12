@@ -72,9 +72,10 @@ impl eframe::App for TemplateApp {
             while self.accum_time >= GB_FRAME_IN_SECONDS {
                 self.frame_count += 1;
                 // ... RENDER GAME BOY SCREEN ...
-                for _ in 0..1000 {
-                    calc_sha256("hello world");
-                }
+                // uncomment to make Tito's fans slightly noisier
+                // for _ in 0..1000 {
+                //     calc_sha256("hello world");
+                // }
                 self.accum_time -= GB_FRAME_IN_SECONDS;
             }
             // self.last_time = now() / 1000.0;
@@ -116,8 +117,8 @@ fn main() -> eframe::Result<()> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
 
     let native_options = eframe::NativeOptions {
-        initial_window_size: Some([400.0, 300.0].into()),
-        min_window_size: Some([300.0, 220.0].into()),
+        initial_window_size: Some([550.0, 260.0].into()),
+        min_window_size: Some([550.0, 260.0].into()),
         ..Default::default()
     };
     eframe::run_native(
