@@ -55,7 +55,6 @@ impl eframe::App for TemplateApp {
                 self.accum_time -= GB_FRAME_IN_SECONDS;
             }
 
-            ui.exp
             egui::Grid::new("my_grid").striped(true).show(ui, |ui| {
                 macro_rules! stat {
                     ($label:literal : $value:expr) => {
