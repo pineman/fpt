@@ -81,6 +81,13 @@ impl eframe::App for TemplateApp {
                         frame.close();
                     }
                 });
+                ui.menu_button("LCD", |ui| {
+                    if ui.button("clear").clicked() {
+                        if let Some(image) = Arc::get_mut(&mut self.image) {
+                            image.pixels.fill(Color32::TRANSPARENT);
+                        }
+                    }
+                });
                 ui.add_space(16.0);
             });
         });
@@ -109,8 +116,6 @@ impl eframe::App for TemplateApp {
                 self.accum_time -= GB_FRAME_IN_SECONDS;
 
                 if let Some(image) = Arc::get_mut(&mut self.image) {
-                    // image.pixels.fill(Color32::TRANSPARENT);
-
                     // It all starts with this...
                     static mut CHAOS_GAME: Pos2 = Pos2::new(80., 143.9);
                     const STEPS: u64 = 5;
