@@ -1,8 +1,12 @@
+#![feature(lazy_cell)]
+
+use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant};
 
-use egui::Color32;
+use egui::{Color32, Pos2, TextureOptions};
 use log::info;
-use sha2::Digest;
+
+// use sha2::Digest;
 
 const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
 
@@ -11,6 +15,7 @@ pub struct TemplateApp {
     gb_frame_count: u64,
     last_time: f64,
     accum_time: f64,
+    image: Arc<egui::ColorImage>,
     texture: Option<egui::TextureHandle>,
 }
 
@@ -22,6 +27,10 @@ impl Default for TemplateApp {
             gb_frame_count: 0,
             last_time: 0.0,
             accum_time: 0.0,
+            image: Arc::new(egui::ColorImage::new(
+                [160, 144],
+                egui::Color32::TRANSPARENT,
+            )),
             texture: None,
         }
     }
@@ -47,8 +56,11 @@ fn now() -> f64 {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn now() -> Instant {
-    Instant::now()
+static APP_START: LazyLock<Instant> = LazyLock::new(Instant::now);
+
+#[cfg(not(target_arch = "wasm32"))]
+fn now() -> f64 {
+    APP_START.elapsed().as_secs_f64() * 1000.0
 }
 
 // fn calc_sha256(input: &str) -> String {
@@ -74,12 +86,17 @@ impl eframe::App for TemplateApp {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
+            self.egui_frame_count += 1;
+            ui.heading("fpt");
+            ui.add(egui::Label::new(self.egui_frame_count.to_string()));
+            ui.separator();
+
             let a = now();
             let time = ui.input(|i| i.time);
             let delta_time = ui.input(|i| i.unstable_dt) as f64;
             self.accum_time += delta_time;
-            let mut image = Default::default();
             let before = self.gb_frame_count;
+
             while self.accum_time >= GB_FRAME_IN_SECONDS {
                 // if self.accum_time >= GB_FRAME_IN_SECONDS {
                 self.gb_frame_count += 1;
@@ -90,45 +107,74 @@ impl eframe::App for TemplateApp {
                 // }
                 // gb_frame = gb.get_frame();
                 self.accum_time -= GB_FRAME_IN_SECONDS;
-                image = egui::ColorImage::new([128, 64], Color32::RED);
-                self.texture = None;
-                for i in 0..(((self.gb_frame_count as usize) * 10) % (128 * 64)) {
-                    image.pixels[i] = Color32::YELLOW;
+
+                if let Some(image) = Arc::get_mut(&mut self.image) {
+                    // image.pixels.fill(Color32::TRANSPARENT);
+
+                    // It all starts with this...
+                    static mut CHAOS_GAME: Pos2 = Pos2::new(80., 143.9);
+                    const STEPS: u64 = 5;
+                    for i in 0..STEPS {
+                        let t = (self.gb_frame_count * STEPS + i) as f64 / 60.
+                            * 0.33
+                            * 2.
+                            * std::f64::consts::PI;
+                        let r = (200. + (t * 1.01 + 0.).sin() * 40.) as u8;
+                        let g = (180. + (t * 0.08 + 1.).sin() * 70.) as u8;
+                        let b = (40.0 + (t * 0.57 + 2.).sin() * 20.) as u8;
+                        let (x, y) = unsafe {
+                            CHAOS_GAME = CHAOS_GAME.lerp(
+                                match ((r as u32) + (g as u32) + (b as u32)) % 3 {
+                                    0 => Pos2::new(0., 0.),
+                                    1 => Pos2::new(0., 143.9),
+                                    _ => Pos2::new(159.9, 143.9),
+                                },
+                                0.5,
+                            );
+                            (CHAOS_GAME.x.floor() as usize, CHAOS_GAME.y.floor() as usize)
+                        };
+                        image[(x, y)] = Color32::from_rgb(r, g, b);
+                        let (x, y) = (159 - x, 143 - y);
+                        image[(x, y)] = Color32::from_rgb(b, g, r);
+                    }
                 }
             }
-            let texture: &egui::TextureHandle = self.texture.get_or_insert_with(|| {
+
+            // self.texture = None; // batota
+            let texture: &mut egui::TextureHandle = self.texture.get_or_insert_with(|| {
                 // Load the texture only once.
-                ui.ctx().load_texture("my-image", image, Default::default())
+                ui.ctx()
+                    .load_texture("my-image", self.image.clone(), TextureOptions::NEAREST)
             });
-            ui.image((texture.id(), texture.size_vec2()));
+            texture.set(self.image.clone(), TextureOptions::NEAREST); // TODO repeated work in 1st repaint
+            ui.image((texture.id(), 3. * texture.size_vec2()));
             // ui.load_texture(gb_frame);
+
             self.last_time = time;
 
-            let mut ccc = false;
+            let mut _ccc = false;
             if self.gb_frame_count - before > 1 {
                 info!("more than one gb_frame");
-                ccc = true;
+                _ccc = true;
             }
+            ui.separator();
             egui::Grid::new("my_grid").striped(true).show(ui, |ui| {
                 macro_rules! stat {
-                    ($label:literal : $value:expr) => {
+                    ($label:literal : $fmt:literal, $value:expr) => {
                         ui.colored_label(Color32::LIGHT_GRAY, $label);
-                        ui.monospace(stringify!($value));
-                        ui.monospace($value);
+                        ui.monospace(format!($fmt, $value));
+                        ui.code(stringify!($value));
                         ui.end_row();
                     };
                 }
-                stat!("time"        : format!("{:.8}", time));
-                stat!("dt"          : format!("{:.8}", delta_time));
-                stat!("accum. time" : format!("{:.8}", self.accum_time));
-                stat!("last time"   : format!("{:.8}", self.last_time));
-                stat!("Ideal count" : format!("{}"   , time / GB_FRAME_IN_SECONDS));
-                stat!("Frame count" : format!("{}"   , self.gb_frame_count));
-                stat!("UI updates"  : format!("{}"   , self.egui_frame_count));
+                stat!("time"        : "{:.8}", time);
+                stat!("dt"          : "{:.8}", delta_time);
+                stat!("accum. time" : "{:.8}", self.accum_time);
+                stat!("last time"   : "{:.8}", self.last_time);
+                stat!("Ideal count" : "{:.3}", time / GB_FRAME_IN_SECONDS);
+                stat!("Frame count" : "{}"   , self.gb_frame_count);
+                stat!("UI updates"  : "{}"   , self.egui_frame_count);
             });
-            self.egui_frame_count += 1;
-            ui.heading("fpt");
-            ui.add(egui::Label::new(self.egui_frame_count.to_string()));
 
             let b = now();
             info!("a {:.8}", a);
@@ -162,8 +208,8 @@ fn main() -> eframe::Result<()> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
 
     let native_options = eframe::NativeOptions {
-        initial_window_size: Some([550.0, 260.0].into()),
-        min_window_size: Some([550.0, 260.0].into()),
+        initial_window_size: Some([500.0, 700.0].into()),
+        min_window_size: Some([500.0, 700.0].into()),
         ..Default::default()
     };
     eframe::run_native(
