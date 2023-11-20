@@ -104,6 +104,7 @@ impl eframe::App for TemplateApp {
             self.accum_time += delta_time;
             let before = self.gb_frame_count;
 
+            // I hate this while, I much prefer the if
             while self.accum_time >= GB_FRAME_IN_SECONDS {
                 // if self.accum_time >= GB_FRAME_IN_SECONDS {
                 self.gb_frame_count += 1;
