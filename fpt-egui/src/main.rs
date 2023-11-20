@@ -187,20 +187,17 @@ impl eframe::App for TemplateApp {
             let time_taken = (b - a) / 1000.0;
             info!("time_taken {:.8}", time_taken);
 
-            // let time_taken = a.elapsed().as_secs_f64();
-            // if ccc {
-            //     info!("time_taken1 {:.8}", time_taken);
-            // }
-            // let time_taken = (time_taken * 1000.0).floor() / 1000.0;
-            // if ccc {
-            //     info!("time_taken2 {:.8}", time_taken);
-            // }
+            let time_taken = (time_taken * 1000.0).ceil() / 1000.0;
+            if _ccc {
+                info!("time_taken2 {:.8}", time_taken);
+            }
 
             let sleep_time = GB_FRAME_IN_SECONDS - time_taken;
             info!("sleep_time {:.8}", sleep_time);
             if sleep_time < 0.0 {
                 ctx.request_repaint();
             } else {
+                // ctx.request_repaint_after(Duration::from_secs_f64(sleep_time - 0.005));
                 ctx.request_repaint_after(Duration::from_secs_f64(sleep_time));
             }
         });
