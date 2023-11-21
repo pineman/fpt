@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 egui = "0.23.0"
-eframe = { version = "0.23.0", default-features = false, features = [ "glow" ] }
+eframe = { version = "0.23.0", default-features = false, features = [ "wgpu" ] }
 log = "0.4.14"
 sha2 = "0.10.8"
 
