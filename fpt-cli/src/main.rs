@@ -94,7 +94,7 @@ fn run(args: Run) -> Result<()> {
     let mut gameboy = Gameboy::new_with_zmq();
     let rom = fs::read(args.rom).unwrap();
     gameboy.load_rom(&rom);
-    dbg!(gameboy.bus.title());
+    dbg!(gameboy.bus.cartridge_type());
     loop {
         if args.debug.unwrap_or(false) {
             println!("{:#02X}: {}", gameboy.cpu().pc(), gameboy.cpu().decode());
