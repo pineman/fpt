@@ -19,6 +19,11 @@ pub mod map {
     /// The Cartridge Header
     pub const ROM_DATA: MemoryRange = 0x0100..0x0150;
 
+    pub const TITLE: MemoryRange = 0x134..0x143;
+    pub const MANUFACTURER_CODE: MemoryRange = 0x13f..0x142;
+    pub const LICENSE_CODE: MemoryRange = 0x144..0x145;
+    pub const CARTRIDGE_TYPE: Address = 0x147;
+
     /// User Program Area (32 KB)
     pub const USER_PROGRAM: MemoryRange = 0x0150..0x8000;
 
@@ -123,6 +128,10 @@ impl Bus {
         self.memory().mem[address as Address]
     }
 
+    pub fn read_range(&self, range: MemoryRange) -> Vec<u8> {
+        self.memory().slice(range).to_vec()
+    }
+
     pub fn write(&mut self, address: GBAddress, value: u8) {
         self.memory().mem[address as Address] = value;
     }
@@ -149,6 +158,16 @@ impl Bus {
 
     pub fn each_byte(&self) -> std::iter::Enumerate<std::array::IntoIter<u8, 65536>> {
         self.memory().mem.into_iter().enumerate()
+    }
+
+    pub fn title(&mut self) -> String {
+        std::str::from_utf8(&self.read_range(map::TITLE))
+            .unwrap()
+            .to_string()
+    }
+
+    pub fn cartridge_type(&self) -> u8 {
+        self._read(map::CARTRIDGE_TYPE)
     }
 
     // registers

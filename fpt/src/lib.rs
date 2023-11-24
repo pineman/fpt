@@ -14,7 +14,7 @@ use memory::Bus;
 use ppu::{Frame, Ppu};
 
 pub struct Gameboy {
-    bus: Bus,
+    pub bus: Bus,
     cpu: LR35902,
     ppu: Ppu,
 }
