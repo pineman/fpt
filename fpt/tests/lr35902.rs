@@ -165,7 +165,7 @@ fn test_instr_0x000_nop() {
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder.with_pc(1).with_clock_cycles(4).build();
@@ -183,7 +183,7 @@ fn test_instr_0x001_ld_bc_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -206,7 +206,7 @@ fn test_instr_ld_pointer_from_a(#[case] opcode: u8, #[case] register: &str) {
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -227,7 +227,7 @@ fn test_instr_0x008_ld_pointer_immediate16_from_sp() {
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -249,7 +249,7 @@ fn test_instr_0x011_ld_de_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -277,7 +277,7 @@ fn test_instr_ld_register_a_from_pointer(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -299,7 +299,7 @@ fn test_instr_0x021_ld_hl_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -322,7 +322,7 @@ fn test_instr_0x022_ld_pointer_hl_increment_from_a(#[case] hl: u16, #[case] hl_i
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -345,7 +345,7 @@ fn test_instr_0x2a_ld_register_a_from_hli() {
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -369,7 +369,7 @@ fn test_instr_0x031_ld_sp_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -392,7 +392,7 @@ fn test_instr_0x032_ld_hld_a(#[case] hl: u16, #[case] hl_after: u16) {
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -415,7 +415,7 @@ fn test_instr_0x3a_ld_register_a_from_hld() {
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -539,7 +539,7 @@ fn test_load_8_bit_reg_to_8_bit_reg(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -579,7 +579,7 @@ fn test_load_8_bit_reg_from_hl_pointer(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -621,7 +621,7 @@ fn test_load_hl_pointer_from_8_bit_reg(
     let hl = sut.hl();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -655,7 +655,7 @@ fn test_load_register_from_immediate(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -679,7 +679,7 @@ fn test_instr_0x36_ld_hl_d8(#[case] d8: u8, #[case] hl: u16) {
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -702,7 +702,7 @@ fn test_instr_0xf8_ld_hl_sp_plus_e8() {
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -724,7 +724,7 @@ fn test_instr_0xe0_ld_immediate8_pointer_from_register_a() {
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -748,7 +748,7 @@ fn test_instr_0xe2_ld_pointer_c_from_register_a() {
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     sut.mem8(0xFF00 + (address as u16));
 
@@ -772,7 +772,7 @@ fn test_instr_0xea_ld_immediate16_pointer_from_register_a() {
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -794,7 +794,7 @@ fn test_instr_0xf0_ld_register_a_from_immediate_pointer() {
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -818,7 +818,7 @@ fn test_instr_0xf2_ld_from_register_a_from_c_pointer() {
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     sut.mem8(0xFF00 + (address as u16));
 
@@ -859,7 +859,7 @@ fn test_alu8_reg(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -974,7 +974,7 @@ fn test_alu8_reg_reg(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1027,7 +1027,7 @@ fn test_alu8_reg_addr(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1083,7 +1083,7 @@ fn test_alu8_reg_imm(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1123,7 +1123,7 @@ fn test_alu16_reg_reg(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1160,7 +1160,7 @@ fn test_alu16_reg_imm(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1331,8 +1331,8 @@ fn test_rot_reg_reg(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
-    sut.step();
+    sut.instruction();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1387,8 +1387,8 @@ fn test_rot_reg_addr(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
-    sut.step();
+    sut.instruction();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1475,8 +1475,8 @@ fn test_bit_reg(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
-    sut.step();
+    sut.instruction();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1515,8 +1515,8 @@ fn test_bit_addr(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
-    sut.step();
+    sut.instruction();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1659,8 +1659,8 @@ fn test_bit_reg_reg(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
-    sut.step();
+    sut.instruction();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1708,8 +1708,8 @@ fn test_bit_reg_addr(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
-    sut.step();
+    sut.instruction();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1745,7 +1745,7 @@ fn test_inc_8_bit_reg(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1780,7 +1780,7 @@ fn test_inc_16_bit_reg(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1834,7 +1834,7 @@ fn test_jump(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder.with_pc(pc).with_clock_cycles(clocks).build();
@@ -1859,7 +1859,7 @@ fn test_push(#[case] opcode: u8, #[case] register: &str, #[case] value: u16, #[c
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1889,7 +1889,7 @@ fn test_pop(#[case] opcode: u8, #[case] register: &str, #[case] value: u16, #[ca
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder
@@ -1919,7 +1919,7 @@ fn test_cp(
     let mut sut = builder.clone().build();
 
     // When
-    sut.step();
+    sut.instruction();
 
     // Then
     let expected = builder

@@ -131,11 +131,11 @@ impl Ppu {
         };
     }
 
+    /// Simulates a "dot", as described in https://gbdev.io/pandocs/Rendering.html.
+    /// A "dot" either draws a single pixel (in Mode 3) or is stalled for $REASONS.
+    /// A "dot" = one 2^22 Hz time unit, so there's 4 dots per machine cycle,
+    /// or 1 dot each t-cycle. dot timings don't change on double speed mode.
     fn dot(&mut self) {
-        //! Simulates a "dot", as described in https://gbdev.io/pandocs/Rendering.html.
-        //! A "dot" either draws a single pixel (in Mode 3) or is stalled for $REASONS.
-        //! A "dot" = one 2^22 Hz time unit, so there's 4 dots per (DMG, single-speed) CPU cycle
-
         // Update LY register
         self.bus.set_ly((self.dots_this_frame / 456) as u8);
 
