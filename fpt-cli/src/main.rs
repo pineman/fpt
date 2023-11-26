@@ -83,7 +83,8 @@ fn dump(args: Dump) -> Result<()> {
             if result.is_empty() { "" } else { " " },
             result.join(" ")
         );
-        // TODO: this is very, very stupid
+        // TODO: this is very, very stupid as it doesn't follow jumps, so it can
+        // read data as code. how do decompilers even work?
         let next_pc = gb.cpu().pc() + inst.size as u16;
         gb.cpu_mut().set_pc(next_pc);
     }
@@ -97,7 +98,7 @@ fn run(args: Run) -> Result<()> {
         if args.debug.unwrap_or(false) {
             println!("{:#02X}: {}", gameboy.cpu().pc(), gameboy.cpu().decode());
         }
-        gameboy.step();
+        gameboy.instruction();
     }
 }
 

@@ -72,7 +72,7 @@ impl Breakpoint {
             Breakpoint::OnPc(pc) => gameboy.cpu().pc() == *pc,
             Breakpoint::OnOpcode(opcode) => gameboy.cpu().mem8(gameboy.cpu().pc()) == *opcode,
             Breakpoint::OnCB(opcode) => {
-                gameboy.cpu().mem8(gameboy.cpu().pc()) == *opcode && gameboy.cpu().get_next_cb()
+                gameboy.cpu().mem8(gameboy.cpu().pc()) == *opcode && gameboy.cpu().next_cb()
             }
         }
     }
@@ -111,10 +111,10 @@ impl Debugger {
                 self.gameboy.cpu().decode()
             );
             if self.check() {
-                self.gameboy.step();
+                self.gameboy.instruction();
                 break;
             }
-            self.gameboy.step();
+            self.gameboy.instruction();
         }
     }
 
@@ -124,7 +124,7 @@ impl Debugger {
             self.gameboy.cpu().pc(),
             self.gameboy.cpu().decode()
         );
-        self.gameboy.step();
+        self.gameboy.instruction();
     }
 
     fn set_breakpoint(&mut self, breakpoint: Breakpoint) {

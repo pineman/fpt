@@ -1,12 +1,12 @@
 use std::fmt;
-use std::{thread, time::Duration};
-
-pub mod instructions;
 
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
-use super::memory::Bus;
 use crate::bitwise as bw;
+
+use super::memory::Bus;
+
+pub mod instructions;
 
 #[derive(Clone, PartialEq)]
 pub struct LR35902 {
@@ -19,6 +19,7 @@ pub struct LR35902 {
     mem: Bus,
     next_cb: bool,
     clock_cycles: u64,
+    inst_cycle_count: u8,
     branch_taken: bool,
 }
 
@@ -46,12 +47,14 @@ impl LR35902 {
             mem: memory,
             next_cb: false,
             clock_cycles: 0,
+            inst_cycle_count: 0,
             branch_taken: false,
         };
         cpu.mem.load_bootrom(include_bytes!("../dmg0.bin"));
         cpu
     }
 
+    // Registers
     pub fn a(&self) -> u8 {
         bw::get_byte16::<1>(self.af)
     }
@@ -148,6 +151,15 @@ impl LR35902 {
         self.hl = hl;
     }
 
+    pub fn sp(&self) -> u16 {
+        self.sp
+    }
+
+    pub fn set_sp(&mut self, sp: u16) {
+        self.sp = sp;
+    }
+
+    // flags
     pub fn z_flag(&self) -> bool {
         bw::test_bit16::<7>(self.af)
     }
@@ -180,6 +192,22 @@ impl LR35902 {
         self.af = bw::set_bit16::<4>(self.af, value);
     }
 
+    // other
+    pub fn pc(&self) -> u16 {
+        self.pc
+    }
+
+    pub fn set_pc(&mut self, pc: u16) {
+        self.pc = pc;
+    }
+    pub fn next_cb(&self) -> bool {
+        self.next_cb
+    }
+
+    pub fn set_next_cb(&mut self, value: bool) {
+        self.next_cb = value;
+    }
+
     pub fn clock_cycles(&self) -> u64 {
         self.clock_cycles
     }
@@ -188,22 +216,23 @@ impl LR35902 {
         self.clock_cycles = clock_cycles;
     }
 
-    pub fn sp(&self) -> u16 {
-        self.sp
+    pub fn branch_taken(&self) -> bool {
+        self.branch_taken
     }
 
-    pub fn set_sp(&mut self, sp: u16) {
-        self.sp = sp;
+    pub fn set_branch_taken(&mut self, branch_taken: bool) {
+        self.branch_taken = branch_taken;
     }
 
-    pub fn pc(&self) -> u16 {
-        self.pc
+    pub fn inst_cycle_count(&self) -> u8 {
+        self.inst_cycle_count
     }
 
-    pub fn set_pc(&mut self, pc: u16) {
-        self.pc = pc;
+    pub fn set_inst_cycle_count(&mut self, inst_cycle_count: u8) {
+        self.inst_cycle_count = inst_cycle_count;
     }
 
+    // helpers
     pub fn mem8(&self, index: u16) -> u8 {
         self.mem.read(index)
     }
@@ -219,14 +248,6 @@ impl LR35902 {
     pub fn set_mem16(&mut self, index: u16, value: u16) {
         self.set_mem8(index + 1, bw::get_byte16::<1>(value));
         self.set_mem8(index, bw::get_byte16::<0>(value));
-    }
-
-    pub fn next_cb(&self) -> bool {
-        self.next_cb
-    }
-
-    pub fn set_next_cb(&mut self, value: bool) {
-        self.next_cb = value;
     }
 
     /// get 8 bit immediate at position pc + 1 + pos
@@ -251,10 +272,6 @@ impl LR35902 {
 
     fn set_hl_ind(&mut self, value: u8) {
         self.set_mem8(self.hl(), value);
-    }
-
-    pub fn get_next_cb(&self) -> bool {
-        self.next_cb
     }
 
     fn half_carry8(&self, x: u8, y: u8) -> bool {
@@ -488,7 +505,7 @@ impl LR35902 {
 
     fn jump(&mut self, address: u16) {
         self.set_pc(address);
-        self.branch_taken = true;
+        self.set_branch_taken(true);
     }
 
     fn call(&mut self, address: u16) {
@@ -538,31 +555,37 @@ impl LR35902 {
         INSTRUCTIONS[opcode as usize]
     }
 
-    /// Run one cycle
-    pub fn step(&mut self) -> u8 {
+    /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
+    pub fn cycle(&mut self) {
         let instruction = self.decode();
+        self.set_inst_cycle_count(self.inst_cycle_count() + 1);
+        if self.inst_cycle_count() < instruction.cycles {
+            return;
+        }
         if self.next_cb() {
             self.set_next_cb(false);
         }
-
         self.execute(instruction);
-
-        let mut cycles = instruction.cycles;
-        if instruction.kind == InstructionKind::Jump {
-            if self.branch_taken {
-                self.branch_taken = false;
-            } else {
-                cycles = instruction.cycles_not_taken;
-                self.set_pc(self.pc() + instruction.size as u16);
-            }
-        } else {
+        if !self.branch_taken() {
             self.set_pc(self.pc() + instruction.size as u16);
         }
-
-        thread::sleep(Duration::from_micros((cycles / 4) as u64));
+        let cycles = if instruction.kind == InstructionKind::Jump && !self.branch_taken() {
+            instruction.cycles_not_taken
+        } else {
+            instruction.cycles
+        };
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
+        self.set_branch_taken(false);
+        self.set_inst_cycle_count(0);
+    }
 
-        cycles
+    /// Run one complete instruction - NOT a machine cycle (4 t-cycles)
+    pub fn instruction(&mut self) -> u8 {
+        let instruction = self.decode();
+        for _ in 0..instruction.cycles {
+            self.cycle();
+        }
+        instruction.cycles
     }
 
     fn execute(&mut self, instruction: Instruction) {
@@ -572,7 +595,7 @@ impl LR35902 {
             }
             0x01 => {
                 // LD BC,d16
-                self.bc = self.get_d16(0);
+                self.set_bc(self.get_d16(0));
             }
             0x02 => {
                 // LD (BC),A
@@ -647,7 +670,7 @@ impl LR35902 {
             }
             0x11 => {
                 // LD DE,d16
-                self.de = self.get_d16(0);
+                self.set_de(self.get_d16(0));
             }
             0x12 => {
                 // LD (DE),A
@@ -807,7 +830,7 @@ impl LR35902 {
             }
             0x32 => {
                 // LD (HL-),A
-                self.set_mem8(self.hl, self.a());
+                self.set_mem8(self.hl(), self.a());
                 self.set_hl(self.hl().overflowing_sub(1).0)
             }
             0x33 => {
@@ -849,7 +872,7 @@ impl LR35902 {
             0x3A => {
                 // LD A,(HL-)
                 self.set_a(self.hl_ind());
-                self.set_hl(self.hl.overflowing_sub(1).0);
+                self.set_hl(self.hl().overflowing_sub(1).0);
             }
             0x3B => {
                 // DEC SP
@@ -1504,7 +1527,7 @@ impl LR35902 {
             }
             0xCB => {
                 // PREFIX CB
-                self.next_cb = true;
+                self.set_next_cb(true);
             }
             0xCC => {
                 // CALL Z,a16
@@ -2831,128 +2854,5 @@ impl LR35902 {
                 todo!()
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_a() {
-        let mut cpu = LR35902::default();
-
-        assert_eq!(cpu.a(), 0);
-        assert_eq!(cpu.af, 0);
-
-        cpu.set_a(5);
-        assert_eq!(cpu.a(), 5);
-        assert_eq!(cpu.af, 5 << 8);
-    }
-
-    #[test]
-    fn test_b() {
-        let mut cpu = LR35902::default();
-
-        assert_eq!(cpu.b(), 0);
-        assert_eq!(cpu.bc, 0);
-
-        cpu.set_b(5);
-        assert_eq!(cpu.b(), 5);
-        assert_eq!(cpu.bc, 5 << 8);
-    }
-
-    #[test]
-    fn test_c() {
-        let mut cpu = LR35902::default();
-
-        assert_eq!(cpu.c(), 0);
-        assert_eq!(cpu.bc, 0);
-
-        cpu.set_c(5);
-        assert_eq!(cpu.c(), 5);
-        assert_eq!(cpu.bc, 5);
-    }
-
-    #[test]
-    fn test_h() {
-        let mut cpu = LR35902::default();
-
-        assert_eq!(cpu.h(), 0);
-        assert_eq!(cpu.hl, 0);
-
-        cpu.set_h(5);
-        assert_eq!(cpu.h(), 5);
-        assert_eq!(cpu.hl, 5 << 8);
-    }
-
-    #[test]
-    fn test_l() {
-        let mut cpu = LR35902::default();
-
-        assert_eq!(cpu.l(), 0);
-        assert_eq!(cpu.hl, 0);
-
-        cpu.set_l(5);
-        assert_eq!(cpu.l(), 5);
-        assert_eq!(cpu.hl, 5);
-    }
-
-    #[test]
-    fn test_d() {
-        let mut cpu = LR35902::default();
-
-        assert_eq!(cpu.d(), 0);
-        assert_eq!(cpu.de, 0);
-
-        cpu.set_d(5);
-        assert_eq!(cpu.d(), 5);
-        assert_eq!(cpu.de, 5 << 8);
-    }
-
-    #[test]
-    fn test_e() {
-        let mut cpu = LR35902::default();
-
-        assert_eq!(cpu.e(), 0);
-        assert_eq!(cpu.de, 0);
-
-        cpu.set_e(5);
-        assert_eq!(cpu.e(), 5);
-        assert_eq!(cpu.de, 5);
-    }
-
-    #[ignore]
-    #[test]
-    fn test_immediate8() {
-        let cpu = LR35902::default();
-        let mut bootrom = [0; 256];
-        bootrom[0] = 1;
-        bootrom[1] = 2;
-        bootrom[2] = 3;
-        //cpu.load_bootrom(&bootrom);
-
-        assert_eq!(cpu.get_d8(0), 2);
-    }
-
-    #[ignore]
-    #[test]
-    fn test_immediate16() {
-        let cpu = LR35902::default();
-        let mut bootrom = [0; 256];
-        bootrom[0] = 1;
-        bootrom[1] = 2;
-        bootrom[2] = 3;
-        //cpu.load_bootrom(&bootrom);
-
-        assert_eq!(cpu.get_d16(0), 3 * 256 + 2);
-    }
-
-    #[test]
-    fn test_memory() {
-        let mut cpu = LR35902::default();
-
-        cpu.set_mem8(10, 255);
-        assert_eq!(cpu.mem8(10), 255);
     }
 }

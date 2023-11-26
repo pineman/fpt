@@ -58,13 +58,20 @@ impl Gameboy {
         &mut self.cpu
     }
 
-    pub fn step(&mut self) -> u32 {
-        let cycles = self.cpu.step() as u32;
+    pub fn instruction(&mut self) -> u32 {
+        let cycles = self.cpu.instruction() as u32;
+        // TODO: care for double speed mode (need to run half as much dots)
         self.ppu.step(cycles);
         cycles
     }
 
-    pub fn get_frame(&self) -> &ppu::Frame {
+    pub fn cycle(&mut self) {
+        // TODO: care for double speed mode (need to run two cpu cycles)
+        self.cpu.cycle();
+        self.ppu.step(1);
+    }
+
+    pub fn get_frame(&self) -> &Frame {
         self.ppu.get_frame()
     }
 }
