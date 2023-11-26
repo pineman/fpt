@@ -10,7 +10,7 @@ WASM:
 ```
 rustup target add wasm32-unknown-unknown
 cargo install trunk
-RUSTFLAGS=--cfg=web_sys_unstable_apis trunk serve fpt-egui/index.html
+trunk serve fpt-egui/index.html
 ```
 
 ## CLI
