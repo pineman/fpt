@@ -1,15 +1,16 @@
 #![feature(lazy_cell)]
 
-use eframe::Frame;
-use std::sync::{Arc, LazyLock};
-use std::time::{Duration, Instant};
+use std::sync::Arc;
+use std::time::Duration;
 
+use eframe::Frame;
 use egui::{Color32, Context, Pos2, TextureOptions, Ui};
 use log::info;
 
 const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
 
 #[cfg(target_arch = "wasm32")]
+#[allow(dead_code)]
 fn now() -> f64 {
     use wasm_bindgen::JsCast;
     use wasm_bindgen::JsValue;
@@ -20,9 +21,12 @@ fn now() -> f64 {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-static APP_START: LazyLock<Instant> = LazyLock::new(Instant::now);
+#[allow(dead_code)]
+static APP_START: std::sync::LazyLock<std::time::Instant> =
+    std::sync::LazyLock::new(std::time::Instant::now);
 
 #[cfg(not(target_arch = "wasm32"))]
+#[allow(dead_code)]
 fn now() -> f64 {
     APP_START.elapsed().as_secs_f64() * 1000.0
 }
@@ -50,18 +54,16 @@ impl Default for TemplateApp {
 impl TemplateApp {
     /// Called once before the first frame.
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
-        // This is also where you can customize the look and feel of egui using
-        // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
         Default::default()
     }
 
-    fn top_panel(&mut self, ctx: &Context, frame: &mut Frame) {
-        #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(not(target_arch = "wasm32"))]
+    fn top_panel(&mut self, ctx: &Context) {
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Quit").clicked() {
-                        frame.close();
+                        ctx.send_viewport_cmd(egui::ViewportCommand::Close)
                     }
                 });
                 ui.menu_button("LCD", |ui| {
@@ -115,41 +117,17 @@ impl TemplateApp {
                 }
             }
         }
+        // TODO repeated work in 1st repaint
+        // TODO: should be in new?
         let texture: &mut egui::TextureHandle = self.texture.get_or_insert_with(|| {
-            // Load the texture only once.
             ui.ctx()
                 .load_texture("my-image", self.image.clone(), TextureOptions::NEAREST)
         });
-        // TODO repeated work in 1st repaint
         texture.set(self.image.clone(), TextureOptions::NEAREST);
         ui.image((texture.id(), 3. * texture.size_vec2()));
     }
 
-    fn sleep(&mut self, ctx: &Context, frame_start: f64, gb_frame_count_before: u64) {
-        let mut _ccc = false;
-        if self.gb_frame_count - gb_frame_count_before > 1 {
-            info!("more than one gb_frame");
-            _ccc = true;
-        }
-        let b = now();
-        info!("a {:.8}", frame_start);
-        info!("b {:.8}", b);
-        let time_taken = (b - frame_start) / 1000.0;
-        info!("time_taken {:.8}", time_taken);
-        let time_taken = (time_taken * 1000.0).ceil() / 1000.0;
-        if _ccc {
-            info!("time_taken2 {:.8}", time_taken);
-        }
-        let sleep_time = GB_FRAME_IN_SECONDS - time_taken;
-        info!("sleep_time {:.8}", sleep_time);
-        if sleep_time < 0.0 {
-            ctx.request_repaint();
-        } else {
-            ctx.request_repaint_after(Duration::from_secs_f64(sleep_time - 0.005));
-            // ctx.request_repaint_after(Duration::from_secs_f64(sleep_time));
-        }
-    }
-
+    #[allow(dead_code)]
     fn debug_panel(&self, ui: &mut Ui) {
         ui.separator();
         egui::Grid::new("my_grid").striped(true).show(ui, |ui| {
@@ -171,20 +149,45 @@ impl TemplateApp {
             stat!("UI updates"  : "{}"   , self.egui_frame_count);
         });
     }
+
+    #[allow(dead_code)]
+    fn sleep(&mut self, ctx: &Context, frame_start: f64, gb_frame_count_before: u64) {
+        let mut _ccc = false;
+        if self.gb_frame_count - gb_frame_count_before > 1 {
+            info!("more than one gb_frame");
+            _ccc = true;
+        }
+        let b = now();
+        info!("a {:.8}", frame_start);
+        info!("b {:.8}", b);
+        let time_taken = (b - frame_start) / 1000.0;
+        info!("time_taken {:.8}", time_taken);
+        let time_taken = (time_taken * 1000.0).ceil() / 1000.0;
+        if _ccc {
+            info!("time_taken2 {:.8}", time_taken);
+        }
+        let sleep_time = GB_FRAME_IN_SECONDS - time_taken;
+        info!("sleep_time {:.8}", sleep_time);
+        if sleep_time < 0.0 {
+            ctx.request_repaint();
+        } else {
+            // ctx.request_repaint_after(Duration::from_secs_f64(sleep_time - 0.005));
+            ctx.request_repaint_after(Duration::from_secs_f64(sleep_time));
+        }
+    }
 }
 
 impl eframe::App for TemplateApp {
-    fn update(&mut self, ctx: &Context, frame: &mut Frame) {
-        self.top_panel(ctx, frame);
+    fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
+        #[cfg(not(target_arch = "wasm32"))]
+        self.top_panel(ctx);
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("fpt");
-            ui.add(egui::Label::new(self.egui_frame_count.to_string()));
             ui.separator();
-            // vars for sleep
             // let frame_start = now();
             // let gb_frame_count_before = self.gb_frame_count;
             self.game(ui);
-            self.debug_panel(ui);
+            // self.debug_panel(ui);
             // TODO: fix sleep timings for displays > 60hz. til then we burn cpu
             // self.sleep(ctx, frame_start, gb_frame_count_before);
             ctx.request_repaint();
@@ -198,8 +201,10 @@ fn main() -> eframe::Result<()> {
     env_logger::init();
 
     let native_options = eframe::NativeOptions {
-        initial_window_size: Some([500.0, 700.0].into()),
-        min_window_size: Some([500.0, 700.0].into()),
+        viewport: egui::ViewportBuilder {
+            inner_size: Some(egui::Vec2::new(500.0, 700.0)),
+            ..Default::default()
+        },
         ..Default::default()
     };
     eframe::run_native(
