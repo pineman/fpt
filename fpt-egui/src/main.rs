@@ -4,10 +4,17 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use eframe::Frame;
-use egui::{Color32, Context, Pos2, TextureOptions, Ui};
+use egui::{Color32, Context, TextureOptions, Ui};
 use log::info;
 
 const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
+
+const PALETTE: [[u8; 4]; 4] = [
+    [0, 63, 0, 255],
+    [46, 115, 32, 255],
+    [140, 191, 10, 255],
+    [160, 207, 10, 255],
+];
 
 #[cfg(target_arch = "wasm32")]
 #[allow(dead_code)]
@@ -31,15 +38,16 @@ fn now() -> f64 {
     APP_START.elapsed().as_secs_f64() * 1000.0
 }
 
-pub struct TemplateApp {
+pub struct FPT {
     egui_frame_count: u64,
     gb_frame_count: u64,
     accum_time: f64,
     image: Arc<egui::ColorImage>,
     texture: Option<egui::TextureHandle>,
+    gb: fpt::Gameboy,
 }
 
-impl Default for TemplateApp {
+impl Default for FPT {
     fn default() -> Self {
         Self {
             egui_frame_count: 0,
@@ -47,14 +55,18 @@ impl Default for TemplateApp {
             accum_time: 0.0,
             image: Arc::new(egui::ColorImage::new([160, 144], Color32::TRANSPARENT)),
             texture: None,
+            gb: fpt::Gameboy::new(),
         }
     }
 }
 
-impl TemplateApp {
+impl FPT {
     /// Called once before the first frame.
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
-        Default::default()
+        let mut app = FPT::default();
+        app.gb
+            .load_rom(&include_bytes!("../../roms/Tetris_World_Rev_1.gb").to_vec());
+        app
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -82,39 +94,17 @@ impl TemplateApp {
         let delta_time = ui.input(|i| i.unstable_dt) as f64;
         self.accum_time += delta_time;
         self.egui_frame_count += 1;
-        // I hate this while, I much prefer the if
-        // while self.accum_time >= GB_FRAME_IN_SECONDS {
         if self.accum_time >= GB_FRAME_IN_SECONDS {
             self.gb_frame_count += 1;
             self.accum_time -= GB_FRAME_IN_SECONDS;
-
-            if let Some(image) = Arc::get_mut(&mut self.image) {
-                // It all starts with this...
-                static mut CHAOS_GAME: Pos2 = Pos2::new(80., 143.9);
-                const STEPS: u64 = 5;
-                for i in 0..STEPS {
-                    let t = (self.gb_frame_count * STEPS + i) as f64 / 60.
-                        * 0.33
-                        * 2.
-                        * std::f64::consts::PI;
-                    let r = (200. + (t * 1.01 + 0.).sin() * 40.) as u8;
-                    let g = (180. + (t * 0.08 + 1.).sin() * 70.) as u8;
-                    let b = (40.0 + (t * 0.57 + 2.).sin() * 20.) as u8;
-                    let (x, y) = unsafe {
-                        CHAOS_GAME = CHAOS_GAME.lerp(
-                            match ((r as u32) + (g as u32) + (b as u32)) % 3 {
-                                0 => Pos2::new(0., 0.),
-                                1 => Pos2::new(0., 143.9),
-                                _ => Pos2::new(159.9, 143.9),
-                            },
-                            0.5,
-                        );
-                        (CHAOS_GAME.x.floor() as usize, CHAOS_GAME.y.floor() as usize)
-                    };
-                    image[(x, y)] = Color32::from_rgb(r, g, b);
-                    let (x, y) = (159 - x, 143 - y);
-                    image[(x, y)] = Color32::from_rgb(b, g, r);
-                }
+            let image = Arc::get_mut(&mut self.image).unwrap();
+            let frame = self.gb.frame();
+            for z in 0..(160 * 144) {
+                let x = z % 160;
+                let y = z / 160;
+                let color = PALETTE[frame[z] as usize];
+                image[(x, y)] =
+                    Color32::from_rgba_premultiplied(color[0], color[1], color[2], color[3]);
             }
         }
         // TODO repeated work in 1st repaint
@@ -177,7 +167,7 @@ impl TemplateApp {
     }
 }
 
-impl eframe::App for TemplateApp {
+impl eframe::App for FPT {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
         #[cfg(not(target_arch = "wasm32"))]
         self.top_panel(ctx);
@@ -210,7 +200,7 @@ fn main() -> eframe::Result<()> {
     eframe::run_native(
         "eframe template",
         native_options,
-        Box::new(|cc| Box::new(TemplateApp::new(cc))),
+        Box::new(|cc| Box::new(FPT::new(cc))),
     )
 }
 
@@ -225,7 +215,7 @@ fn main() {
             .start(
                 "the_canvas_id",
                 web_options,
-                Box::new(|cc| Box::new(TemplateApp::new(cc))),
+                Box::new(|cc| Box::new(FPT::new(cc))),
             )
             .await
             .expect("failed to start eframe");

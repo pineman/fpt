@@ -22,7 +22,7 @@ pub struct Gameboy {
 impl Gameboy {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        Self::new_with_hook(Box::new(|_frame: ppu::Frame| {}))
+        Self::new_with_hook(Box::new(|_frame: Frame| {}))
     }
 
     pub fn new_with_zmq() -> Self {
@@ -30,7 +30,7 @@ impl Gameboy {
         let socket = ctx.socket(zmq::PUB).unwrap();
         socket.bind("tcp://127.0.0.1:5000").unwrap();
 
-        Self::new_with_hook(Box::new(move |frame: ppu::Frame| {
+        Self::new_with_hook(Box::new(move |frame: Frame| {
             let message = zmq::Message::from(frame.to_vec());
             socket.send("frame", zmq::SNDMORE).unwrap();
             socket.send(message, 0).unwrap();
@@ -69,6 +69,14 @@ impl Gameboy {
         // TODO: care for double speed mode (need to run two cpu cycles)
         self.cpu.cycle();
         self.ppu.step(1);
+    }
+
+    pub fn frame(&mut self) -> &Frame {
+        for _ in 0..70224 {
+            self.cpu.cycle();
+            self.ppu.step(1);
+        }
+        self.ppu.get_frame()
     }
 
     pub fn get_frame(&self) -> &Frame {
