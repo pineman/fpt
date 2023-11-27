@@ -1,5 +1,6 @@
 #![feature(lazy_cell)]
 
+use std::fs;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -9,11 +10,11 @@ use log::info;
 
 const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
 
-const PALETTE: [[u8; 4]; 4] = [
-    [0, 63, 0, 255],
-    [46, 115, 32, 255],
-    [140, 191, 10, 255],
-    [160, 207, 10, 255],
+const PALETTE: [Color32; 4] = [
+    Color32::from_rgb(0, 63, 0),
+    Color32::from_rgb(46, 115, 32),
+    Color32::from_rgb(140, 191, 10),
+    Color32::from_rgb(160, 207, 10),
 ];
 
 #[cfg(target_arch = "wasm32")]
@@ -64,8 +65,8 @@ impl FPT {
     /// Called once before the first frame.
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         let mut app = FPT::default();
-        app.gb
-            .load_rom(&include_bytes!("../../roms/Tetris_World_Rev_1.gb").to_vec());
+        let rom = fs::read("../../roms/Tetris_World_Rev_1.gb").unwrap();
+        app.gb.load_rom(&rom);
         app
     }
 
@@ -98,13 +99,14 @@ impl FPT {
             self.gb_frame_count += 1;
             self.accum_time -= GB_FRAME_IN_SECONDS;
             let image = Arc::get_mut(&mut self.image).unwrap();
+            let a = now();
             let frame = self.gb.frame();
+            let b = now();
+            info!("gb frame took {:.8} ms", b - a);
             for z in 0..(160 * 144) {
                 let x = z % 160;
                 let y = z / 160;
-                let color = PALETTE[frame[z] as usize];
-                image[(x, y)] =
-                    Color32::from_rgba_premultiplied(color[0], color[1], color[2], color[3]);
+                image[(x, y)] = PALETTE[frame[z] as usize];
             }
         }
         // TODO repeated work in 1st repaint
@@ -173,6 +175,7 @@ impl eframe::App for FPT {
         self.top_panel(ctx);
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("fpt");
+            ui.label(self.egui_frame_count.to_string());
             ui.separator();
             // let frame_start = now();
             // let gb_frame_count_before = self.gb_frame_count;
