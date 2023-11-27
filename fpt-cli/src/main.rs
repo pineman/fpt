@@ -1,12 +1,15 @@
+#![feature(array_chunks)]
+#![feature(iter_intersperse)]
+
 use std::fs;
 
-use fpt::debugger::DebuggerTextInterface;
-use fpt::Gameboy;
-
 use clap::{Args, Parser, Subcommand};
-
+use debugger::DebuggerTextInterface;
+use fpt::Gameboy;
 use rustyline::error::ReadlineError;
 use rustyline::{DefaultEditor, Result};
+
+pub mod debugger;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -91,7 +94,7 @@ fn dump(args: Dump) -> Result<()> {
 }
 
 fn run(args: Run) -> Result<()> {
-    let mut gameboy = Gameboy::new_with_zmq();
+    let mut gameboy = Gameboy::new();
     let rom = fs::read(args.rom).unwrap();
     gameboy.load_rom(&rom);
     loop {

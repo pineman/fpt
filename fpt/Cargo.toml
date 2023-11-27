@@ -3,10 +3,6 @@ name = "fpt"
 version = "0.1.0"
 edition = "2021"
 
-[dependencies]
-hlua = { version = "0.4.1" }
-zmq = "0.10"
-
 [dev-dependencies]
 rstest = "0.18"
 

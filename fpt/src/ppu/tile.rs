@@ -1,4 +1,8 @@
 use std::fmt;
+use std::fs::File;
+use std::io::Write;
+
+use crate::ppu::Frame;
 
 /// Holds a 8x8 tile image as it appears in VRAM
 /// (2 bytes for each 8 pixel row)
@@ -71,6 +75,27 @@ impl VRamContents {
     }
 }
 
+/// Writes a Gameboy frame to a PGM file
+pub fn write_pgm_screenshot(frame: &Frame, filename: &str) {
+    // TODO: code dedup
+    let mut file = File::create(filename).unwrap();
+
+    // Write the header for a 160x144 PGM image with 4 shades of gray
+    write!(file, "P2\n# Game Boy screenshot: {filename}\n160 144\n3\n").unwrap();
+
+    // Our Game Boy's framebuffer seems to have a direct correspondence to this!
+    for line in frame.array_chunks::<160>() {
+        let pgm_line = line
+            .iter()
+            .map(|p| (b'3' - *p) as char) // ASCII from '0' to '3'
+            .intersperse(' ')
+            .collect::<String>()
+            + "\n";
+
+        file.write_all(pgm_line.as_bytes()).unwrap();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -137,11 +162,10 @@ mod tests {
 
         std::fs::create_dir_all("screenshots").unwrap();
         for ly in 0..154 {
-            crate::debugger::utilities::write_pgm_screenshot(
+            write_pgm_screenshot(
                 gb.get_frame(),
                 &format!("screenshots/test_one_tile_to_vram-ly_{ly:05}.pgm"),
-            )
-            .unwrap();
+            );
             gb.ppu.step(456);
         }
     }

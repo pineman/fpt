@@ -1,6 +1,5 @@
-use rstest::*;
-
 use fpt::lr35902::LR35902;
+use rstest::*;
 
 #[derive(Clone)]
 struct LR35902Builder {

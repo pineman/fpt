@@ -1,15 +1,13 @@
+use std::cell::RefCell;
 use std::fmt;
+use std::fs::File;
+use std::io::Write;
+use std::rc::Rc;
 
 use hlua::AnyHashableLuaValue as LuaValue;
 use hlua::Lua;
 
 use crate::Gameboy;
-use std::cell::RefCell;
-use std::fs::File;
-use std::io::Write;
-use std::rc::Rc;
-
-pub mod utilities;
 
 const ALIASES: [(&str, &str); 7] = [
     ("b", "_G['break']"),
@@ -85,7 +83,7 @@ struct Debugger {
 #[allow(dead_code)]
 impl Debugger {
     fn new() -> Debugger {
-        let gameboy = Gameboy::new_with_zmq();
+        let gameboy = Gameboy::new();
 
         Debugger {
             gameboy,
@@ -337,7 +335,7 @@ impl DebuggerTextInterface<'_> {
                     let game_name = String::from_utf8(
                         d1.borrow()
                             .gameboy
-                            .bus
+                            .bus()
                             .memory()
                             .slice(0x134..0x143)
                             .to_vec(),
@@ -385,6 +383,7 @@ impl DebuggerTextInterface<'_> {
                     let mut file = File::create(&filename)
                         .unwrap_or_else(|_| panic!("Couldn't open file \"{filename}\""));
 
+                    // TODO: code dedup
                     // Write the header for a 160x144 PGM image with 4 shades of gray
                     write!(file, "P2\n# Game Boy screenshot: {filename}\n160 140\n3\n")
                         .expect("Couldn't write PGM header");

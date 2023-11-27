@@ -2,9 +2,8 @@ use std::fmt;
 
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
-use crate::bitwise as bw;
-
 use super::memory::Bus;
+use crate::bitwise as bw;
 
 pub mod instructions;
 
