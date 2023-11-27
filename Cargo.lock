@@ -907,6 +907,7 @@ dependencies = [
  "eframe",
  "egui",
  "env_logger",
+ "fpt",
  "js-sys",
  "log",
  "sha2",
