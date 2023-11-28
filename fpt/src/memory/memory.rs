@@ -1,3 +1,5 @@
+use crate::memory::Mbc0;
+use crate::memory::MemoryController;
 use std::cell::{RefCell, RefMut};
 use std::ops::Range;
 use std::rc::Rc;
@@ -60,11 +62,12 @@ pub mod map {
     pub const INTERRUPT_SWITCH: Address = 0xFFFF;
 }
 
-#[derive(Clone)]
+//#[derive(Clone)]
 pub struct Memory {
     mem: [u8; 65536],
     cartridge: Vec<u8>,
     bootrom: [u8; 256],
+    memory_controller: Box<dyn MemoryController>,
 }
 
 impl PartialEq for Memory {
@@ -85,7 +88,17 @@ impl Memory {
             mem: [0; 65536],
             cartridge: Vec::new(),
             bootrom: [0; 256],
+            memory_controller: Box::new(Mbc0::new()),
         }
+    }
+
+    pub fn read(&self, address: GBAddress) -> u8 {
+        self.memory_controller.read(address, &self.cartridge)
+    }
+
+    pub fn write(&mut self, address: GBAddress, value: u8) {
+        self.memory_controller
+            .write(address, value, &mut self.cartridge)
     }
 
     pub fn slice(&self, range: MemoryRange) -> &[u8] {
@@ -137,11 +150,11 @@ impl Bus {
     }
 
     fn _read(&self, address: Address) -> u8 {
-        self.memory().mem[address]
+        self.memory().read(address as GBAddress)
     }
 
     fn _write(&mut self, address: Address, value: u8) {
-        self.memory().mem[address] = value;
+        self.memory().write(address as GBAddress, value);
     }
 
     pub fn clone_from_slice(&mut self, range: MemoryRange, slice: &[u8]) {

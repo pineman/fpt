@@ -38,7 +38,8 @@ impl Gameboy {
     }
 
     fn new_with_hook(frame_hook: Box<dyn Fn(Frame)>) -> Self {
-        let bus = Bus::new();
+        let mut bus = Bus::new();
+        bus.load_cartridge(&[0; 32768].to_vec());
         Self {
             bus: bus.clone(),
             cpu: LR35902::new(bus.clone()),
