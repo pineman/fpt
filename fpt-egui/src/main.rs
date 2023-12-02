@@ -1,6 +1,5 @@
 #![feature(lazy_cell)]
 
-use std::fs;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -65,7 +64,7 @@ impl FPT {
     /// Called once before the first frame.
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         let mut app = FPT::default();
-        let rom = fs::read("../../roms/Tetris_World_Rev_1.gb").unwrap();
+        let rom = include_bytes!("../../roms/Tetris_World_Rev_1.gb").to_vec();
         app.gb.load_rom(&rom);
         app
     }
