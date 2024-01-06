@@ -98,10 +98,7 @@ impl FPT {
             self.gb_frame_count += 1;
             self.accum_time -= GB_FRAME_IN_SECONDS;
             let image = Arc::get_mut(&mut self.image).unwrap();
-            let a = now();
             let frame = self.gb.frame();
-            let b = now();
-            info!("gb frame took {:.8} ms", b - a);
             for z in 0..(160 * 144) {
                 let x = z % 160;
                 let y = z / 160;
