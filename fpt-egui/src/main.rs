@@ -64,8 +64,10 @@ impl FPT {
     /// Called once before the first frame.
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         let mut app = FPT::default();
-        let rom = include_bytes!("../../roms/Tetris_World_Rev_1.gb").to_vec();
-        app.gb.load_rom(&rom);
+        if std::env::var("CI").is_err() {
+            let rom = std::fs::read("roms/Tetris_World_Rev_1.gb").unwrap();
+            app.gb.load_rom(&rom);
+        }
         app
     }
 
@@ -90,7 +92,7 @@ impl FPT {
         });
     }
 
-    fn game(&mut self, ui: &mut Ui) {
+    fn emulator(&mut self, ui: &mut Ui) {
         let delta_time = ui.input(|i| i.unstable_dt) as f64;
         self.accum_time += delta_time;
         self.egui_frame_count += 1;
@@ -175,7 +177,7 @@ impl eframe::App for FPT {
             ui.separator();
             // let frame_start = now();
             // let gb_frame_count_before = self.gb_frame_count;
-            self.game(ui);
+            self.emulator(ui);
             // self.debug_panel(ui);
             // TODO: fix sleep timings for displays > 60hz. til then we burn cpu
             // self.sleep(ctx, frame_start, gb_frame_count_before);

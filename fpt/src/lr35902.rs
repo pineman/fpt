@@ -558,6 +558,7 @@ impl LR35902 {
     pub fn cycle(&mut self) {
         let instruction = self.decode();
         self.set_inst_cycle_count(self.inst_cycle_count() + 1);
+        // Only actually mutate CPU state on the last t-cycle of the instruction
         if self.inst_cycle_count() < instruction.cycles {
             return;
         }
