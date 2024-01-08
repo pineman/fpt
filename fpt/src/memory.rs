@@ -24,7 +24,7 @@ pub mod map {
     /// 0x4000..0x8000 From cartridge, switchable bank via mapper (if any)
     pub const USER_PROGRAM: MemoryRange = 0x0000..0x8000;
 
-    /// Video RAM (8 KB) - 	In CGB mode, switchable bank 0/1
+    /// Video RAM (8 KB) - In CGB mode, switchable bank 0/1
     pub const VRAM: MemoryRange = 0x8000..0xA000;
 
     /// External Expansion Working RAM (8 KB) - From cartridge, switchable bank if any
@@ -231,7 +231,7 @@ impl Bus {
         self.clone_from_slice(map::BOOTROM, bootrom);
     }
 
-    pub fn load_cartridge(&mut self, cartridge: &Vec<u8>) {
+    pub fn load_cartridge(&mut self, cartridge: &[u8]) {
         if cartridge.len() < 0x8000 {
             println!("This is not a  rom, fuck you!");
             panic!();
