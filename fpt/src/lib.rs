@@ -29,7 +29,7 @@ impl Gameboy {
         }
     }
 
-    pub fn load_rom(&mut self, rom: &Vec<u8>) {
+    pub fn load_rom(&mut self, rom: &[u8]) {
         self.bus.load_cartridge(rom);
     }
 
