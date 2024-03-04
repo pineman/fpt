@@ -65,8 +65,12 @@ impl FPT {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         let mut app = FPT::default();
         if std::env::var("CI").is_err() {
-            let rom = std::fs::read("roms/Tetris_World_Rev_1.gb").unwrap();
-            app.gb.load_rom(&rom);
+            const ROM_PATH: &str = "roms/Tetris_World_Rev_1.gb";
+            if let Ok(rom) = std::fs::read(ROM_PATH) {
+                app.gb.load_rom(&rom);
+            } else {
+                panic!("Unable to open {}", ROM_PATH);
+            }
         }
         app
     }

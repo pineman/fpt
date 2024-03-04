@@ -7,9 +7,9 @@ default-run = "main"
 [dependencies]
 clap = { version = "4.4.6", features = ["derive"] }
 fpt = { path = "../fpt" }
-rustyline = "12"
+rustyline = "13.0.0"
 hlua = { version = "0.4.1" }
 
 [[bin]]
-name="main"
+name = "main"
 path = "src/main.rs"
