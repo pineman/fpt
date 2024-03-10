@@ -80,7 +80,6 @@ struct Debugger {
     breakpoints: Vec<Breakpoint>,
 }
 
-#[allow(dead_code)]
 impl Debugger {
     fn new() -> Debugger {
         let gameboy = Gameboy::new();

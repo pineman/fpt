@@ -340,7 +340,7 @@ impl LR35902 {
     }
 
     fn sub8(&mut self, x: u8, y: u8) -> u8 {
-        // everyday I'm grateful for overflowing_sub
+        // every day I'm grateful for overflowing_sub
         let (result, overflow) = x.overflowing_sub(y);
         self.set_z_flag(result == 0);
         self.set_n_flag(true);

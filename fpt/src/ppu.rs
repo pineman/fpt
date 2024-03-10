@@ -48,7 +48,7 @@ impl From<u8> for Mode {
     }
 }
 
-const DOTS_IN_ONE_FRAME: u32 = 70224;
+pub const DOTS_IN_ONE_FRAME: u32 = 70224;
 
 impl Ppu {
     pub fn new(mut bus: Bus) -> Self {
@@ -71,17 +71,21 @@ impl Ppu {
         }
     }
 
+    fn set_mode(&mut self, mode: Mode) {
+        self.mode = mode;
+    }
+
     fn oam_scan(&mut self) {
         if self.dots_this_frame % 456 == 79 {
             self.tilemap = VRamContents::load(&self.bus.vram());
-            self.mode = Mode::PixelTransfer;
+            self.set_mode(Mode::PixelTransfer);
         }
     }
 
     #[allow(clippy::format_collect)]
     fn pixel_transfer(&mut self) {
         if self.dots_this_frame % 456 == 238 {
-            self.mode = Mode::HBlank;
+            self.set_mode(Mode::HBlank);
             return;
         }
 
@@ -109,15 +113,15 @@ impl Ppu {
 
     fn h_blank(&mut self) {
         if self.dots_this_frame >= (456 * HEIGHT - 1) as u32 {
-            self.mode = Mode::VBlank;
+            self.set_mode(Mode::VBlank);
         } else if self.dots_this_frame % 456 == 455 {
-            self.mode = Mode::OamScan;
+            self.set_mode(Mode::OamScan);
         }
     }
 
     fn v_blank(&mut self) {
         if self.dots_this_frame == DOTS_IN_ONE_FRAME - 1 {
-            self.mode = Mode::OamScan;
+            self.set_mode(Mode::OamScan);
         }
     }
 
