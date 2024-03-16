@@ -260,9 +260,9 @@ impl Bus {
         self.memory().mem[range.start..range.end].clone_from_slice(slice);
     }
 
-    //pub fn slice(&self, range: MemoryRange) -> &[u8] {
-    //    &self.memory().mem[(range.start as usize)..(range.end as usize)]
-    //}
+    pub fn slice(&self, range: MemoryRange) -> Vec<u8> {
+       self.memory().mem[(range.start as usize)..(range.end as usize)].to_vec()
+    }
 
     //pub fn mut_slice(&mut self, range: MemoryRange) -> &mut [u8] {
     //    &mut self.memory().mem[(range.start as usize)..(range.end as usize)]
