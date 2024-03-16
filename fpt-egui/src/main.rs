@@ -12,6 +12,8 @@ use fpt::ppu::tile::Tile;
 
 const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
 
+const TEXTURE_SCALE_FACTOR: f32 = 3.0;
+
 const PALETTE: [Color32; 4] = [
     Color32::from_rgb(0, 63, 0),
     Color32::from_rgb(46, 115, 32),
@@ -94,13 +96,6 @@ impl FPT {
                 ui.menu_button("File", |ui| {
                     if ui.button("Quit").clicked() {
                         ctx.send_viewport_cmd(egui::ViewportCommand::Close)
-                    }
-                });
-                ui.menu_button("LCD", |ui| {
-                    if ui.button("clear").clicked() {
-                        if let Some(image) = Arc::get_mut(&mut self.image) {
-                            image.pixels.fill(Color32::TRANSPARENT);
-                        }
                     }
                 });
                 ui.add_space(16.0);
@@ -194,7 +189,7 @@ impl eframe::App for FPT {
                     .load_texture("my-image", self.image.clone(), TextureOptions::NEAREST)
             });
             texture.set(self.image.clone(), TextureOptions::NEAREST);
-            ui.image((texture.id(), 3. * texture.size_vec2()));
+            ui.image((texture.id(), TEXTURE_SCALE_FACTOR * texture.size_vec2()));
 
             // self.debug_panel(ui);
             // TODO: fix sleep timings for displays > 60hz. til then we burn cpu
@@ -207,22 +202,12 @@ impl eframe::App for FPT {
             .show(ctx, |ui| {
                 ui.heading("Debug");
                 ui.checkbox(&mut self.paused, "Pause");
-                // let tile_i = 0;
-                // let start = 0x8000 + tile_i * 16;
-                // let end = 0x8000 + (tile_i + 1) * 16;
-                // let tile_vec = self.gb.bus().slice(start..end);
-                // let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
-                #[rustfmt::skip]
-                let tile_slice = [
-                    0x3c, 0x7e,
-                    0x42, 0x42,
-                    0x42, 0x42,
-                    0x42, 0x42,
-                    0x7e, 0x5e,
-                    0x7e, 0x0a,
-                    0x7c, 0x56,
-                    0x38, 0x7c,
-                ];
+
+                let tile_i = 0;
+                let start = 0x8000 + tile_i * 16;
+                let end = 0x8000 + (tile_i + 1) * 16;
+                let tile_vec = self.gb.bus().slice(start..end);
+                let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
                 let tile = Tile::load(&tile_slice);
                 let the_tile = Arc::get_mut(&mut self.tile).unwrap();
                 for y in 0..8 {
@@ -237,7 +222,8 @@ impl eframe::App for FPT {
                             .load_texture("tile0", self.tile.clone(), TextureOptions::NEAREST)
                     });
                 texture.set(self.tile.clone(), TextureOptions::NEAREST);
-                ui.image((texture.id(), 3. * texture.size_vec2()));
+                ui.image((texture.id(), TEXTURE_SCALE_FACTOR * texture.size_vec2()));
+
                 // for tile_i in 0..384 {
                 //     let start = 0x8000+tile_i*16;
                 //     let end = 0x8000+(tile_i+1)*16;
