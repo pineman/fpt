@@ -1,4 +1,5 @@
 #![feature(lazy_cell)]
+#![feature(array_chunks)]
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -6,6 +7,8 @@ use std::time::Duration;
 use eframe::Frame;
 use egui::{Color32, Context, TextureOptions, Ui};
 use log::info;
+
+use fpt::ppu::tile::Tile;
 
 const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
 
@@ -42,9 +45,15 @@ pub struct FPT {
     egui_frame_count: u64,
     gb_frame_count: u64,
     accum_time: f64,
+
     image: Arc<egui::ColorImage>,
     texture: Option<egui::TextureHandle>,
+
+    tile: Arc<egui::ColorImage>,
+    tile_texture: Option<egui::TextureHandle>,
+
     gb: fpt::Gameboy,
+    paused: bool,
 }
 
 impl Default for FPT {
@@ -55,7 +64,10 @@ impl Default for FPT {
             accum_time: 0.0,
             image: Arc::new(egui::ColorImage::new([160, 144], Color32::TRANSPARENT)),
             texture: None,
+            tile: Arc::new(egui::ColorImage::new([8, 8], Color32::TRANSPARENT)),
+            tile_texture: None,
             gb: fpt::Gameboy::new(),
+            paused: false,
         }
     }
 }
@@ -75,8 +87,8 @@ impl FPT {
         app
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     fn top_panel(&mut self, ctx: &Context) {
+        #[cfg(not(target_arch = "wasm32"))]
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
@@ -111,14 +123,6 @@ impl FPT {
                 image[(x, y)] = PALETTE[frame[z] as usize];
             }
         }
-        // TODO repeated work in 1st repaint
-        // TODO: should be in new?
-        let texture: &mut egui::TextureHandle = self.texture.get_or_insert_with(|| {
-            ui.ctx()
-                .load_texture("my-image", self.image.clone(), TextureOptions::NEAREST)
-        });
-        texture.set(self.image.clone(), TextureOptions::NEAREST);
-        ui.image((texture.id(), 3. * texture.size_vec2()));
     }
 
     #[allow(dead_code)]
@@ -173,20 +177,88 @@ impl FPT {
 
 impl eframe::App for FPT {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
-        #[cfg(not(target_arch = "wasm32"))]
         self.top_panel(ctx);
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("fpt");
             ui.label(self.egui_frame_count.to_string());
-            ui.separator();
+
+            // Emulator + screen
             // let frame_start = now();
             // let gb_frame_count_before = self.gb_frame_count;
-            self.emulator(ui);
+            if !self.paused {
+                self.emulator(ui);
+            }
+            // TODO repeated work in 1st repaint
+            // TODO: should be in new?
+            let texture: &mut egui::TextureHandle = self.texture.get_or_insert_with(|| {
+                ui.ctx()
+                    .load_texture("my-image", self.image.clone(), TextureOptions::NEAREST)
+            });
+            texture.set(self.image.clone(), TextureOptions::NEAREST);
+            ui.image((texture.id(), 3. * texture.size_vec2()));
+
             // self.debug_panel(ui);
             // TODO: fix sleep timings for displays > 60hz. til then we burn cpu
             // self.sleep(ctx, frame_start, gb_frame_count_before);
             ctx.request_repaint();
         });
+
+        egui::SidePanel::right("right_panel")
+            .resizable(false)
+            .show(ctx, |ui| {
+                ui.heading("Debug");
+                ui.checkbox(&mut self.paused, "Pause");
+                // let tile_i = 0;
+                // let start = 0x8000 + tile_i * 16;
+                // let end = 0x8000 + (tile_i + 1) * 16;
+                // let tile_vec = self.gb.bus().slice(start..end);
+                // let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
+                #[rustfmt::skip]
+                let tile_slice = [
+                    0x3c, 0x7e,
+                    0x42, 0x42,
+                    0x42, 0x42,
+                    0x42, 0x42,
+                    0x7e, 0x5e,
+                    0x7e, 0x0a,
+                    0x7c, 0x56,
+                    0x38, 0x7c,
+                ];
+                let tile = Tile::load(&tile_slice);
+                let the_tile = Arc::get_mut(&mut self.tile).unwrap();
+                for y in 0..8 {
+                    for x in 0..8 {
+                        let pixel = tile.get_pixel(y, x);
+                        the_tile[(x, y)] = PALETTE[pixel as usize];
+                    }
+                }
+                let texture: &mut egui::TextureHandle =
+                    self.tile_texture.get_or_insert_with(|| {
+                        ui.ctx()
+                            .load_texture("tile0", self.tile.clone(), TextureOptions::NEAREST)
+                    });
+                texture.set(self.tile.clone(), TextureOptions::NEAREST);
+                ui.image((texture.id(), 3. * texture.size_vec2()));
+                // for tile_i in 0..384 {
+                //     let start = 0x8000+tile_i*16;
+                //     let end = 0x8000+(tile_i+1)*16;
+                //     let tile = self.gb.bus().slice(start..end);
+                //     for (line_i, line) in tile.array_chunks::<2>().enumerate() {
+                //         let lsb = line[0];
+                //         let msb = line[1];
+                //         let y = line_i + (tile_i /16) * 8;
+                //         for i in 0..8 {
+                //             let low_bit = (lsb >> (7 - i)) & 1;
+                //             let high_bit = (msb >> (7 - i)) & 1;
+                //             let pixel = (high_bit << 1) + low_bit;
+                //
+                //             let x = (tile_i % 16) * 8 + i;
+                //             let y = (tile_i / 16) * 8 + (i / 8);
+                //             self.tiles[(x, y)] = PALETTE[pixel as usize];
+                //
+                //         }
+                //     }
+                // }
+            });
     }
 }
 
