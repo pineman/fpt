@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+FILES=$(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g')
+cargo fmt
+cargo clippy --all-features
+echo "$FILES" | xargs git add
