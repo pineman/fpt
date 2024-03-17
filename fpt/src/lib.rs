@@ -3,14 +3,14 @@
 #![feature(array_chunks)]
 #![feature(iter_intersperse)]
 
-mod bitwise;
+use lr35902::LR35902;
+use memory::Bus;
+use ppu::{Frame, Ppu, DOTS_IN_ONE_FRAME};
+
+pub mod bitwise;
 pub mod lr35902;
 pub mod memory;
 pub mod ppu;
-
-use lr35902::LR35902;
-use memory::Bus;
-use ppu::{Frame, Ppu};
 
 pub struct Gameboy {
     bus: Bus,
@@ -52,14 +52,9 @@ impl Gameboy {
         cycles
     }
 
-    pub fn cycle(&mut self) {
-        // TODO: care for double speed mode (need to run two cpu cycles)
-        self.cpu.cycle();
-        self.ppu.step(1);
-    }
-
     pub fn frame(&mut self) -> &Frame {
-        for _ in 0..70224 {
+        for _ in 0..DOTS_IN_ONE_FRAME {
+            // TODO: care for double speed mode (need to run two cpu cycles)
             self.cpu.cycle();
             self.ppu.step(1);
         }

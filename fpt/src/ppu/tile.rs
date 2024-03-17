@@ -4,6 +4,9 @@ use std::io::Write;
 
 use crate::ppu::Frame;
 
+pub const NUM_TILES: usize = 384;
+pub const TILE_PIXEL_SIZE: usize = 8;
+
 /// Holds a 8x8 tile image as it appears in VRAM
 /// (2 bytes for each 8 pixel row)
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -41,7 +44,7 @@ impl fmt::Debug for Tile {
 /// 3 * 128 tile blocks and two 32x32 tile maps
 pub struct VRamContents {
     /// Three blocks of 128 tiles shared by the BG/Win tiles and OBJ tiles
-    pub tile_data: [Tile; 384],
+    pub tile_data: [Tile; NUM_TILES],
     /// The first 32x32 tile map, accessed when either LCDC.3 or LCDC.6 are 0
     pub tile_map0: [u8; 1024],
     /// The second 32x32 tile map, accessed when either LCDC.3 or LCDC.6 are 1
@@ -62,7 +65,7 @@ impl VRamContents {
     pub fn load(vram: &[u8]) -> VRamContents {
         let mut tilemap = VRamContents::default();
 
-        for i in 0..384 {
+        for i in 0..NUM_TILES {
             tilemap.tile_data[i]
                 .bytes
                 .clone_from_slice(&vram[(16 * i)..(16 * (i + 1))]);
