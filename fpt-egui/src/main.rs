@@ -5,8 +5,9 @@ use std::time::Duration;
 
 use eframe::Frame;
 use egui::{Color32, Context, TextureOptions, Ui};
-use fpt::ppu::tile::Tile;
 use log::info;
+
+use fpt::ppu::tile::Tile;
 
 const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
 
@@ -119,29 +120,6 @@ impl FPT {
     }
 
     #[allow(dead_code)]
-    fn debug_panel(&self, ui: &mut Ui) {
-        ui.separator();
-        egui::Grid::new("my_grid").striped(true).show(ui, |ui| {
-            macro_rules! stat {
-                ($label:literal : $fmt:literal, $value:expr) => {
-                    ui.colored_label(Color32::LIGHT_GRAY, $label);
-                    ui.monospace(format!($fmt, $value));
-                    ui.code(stringify!($value));
-                    ui.end_row();
-                };
-            }
-            let time = ui.input(|i| i.time);
-            let delta_time = ui.input(|i| i.unstable_dt) as f64;
-            stat!("time"        : "{:.8}", time);
-            stat!("dt"          : "{:.8}", delta_time);
-            stat!("accum. time" : "{:.8}", self.accum_time);
-            stat!("Ideal count" : "{:.3}", time / GB_FRAME_IN_SECONDS);
-            stat!("Frame count" : "{}"   , self.gb_frame_count);
-            stat!("UI updates"  : "{}"   , self.egui_frame_count);
-        });
-    }
-
-    #[allow(dead_code)]
     fn sleep(&mut self, ctx: &Context, frame_start: f64, gb_frame_count_before: u64) {
         let mut _ccc = false;
         if self.gb_frame_count - gb_frame_count_before > 1 {
@@ -166,97 +144,125 @@ impl FPT {
             ctx.request_repaint_after(Duration::from_secs_f64(sleep_time));
         }
     }
+
+    #[allow(dead_code)]
+    fn debug_info(&self, ui: &mut Ui) {
+        ui.separator();
+        egui::Grid::new("my_grid").striped(true).show(ui, |ui| {
+            macro_rules! stat {
+                ($label:literal : $fmt:literal, $value:expr) => {
+                    ui.colored_label(Color32::LIGHT_GRAY, $label);
+                    ui.monospace(format!($fmt, $value));
+                    ui.code(stringify!($value));
+                    ui.end_row();
+                };
+            }
+            let time = ui.input(|i| i.time);
+            let delta_time = ui.input(|i| i.unstable_dt) as f64;
+            stat!("time"        : "{:.8}", time);
+            stat!("dt"          : "{:.8}", delta_time);
+            stat!("accum. time" : "{:.8}", self.accum_time);
+            stat!("Ideal count" : "{:.3}", time / GB_FRAME_IN_SECONDS);
+            stat!("Frame count" : "{}"   , self.gb_frame_count);
+            stat!("UI updates"  : "{}"   , self.egui_frame_count);
+        });
+    }
+
+    fn debug_panel(&mut self, ui: &mut Ui) {
+        ui.heading("Debug");
+        self.debug_info(ui);
+        ui.checkbox(&mut self.paused, "Pause");
+
+        // TODO: convert to one big texture so we can draw borders (and not use grid)
+        egui::ScrollArea::vertical()
+            .id_source("le tiles")
+            .show(ui, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    ui.spacing_mut().item_spacing = egui::Vec2::splat(2.0);
+                    for tile_i in 0..384 {
+                        let start = 0x8000 + tile_i * 16;
+                        let end = 0x8000 + (tile_i + 1) * 16;
+                        let tile_vec = self.gb.bus().slice(start..end);
+                        let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
+                        let tile = Tile::load(&tile_slice);
+                        for y in 0..8 {
+                            for x in 0..8 {
+                                let pixel = tile.get_pixel(y, x);
+                                self.tiles[tile_i][(x, y)] = PALETTE[pixel as usize];
+                            }
+                        }
+                        let texture: &mut egui::TextureHandle = self.tiles_textures[tile_i]
+                            .get_or_insert_with(|| {
+                                ui.ctx().load_texture(
+                                    format!("tile_{:03}", tile_i),
+                                    self.tiles[tile_i].clone(),
+                                    TextureOptions::NEAREST,
+                                )
+                            });
+                        texture.set(self.tiles[tile_i].clone(), TextureOptions::NEAREST);
+                        ui.image((texture.id(), 2. * texture.size_vec2()));
+                    }
+                });
+            });
+
+        ui.separator();
+
+        egui::ScrollArea::vertical()
+            .id_source("le bgmap")
+            .show(ui, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    ui.spacing_mut().item_spacing = egui::Vec2::splat(2.0);
+
+                    // TODO we're assuming that the background map is the first one (LCDC.3 == 0)
+                    let bg_map = self.gb.bus().slice(0x9800..0x9C00);
+                    bg_map
+                        .into_iter()
+                        .enumerate()
+                        .for_each(|(i, tile_address)| {
+                            let texture =
+                                self.tiles_textures[tile_address as usize].as_ref().unwrap();
+                            ui.image((texture.id(), 2. * texture.size_vec2()));
+                            if (i + 1) % 32 == 0 {
+                                ui.end_row();
+                            }
+                        });
+                });
+            });
+    }
+
+    fn central_panel(&mut self, ctx: &Context, ui: &mut Ui) {
+        // Emulator + screen
+        // let frame_start = now();
+        // let gb_frame_count_before = self.gb_frame_count;
+        if !self.paused {
+            self.emulator(ui);
+        }
+        // TODO repeated work in 1st repaint
+        // TODO: should be in new?
+        let texture: &mut egui::TextureHandle = self.texture.get_or_insert_with(|| {
+            ui.ctx()
+                .load_texture("my-image", self.image.clone(), TextureOptions::NEAREST)
+        });
+        texture.set(self.image.clone(), TextureOptions::NEAREST);
+        ui.image((texture.id(), TEXTURE_SCALE_FACTOR * texture.size_vec2()));
+        ui.label(self.egui_frame_count.to_string());
+        // TODO: fix sleep timings for displays > 60hz. til then we burn cpu
+        // self.sleep(ctx, frame_start, gb_frame_count_before);
+        ctx.request_repaint();
+    }
 }
 
 impl eframe::App for FPT {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
         self.top_panel(ctx);
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.label(self.egui_frame_count.to_string());
-
-            // Emulator + screen
-            // let frame_start = now();
-            // let gb_frame_count_before = self.gb_frame_count;
-            if !self.paused {
-                self.emulator(ui);
-            }
-            // TODO repeated work in 1st repaint
-            // TODO: should be in new?
-            let texture: &mut egui::TextureHandle = self.texture.get_or_insert_with(|| {
-                ui.ctx()
-                    .load_texture("my-image", self.image.clone(), TextureOptions::NEAREST)
-            });
-            texture.set(self.image.clone(), TextureOptions::NEAREST);
-            ui.image((texture.id(), TEXTURE_SCALE_FACTOR * texture.size_vec2()));
-
-            // self.debug_panel(ui);
-            // TODO: fix sleep timings for displays > 60hz. til then we burn cpu
-            // self.sleep(ctx, frame_start, gb_frame_count_before);
-            ctx.request_repaint();
+            self.central_panel(ctx, ui);
         });
 
         egui::SidePanel::right("right_panel")
             .resizable(true)
             .show(ctx, |ui| {
-                ui.heading("Debug");
-                ui.checkbox(&mut self.paused, "Pause");
-
-                // TODO: convert to one big texture so we can draw borders (and not use grid)
-                egui::ScrollArea::vertical()
-                    .id_source("le tiles")
-                    .show(ui, |ui| {
-                        ui.horizontal_wrapped(|ui| {
-                            ui.spacing_mut().item_spacing = egui::Vec2::splat(2.0);
-                            for tile_i in 0..384 {
-                                let start = 0x8000 + tile_i * 16;
-                                let end = 0x8000 + (tile_i + 1) * 16;
-                                let tile_vec = self.gb.bus().slice(start..end);
-                                let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
-                                let tile = Tile::load(&tile_slice);
-                                for y in 0..8 {
-                                    for x in 0..8 {
-                                        let pixel = tile.get_pixel(y, x);
-                                        self.tiles[tile_i][(x, y)] = PALETTE[pixel as usize];
-                                    }
-                                }
-                                let texture: &mut egui::TextureHandle = self.tiles_textures[tile_i]
-                                    .get_or_insert_with(|| {
-                                        ui.ctx().load_texture(
-                                            format!("tile_{:03}", tile_i),
-                                            self.tiles[tile_i].clone(),
-                                            TextureOptions::NEAREST,
-                                        )
-                                    });
-                                texture.set(self.tiles[tile_i].clone(), TextureOptions::NEAREST);
-                                ui.image((texture.id(), 2. * texture.size_vec2()));
-                            }
-                        });
-                    });
-
-                ui.separator();
-
-                egui::ScrollArea::vertical()
-                    .id_source("le bgmap")
-                    .show(ui, |ui| {
-                        ui.horizontal_wrapped(|ui| {
-                            ui.spacing_mut().item_spacing = egui::Vec2::splat(2.0);
-
-                            // TODO we're assuming that the background map is the first one (LCDC.3 == 0)
-                            let bg_map = self.gb.bus().slice(0x9800..0x9C00);
-                            bg_map
-                                .into_iter()
-                                .enumerate()
-                                .for_each(|(i, tile_address)| {
-                                    let texture = self.tiles_textures[tile_address as usize]
-                                        .as_ref()
-                                        .unwrap();
-                                    ui.image((texture.id(), 2. * texture.size_vec2()));
-                                    if (i + 1) % 32 == 0 {
-                                        ui.end_row();
-                                    }
-                                });
-                        });
-                    });
+                self.debug_panel(ui);
             });
     }
 }
