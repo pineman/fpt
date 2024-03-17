@@ -1,11 +1,10 @@
 #![feature(lazy_cell)]
 #![feature(array_chunks)]
 
-use std::sync::Arc;
 use std::time::Duration;
 
 use eframe::Frame;
-use egui::{Color32, Context, TextureOptions, Ui};
+use egui::{Color32, Context, TextureOptions, Ui, Vec2};
 use log::info;
 
 use fpt::ppu::tile::Tile;
@@ -48,11 +47,11 @@ pub struct FPT {
     gb_frame_count: u64,
     accum_time: f64,
 
-    image: Arc<egui::ColorImage>,
+    image: egui::ColorImage,
     texture: Option<egui::TextureHandle>,
 
-    tile: Arc<egui::ColorImage>,
-    tile_texture: Option<egui::TextureHandle>,
+    tiles: [egui::ColorImage; 384],
+    tiles_textures: [Option<egui::TextureHandle>; 384],
 
     gb: fpt::Gameboy,
     paused: bool,
@@ -60,16 +59,17 @@ pub struct FPT {
 
 impl Default for FPT {
     fn default() -> Self {
+        const ARRAY_REPEAT_VALUE: Option<egui::TextureHandle> = None;
         Self {
             egui_frame_count: 0,
             gb_frame_count: 0,
             accum_time: 0.0,
-            image: Arc::new(egui::ColorImage::new([160, 144], Color32::TRANSPARENT)),
+            image: egui::ColorImage::new([160, 144], Color32::TRANSPARENT),
             texture: None,
-            tile: Arc::new(egui::ColorImage::new([8, 8], Color32::TRANSPARENT)),
-            tile_texture: None,
+            tiles: core::array::from_fn(|_i| egui::ColorImage::new([8, 8], Color32::TRANSPARENT)),
+            tiles_textures: [ARRAY_REPEAT_VALUE; 384],
             gb: fpt::Gameboy::new(),
-            paused: false,
+            paused: true,
         }
     }
 }
@@ -110,12 +110,11 @@ impl FPT {
         if self.accum_time >= GB_FRAME_IN_SECONDS {
             self.gb_frame_count += 1;
             self.accum_time -= GB_FRAME_IN_SECONDS;
-            let image = Arc::get_mut(&mut self.image).unwrap();
             let frame = self.gb.frame();
             for z in 0..(160 * 144) {
                 let x = z % 160;
                 let y = z / 160;
-                image[(x, y)] = PALETTE[frame[z] as usize];
+                self.image[(x, y)] = PALETTE[frame[z] as usize];
             }
         }
     }
@@ -198,52 +197,70 @@ impl eframe::App for FPT {
         });
 
         egui::SidePanel::right("right_panel")
-            .resizable(false)
+            .resizable(true)
             .show(ctx, |ui| {
                 ui.heading("Debug");
                 ui.checkbox(&mut self.paused, "Pause");
 
-                let tile_i = 0;
-                let start = 0x8000 + tile_i * 16;
-                let end = 0x8000 + (tile_i + 1) * 16;
-                let tile_vec = self.gb.bus().slice(start..end);
-                let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
-                let tile = Tile::load(&tile_slice);
-                let the_tile = Arc::get_mut(&mut self.tile).unwrap();
-                for y in 0..8 {
-                    for x in 0..8 {
-                        let pixel = tile.get_pixel(y, x);
-                        the_tile[(x, y)] = PALETTE[pixel as usize];
-                    }
-                }
-                let texture: &mut egui::TextureHandle =
-                    self.tile_texture.get_or_insert_with(|| {
-                        ui.ctx()
-                            .load_texture("tile0", self.tile.clone(), TextureOptions::NEAREST)
+                // TODO: convert to one big texture so we can draw borders (and not use grid)
+                egui::ScrollArea::vertical()
+                    .id_source("le tiles")
+                    .show(ui, |ui| {
+                        ui.horizontal_wrapped(|ui| {
+                            ui.spacing_mut().item_spacing = egui::Vec2::splat(2.0);
+                            for tile_i in 0..384 {
+                                let start = 0x8000 + tile_i * 16;
+                                let end = 0x8000 + (tile_i + 1) * 16;
+                                let tile_vec = self.gb.bus().slice(start..end);
+                                let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
+                                let tile = Tile::load(&tile_slice);
+                                for y in 0..8 {
+                                    for x in 0..8 {
+                                        let pixel = tile.get_pixel(y, x);
+                                        self.tiles[tile_i][(x, y)] = PALETTE[pixel as usize];
+                                    }
+                                }
+                                let texture: &mut egui::TextureHandle = self.tiles_textures[tile_i]
+                                    .get_or_insert_with(|| {
+                                        ui.ctx().load_texture(
+                                            format!("tile_{:03}", tile_i),
+                                            self.tiles[tile_i].clone(),
+                                            TextureOptions::NEAREST,
+                                        )
+                                    });
+                                texture.set(self.tiles[tile_i].clone(), TextureOptions::NEAREST);
+                                ui.image((texture.id(), 2. * texture.size_vec2()));
+                                if (tile_i + 1) % 16 == 0 {
+                                    ui.end_row();
+                                }
+                            }
+                        });
                     });
-                texture.set(self.tile.clone(), TextureOptions::NEAREST);
-                ui.image((texture.id(), TEXTURE_SCALE_FACTOR * texture.size_vec2()));
 
-                // for tile_i in 0..384 {
-                //     let start = 0x8000+tile_i*16;
-                //     let end = 0x8000+(tile_i+1)*16;
-                //     let tile = self.gb.bus().slice(start..end);
-                //     for (line_i, line) in tile.array_chunks::<2>().enumerate() {
-                //         let lsb = line[0];
-                //         let msb = line[1];
-                //         let y = line_i + (tile_i /16) * 8;
-                //         for i in 0..8 {
-                //             let low_bit = (lsb >> (7 - i)) & 1;
-                //             let high_bit = (msb >> (7 - i)) & 1;
-                //             let pixel = (high_bit << 1) + low_bit;
-                //
-                //             let x = (tile_i % 16) * 8 + i;
-                //             let y = (tile_i / 16) * 8 + (i / 8);
-                //             self.tiles[(x, y)] = PALETTE[pixel as usize];
-                //
-                //         }
-                //     }
-                // }
+                ui.separator();
+
+                egui::ScrollArea::vertical()
+                    .id_source("le bgmap")
+                    .show(ui, |ui| {
+                        ui.horizontal_wrapped(|ui| {
+                            ui.spacing_mut().item_spacing = egui::Vec2::splat(2.0);
+
+                            // TODO we're assuming that the background map is the first one (LCDC.3 == 0)
+                            let bg_map = self.gb.bus().slice(0x9800..0x9C00);
+                            bg_map
+                                .into_iter()
+                                .enumerate()
+                                .for_each(|(i, tile_address)| {
+                                    let texture = self.tiles_textures[tile_address as usize]
+                                        .as_ref()
+                                        .unwrap();
+                                    ui.image((texture.id(), 2. * texture.size_vec2()));
+                                    if (i + 1) % 32 == 0 {
+                                        ui.end_row();
+                                    }
+                                });
+                        });
+                    });
             });
     }
 }
