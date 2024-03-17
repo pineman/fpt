@@ -13,7 +13,10 @@ const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
 
 const TEXTURE_SCALE_FACTOR: f32 = 3.0;
 
-const WHITE: Color32 = Color32::from_rgb(255, 255, 255);
+const GREY: Color32 = Color32::from_rgb(120, 120, 120);
+
+const WIDTH: usize = fpt::ppu::WIDTH;
+const HEIGHT: usize = fpt::ppu::HEIGHT;
 
 const PALETTE: [Color32; 4] = [
     Color32::from_rgb(0, 63, 0),
@@ -23,7 +26,7 @@ const PALETTE: [Color32; 4] = [
 ];
 
 // Debug view Tile Viewer (TV)
-const TILE_SIZE: usize = 8;
+const TILE_SIZE: usize = fpt::ppu::tile::TILE_PIXEL_SIZE;
 const TV_BORDER_SIZE: usize = 1;
 const TV_COLS: usize = 16;
 const TV_NUM_VBORDERS: usize = TV_COLS + 1;
@@ -31,6 +34,12 @@ const TV_ROWS: usize = 24;
 const TV_NUM_HBORDERS: usize = TV_ROWS + 1;
 const TV_X_SIZE: usize = TILE_SIZE * TV_COLS + TV_BORDER_SIZE * TV_NUM_VBORDERS;
 const TV_Y_SIZE: usize = TILE_SIZE * TV_ROWS + TV_BORDER_SIZE * TV_NUM_HBORDERS;
+
+// Debug view Background Map Viewer (BMV)
+const BMV_BORDER_SIZE: usize = 1;
+const BMV_TILES_PER: usize = 32;
+const BMV_X_SIZE: usize = 256 + BMV_BORDER_SIZE * 2;
+const BMV_Y_SIZE: usize = 256 + BMV_BORDER_SIZE * 2;
 
 #[cfg(target_arch = "wasm32")]
 #[allow(dead_code)]
@@ -65,6 +74,9 @@ pub struct FPT {
     tiles: egui::ColorImage,
     tiles_texture: Option<egui::TextureHandle>,
 
+    bg_map: egui::ColorImage,
+    bg_map_texture: Option<egui::TextureHandle>,
+
     gb: fpt::Gameboy,
     paused: bool,
 }
@@ -75,10 +87,12 @@ impl Default for FPT {
             egui_frame_count: 0,
             gb_frame_count: 0,
             accum_time: 0.0,
-            image: egui::ColorImage::new([160, 144], Color32::TRANSPARENT),
+            image: egui::ColorImage::new([WIDTH, HEIGHT], Color32::TRANSPARENT),
             texture: None,
             tiles: egui::ColorImage::new([TV_X_SIZE, TV_Y_SIZE], Color32::TRANSPARENT),
             tiles_texture: None,
+            bg_map: egui::ColorImage::new([BMV_X_SIZE, BMV_Y_SIZE], Color32::TRANSPARENT),
+            bg_map_texture: None,
             gb: fpt::Gameboy::new(),
             paused: true,
         }
@@ -122,9 +136,9 @@ impl FPT {
             self.gb_frame_count += 1;
             self.accum_time -= GB_FRAME_IN_SECONDS;
             let frame = self.gb.frame();
-            for z in 0..(160 * 144) {
-                let x = z % 160;
-                let y = z / 160;
+            for z in 0..(WIDTH * HEIGHT) {
+                let x = z % WIDTH;
+                let y = z / WIDTH;
                 self.image[(x, y)] = PALETTE[frame[z] as usize];
             }
         }
@@ -179,83 +193,110 @@ impl FPT {
         });
     }
 
+    fn get_tile(&self, tile_i: usize) -> Tile {
+        let start = 0x8000 + tile_i * 16;
+        let end = 0x8000 + (tile_i + 1) * 16;
+        let tile_vec = self.gb.bus().slice(start..end);
+        let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
+        Tile::load(&tile_slice)
+    }
+
     fn debug_panel(&mut self, ui: &mut Ui) {
-        ui.heading("Debug");
-        self.debug_info(ui);
-        ui.checkbox(&mut self.paused, "Paused");
-
-        // TODO: convert to one big texture so we can draw borders (and not use grid)
         egui::ScrollArea::vertical()
-            .id_source("tile_viewer")
+            .id_source("debug_panel")
             .show(ui, |ui| {
-                ui.horizontal_wrapped(|ui| {
-                    ui.spacing_mut().item_spacing = egui::Vec2::splat(2.0);
-                    for tile_i in 0..384 {
-                        let start = 0x8000 + tile_i * 16;
-                        let end = 0x8000 + (tile_i + 1) * 16;
-                        let tile_vec = self.gb.bus().slice(start..end);
-                        let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
-                        let tile = Tile::load(&tile_slice);
-                        for y in 0..TILE_SIZE {
-                            let yy = y
-                                + (tile_i / TV_COLS + 1) * TV_BORDER_SIZE
-                                + (tile_i / TV_COLS) * TILE_SIZE;
-                            for x in 0..TILE_SIZE {
-                                let pixel = tile.get_pixel(y, x);
-                                let xx = x
-                                    + (tile_i % TV_COLS + 1) * TV_BORDER_SIZE
-                                    + (tile_i % TV_COLS) * TILE_SIZE;
-                                self.tiles[(xx, yy)] = PALETTE[pixel as usize];
-                            }
+                ui.heading("Debug");
+                self.debug_info(ui);
+                ui.checkbox(&mut self.paused, "Paused");
+                for tile_i in 0..fpt::ppu::tile::NUM_TILES {
+                    let tile = self.get_tile(tile_i);
+                    for y in 0..TILE_SIZE {
+                        let yy = y
+                            + (tile_i / TV_COLS + 1) * TV_BORDER_SIZE
+                            + (tile_i / TV_COLS) * TILE_SIZE;
+                        for x in 0..TILE_SIZE {
+                            let pixel = tile.get_pixel(y, x);
+                            let xx = x
+                                + (tile_i % TV_COLS + 1) * TV_BORDER_SIZE
+                                + (tile_i % TV_COLS) * TILE_SIZE;
+                            self.tiles[(xx, yy)] = PALETTE[pixel as usize];
                         }
                     }
-                    for b in 0..TV_NUM_HBORDERS {
-                        for y in 0..TV_BORDER_SIZE {
-                            for x in 0..TV_X_SIZE {
-                                self.tiles[(x, y + b * (TILE_SIZE + TV_BORDER_SIZE))] = WHITE;
-                            }
+                }
+                for b in 0..TV_NUM_HBORDERS {
+                    for y in 0..TV_BORDER_SIZE {
+                        for x in 0..TV_X_SIZE {
+                            self.tiles[(x, y + b * (TILE_SIZE + TV_BORDER_SIZE))] = GREY;
                         }
                     }
-                    for b in 0..TV_NUM_VBORDERS {
-                        for x in 0..TV_BORDER_SIZE {
-                            for y in 0..TV_Y_SIZE {
-                                self.tiles[(x + b * (TILE_SIZE + TV_BORDER_SIZE), y)] = WHITE;
-                            }
+                }
+                for b in 0..TV_NUM_VBORDERS {
+                    for x in 0..TV_BORDER_SIZE {
+                        for y in 0..TV_Y_SIZE {
+                            self.tiles[(x + b * (TILE_SIZE + TV_BORDER_SIZE), y)] = GREY;
                         }
                     }
-                    let texture: &mut egui::TextureHandle =
-                        self.tiles_texture.get_or_insert_with(|| {
-                            ui.ctx().load_texture(
-                                "tiles",
-                                self.tiles.clone(),
-                                TextureOptions::NEAREST,
-                            )
-                        });
-                    texture.set(self.tiles.clone(), TextureOptions::NEAREST);
-                    ui.image((texture.id(), 2. * texture.size_vec2()));
-                });
+                }
+                let texture: &mut egui::TextureHandle =
+                    self.tiles_texture.get_or_insert_with(|| {
+                        ui.ctx().load_texture(
+                            "tile_viewer",
+                            self.tiles.clone(),
+                            TextureOptions::NEAREST,
+                        )
+                    });
+                texture.set(self.tiles.clone(), TextureOptions::NEAREST);
+                ui.image((texture.id(), 2. * texture.size_vec2()));
+
+                // TODO we're assuming that the background map is the first one (LCDC.3 == 0)
+                let bg_map = self.gb.bus().slice(0x9800..0x9C00);
+                for (i, tile_address) in bg_map.iter().enumerate() {
+                    let tile = self.get_tile(*tile_address as usize);
+                    for y in 0..TILE_SIZE {
+                        let yy = y + (i / BMV_TILES_PER) * TILE_SIZE + BMV_BORDER_SIZE;
+                        for x in 0..TILE_SIZE {
+                            let pixel = tile.get_pixel(y, x);
+                            let xx = x + (i % BMV_TILES_PER) * TILE_SIZE + BMV_BORDER_SIZE;
+                            self.bg_map[(xx, yy)] = PALETTE[pixel as usize];
+                        }
+                    }
+                }
+                // clear edges of bg_map viewer
+                for x in 0..BMV_X_SIZE {
+                    self.bg_map[(x, 0)] = Color32::TRANSPARENT;
+                    self.bg_map[(x, BMV_Y_SIZE - 1)] = Color32::TRANSPARENT;
+                }
+                for y in 0..BMV_Y_SIZE {
+                    self.bg_map[(0, y)] = Color32::TRANSPARENT;
+                    self.bg_map[(BMV_X_SIZE - 1, y)] = Color32::TRANSPARENT;
+                }
+                let top = self.gb.bus().scy() as usize;
+                let left = self.gb.bus().scx() as usize;
+                let bottom = ((self.gb.bus().scy() as u16 + 143u16) % 256u16) as usize;
+                let right = ((self.gb.bus().scx() as u16 + 159u16) % 256u16) as usize;
+                let btop = top;
+                let bleft = left;
+                let bbottom = bottom + 2 * BMV_BORDER_SIZE;
+                let bright = right + 2 * BMV_BORDER_SIZE;
+                for x in bleft..(bright + 1) {
+                    self.bg_map[(x, btop)] = GREY;
+                    self.bg_map[(x, bbottom)] = GREY;
+                }
+                for y in btop..(bbottom + 1) {
+                    self.bg_map[(bleft, y)] = GREY;
+                    self.bg_map[(bright, y)] = GREY;
+                }
+                let texture: &mut egui::TextureHandle =
+                    self.bg_map_texture.get_or_insert_with(|| {
+                        ui.ctx().load_texture(
+                            "bg_map_viewer",
+                            self.bg_map.clone(),
+                            TextureOptions::NEAREST,
+                        )
+                    });
+                texture.set(self.bg_map.clone(), TextureOptions::NEAREST);
+                ui.image((texture.id(), 1. * texture.size_vec2()));
             });
-
-        ui.separator();
-
-        // egui::ScrollArea::vertical()
-        //     .id_source("bg_map_viewer")
-        //     .show(ui, |ui| {
-        //         ui.horizontal_wrapped(|ui| {
-        //             ui.spacing_mut().item_spacing = egui::Vec2::splat(2.0);
-        //             // TODO we're assuming that the background map is the first one (LCDC.3 == 0)
-        //             let bg_map = self.gb.bus().slice(0x9800..0x9C00);
-        //             for (i, tile_address) in bg_map.iter().enumerate() {
-        //                 let texture = self.tiles_textures[*tile_address as usize]
-        //                     .as_ref()
-        //                     .unwrap();
-        //                 ui.image((texture.id(), 2. * texture.size_vec2()));
-        //                 if (i + 1) % 32 == 0 {
-        //                     ui.end_row();
-        //                 }
-        //             }
-        //         });
-        //     });
     }
 
     fn central_panel(&mut self, ctx: &Context, ui: &mut Ui) {
