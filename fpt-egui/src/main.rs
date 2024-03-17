@@ -4,7 +4,7 @@
 use std::time::Duration;
 
 use eframe::Frame;
-use egui::{Color32, Context, TextureOptions, Ui, Vec2};
+use egui::{Color32, Context, TextureOptions, Ui};
 use log::info;
 
 use fpt::ppu::tile::Tile;
@@ -230,9 +230,6 @@ impl eframe::App for FPT {
                                     });
                                 texture.set(self.tiles[tile_i].clone(), TextureOptions::NEAREST);
                                 ui.image((texture.id(), 2. * texture.size_vec2()));
-                                if (tile_i + 1) % 16 == 0 {
-                                    ui.end_row();
-                                }
                             }
                         });
                     });
