@@ -5,9 +5,8 @@ use std::time::Duration;
 
 use eframe::Frame;
 use egui::{Color32, Context, TextureOptions, Ui};
-use log::info;
-
 use fpt::ppu::tile::Tile;
+use log::info;
 
 const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
 
@@ -249,8 +248,12 @@ impl FPT {
                 texture.set(self.tiles.clone(), TextureOptions::NEAREST);
                 ui.image((texture.id(), 2. * texture.size_vec2()));
 
-                // TODO we're assuming that the background map is the first one (LCDC.3 == 0)
-                let bg_map = self.gb.bus().slice(0x9800..0x9C00);
+                // TODO check LCDC.4
+                let bg_map = if self.gb.bus().lcdc() & 0b0000_1000 == 0 {
+                    self.gb.bus().slice(0x9800..0x9C00)
+                } else {
+                    self.gb.bus().slice(0x9C00..0xA000)
+                };
                 for (i, tile_address) in bg_map.iter().enumerate() {
                     let tile = self.get_tile(*tile_address as usize);
                     for y in 0..TILE_SIZE {
