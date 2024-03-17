@@ -5,8 +5,9 @@ use std::time::Duration;
 
 use eframe::Frame;
 use egui::{Color32, Context, TextureOptions, Ui};
-use fpt::ppu::tile::Tile;
 use log::info;
+
+use fpt::ppu::tile::Tile;
 
 const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
 
@@ -102,6 +103,7 @@ impl FPT {
     /// Called once before the first frame.
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         let mut app = FPT::default();
+        #[cfg(not(target_arch = "wasm32"))]
         if std::env::var("CI").is_err() {
             const ROM_PATH: &str = "roms/Tetris_World_Rev_1.gb";
             if let Ok(rom) = std::fs::read(ROM_PATH) {
