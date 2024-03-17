@@ -50,8 +50,8 @@ pub struct FPT {
     image: egui::ColorImage,
     texture: Option<egui::TextureHandle>,
 
-    tiles: [egui::ColorImage; 384],
-    tiles_textures: [Option<egui::TextureHandle>; 384],
+    tiles: egui::ColorImage,
+    tiles_texture: Option<egui::TextureHandle>,
 
     gb: fpt::Gameboy,
     paused: bool,
@@ -59,15 +59,14 @@ pub struct FPT {
 
 impl Default for FPT {
     fn default() -> Self {
-        const ARRAY_REPEAT_VALUE: Option<egui::TextureHandle> = None;
         Self {
             egui_frame_count: 0,
             gb_frame_count: 0,
             accum_time: 0.0,
             image: egui::ColorImage::new([160, 144], Color32::TRANSPARENT),
             texture: None,
-            tiles: core::array::from_fn(|_i| egui::ColorImage::new([8, 8], Color32::TRANSPARENT)),
-            tiles_textures: [ARRAY_REPEAT_VALUE; 384],
+            tiles: egui::ColorImage::new([8 * 16, 8 * 24], Color32::TRANSPARENT),
+            tiles_texture: None,
             gb: fpt::Gameboy::new(),
             paused: true,
         }
@@ -171,11 +170,11 @@ impl FPT {
     fn debug_panel(&mut self, ui: &mut Ui) {
         ui.heading("Debug");
         self.debug_info(ui);
-        ui.checkbox(&mut self.paused, "Pause");
+        ui.checkbox(&mut self.paused, "Paused");
 
         // TODO: convert to one big texture so we can draw borders (and not use grid)
         egui::ScrollArea::vertical()
-            .id_source("le tiles")
+            .id_source("tile_viewer")
             .show(ui, |ui| {
                 ui.horizontal_wrapped(|ui| {
                     ui.spacing_mut().item_spacing = egui::Vec2::splat(2.0);
@@ -188,46 +187,45 @@ impl FPT {
                         for y in 0..8 {
                             for x in 0..8 {
                                 let pixel = tile.get_pixel(y, x);
-                                self.tiles[tile_i][(x, y)] = PALETTE[pixel as usize];
+                                let xx = x + (tile_i % 16) * 8;
+                                let yy = y + (tile_i / 16) * 8;
+                                self.tiles[(xx, yy)] = PALETTE[pixel as usize];
                             }
                         }
-                        let texture: &mut egui::TextureHandle = self.tiles_textures[tile_i]
-                            .get_or_insert_with(|| {
-                                ui.ctx().load_texture(
-                                    format!("tile_{:03}", tile_i),
-                                    self.tiles[tile_i].clone(),
-                                    TextureOptions::NEAREST,
-                                )
-                            });
-                        texture.set(self.tiles[tile_i].clone(), TextureOptions::NEAREST);
-                        ui.image((texture.id(), 2. * texture.size_vec2()));
                     }
+                    let texture: &mut egui::TextureHandle =
+                        self.tiles_texture.get_or_insert_with(|| {
+                            ui.ctx().load_texture(
+                                "tiles",
+                                self.tiles.clone(),
+                                TextureOptions::NEAREST,
+                            )
+                        });
+                    texture.set(self.tiles.clone(), TextureOptions::NEAREST);
+                    ui.image((texture.id(), 2. * texture.size_vec2()));
                 });
             });
 
         ui.separator();
 
-        egui::ScrollArea::vertical()
-            .id_source("le bgmap")
-            .show(ui, |ui| {
-                ui.horizontal_wrapped(|ui| {
-                    ui.spacing_mut().item_spacing = egui::Vec2::splat(2.0);
-
-                    // TODO we're assuming that the background map is the first one (LCDC.3 == 0)
-                    let bg_map = self.gb.bus().slice(0x9800..0x9C00);
-                    bg_map
-                        .into_iter()
-                        .enumerate()
-                        .for_each(|(i, tile_address)| {
-                            let texture =
-                                self.tiles_textures[tile_address as usize].as_ref().unwrap();
-                            ui.image((texture.id(), 2. * texture.size_vec2()));
-                            if (i + 1) % 32 == 0 {
-                                ui.end_row();
-                            }
-                        });
-                });
-            });
+        // egui::ScrollArea::vertical()
+        //     .id_source("bg_map_viewer")
+        //     .show(ui, |ui| {
+        //         ui.horizontal_wrapped(|ui| {
+        //             ui.spacing_mut().item_spacing = egui::Vec2::splat(2.0);
+        //             // TODO we're assuming that the background map is the first one (LCDC.3 == 0)
+        //             let bg_map = self.gb.bus().slice(0x9800..0x9C00);
+        //             for (i, tile_address) in bg_map.iter().enumerate() {
+        //                 let texture = self.tiles_textures[*tile_address as usize]
+        //                     .as_ref()
+        //                     .unwrap();
+        //                 ui.image((texture.id(), 2. * texture.size_vec2()));
+        //                 if (i + 1) % 32 == 0 {
+        //                     ui.end_row();
+        //                 }
+        //             }
+        //         });
+        //     });
     }
 
     fn central_panel(&mut self, ctx: &Context, ui: &mut Ui) {
