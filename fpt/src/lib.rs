@@ -3,14 +3,14 @@
 #![feature(array_chunks)]
 #![feature(iter_intersperse)]
 
-mod bitwise;
-pub mod lr35902;
-pub mod memory;
-pub mod ppu;
-
 use lr35902::LR35902;
 use memory::Bus;
 use ppu::{Frame, Ppu, DOTS_IN_ONE_FRAME};
+
+pub mod bitwise;
+pub mod lr35902;
+pub mod memory;
+pub mod ppu;
 
 pub struct Gameboy {
     bus: Bus,
