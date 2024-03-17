@@ -197,12 +197,10 @@ impl FPT {
     fn get_tile(&self, tile_i: usize) -> Tile {
         let [start, end] = if test_bit8::<4>(self.gb.bus().lcdc()) {
             [0x8000 + tile_i * 16, 0x8000 + (tile_i + 1) * 16]
+        } else if tile_i >= 128 {
+            [0x8800 + tile_i * 16, 0x8800 + (tile_i + 1) * 16]
         } else {
-            if tile_i >= 128 {
-                [0x8800 + tile_i * 16, 0x8800 + (tile_i + 1) * 16]
-            } else {
-                [0x9000 + tile_i * 16, 0x9000 + (tile_i + 1) * 16]
-            }
+            [0x9000 + tile_i * 16, 0x9000 + (tile_i + 1) * 16]
         };
         let tile_vec = self.gb.bus().slice(start..end);
         let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
