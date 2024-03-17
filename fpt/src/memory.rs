@@ -261,7 +261,7 @@ impl Bus {
     }
 
     pub fn slice(&self, range: MemoryRange) -> Vec<u8> {
-       self.memory().mem[(range.start as usize)..(range.end as usize)].to_vec()
+        self.memory().mem[(range.start as usize)..(range.end as usize)].to_vec()
     }
 
     //pub fn mut_slice(&mut self, range: MemoryRange) -> &mut [u8] {

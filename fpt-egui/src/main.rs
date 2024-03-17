@@ -5,9 +5,8 @@ use std::time::Duration;
 
 use eframe::Frame;
 use egui::{Color32, Context, TextureOptions, Ui};
-use log::info;
-
 use fpt::ppu::tile::Tile;
+use log::info;
 
 const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
 
