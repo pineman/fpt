@@ -101,10 +101,9 @@ pub fn write_pgm_screenshot(frame: &Frame, filename: &str) {
 
 #[cfg(test)]
 mod tests {
-    use crate::Gameboy;
-    use crate::memory::map::VRAM;
-
     use super::*;
+    use crate::memory::map::VRAM;
+    use crate::Gameboy;
 
     // Looks like a game boy
     #[rustfmt::skip]
