@@ -6,8 +6,8 @@ use crate::memory::Bus;
 
 pub mod tile;
 
-const WIDTH: usize = 160;
-const HEIGHT: usize = 144;
+pub const WIDTH: usize = 160;
+pub const HEIGHT: usize = 144;
 pub type Frame = [u8; WIDTH * HEIGHT];
 
 //#[derive(Clone, PartialEq)]
