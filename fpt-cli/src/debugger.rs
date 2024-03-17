@@ -417,7 +417,7 @@ impl DebuggerTextInterface<'_> {
     pub fn run(&mut self, mut cmd: String) {
         if cmd.is_empty() {
             match self.last_repeatable_command {
-                Some(ref repeatable_command) => cmd = repeatable_command.clone(),
+                Some(ref repeatable_command) => cmd.clone_from(repeatable_command),
                 None => return,
             }
         }
