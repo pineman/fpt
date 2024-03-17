@@ -13,12 +13,24 @@ const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
 
 const TEXTURE_SCALE_FACTOR: f32 = 3.0;
 
+const WHITE: Color32 = Color32::from_rgb(255, 255, 255);
+
 const PALETTE: [Color32; 4] = [
     Color32::from_rgb(0, 63, 0),
     Color32::from_rgb(46, 115, 32),
     Color32::from_rgb(140, 191, 10),
     Color32::from_rgb(160, 207, 10),
 ];
+
+// Debug view Tile Viewer (TV)
+const TILE_SIZE: usize = 8;
+const TV_BORDER_SIZE: usize = 1;
+const TV_COLS: usize = 16;
+const TV_NUM_VBORDERS: usize = TV_COLS + 1;
+const TV_ROWS: usize = 24;
+const TV_NUM_HBORDERS: usize = TV_ROWS + 1;
+const TV_X_SIZE: usize = TILE_SIZE * TV_COLS + TV_BORDER_SIZE * TV_NUM_VBORDERS;
+const TV_Y_SIZE: usize = TILE_SIZE * TV_ROWS + TV_BORDER_SIZE * TV_NUM_HBORDERS;
 
 #[cfg(target_arch = "wasm32")]
 #[allow(dead_code)]
@@ -65,7 +77,7 @@ impl Default for FPT {
             accum_time: 0.0,
             image: egui::ColorImage::new([160, 144], Color32::TRANSPARENT),
             texture: None,
-            tiles: egui::ColorImage::new([8 * 16, 8 * 24], Color32::TRANSPARENT),
+            tiles: egui::ColorImage::new([TV_X_SIZE, TV_Y_SIZE], Color32::TRANSPARENT),
             tiles_texture: None,
             gb: fpt::Gameboy::new(),
             paused: true,
@@ -184,12 +196,30 @@ impl FPT {
                         let tile_vec = self.gb.bus().slice(start..end);
                         let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
                         let tile = Tile::load(&tile_slice);
-                        for y in 0..8 {
-                            for x in 0..8 {
+                        for y in 0..TILE_SIZE {
+                            let yy = y
+                                + (tile_i / TV_COLS + 1) * TV_BORDER_SIZE
+                                + (tile_i / TV_COLS) * TILE_SIZE;
+                            for x in 0..TILE_SIZE {
                                 let pixel = tile.get_pixel(y, x);
-                                let xx = x + (tile_i % 16) * 8;
-                                let yy = y + (tile_i / 16) * 8;
+                                let xx = x
+                                    + (tile_i % TV_COLS + 1) * TV_BORDER_SIZE
+                                    + (tile_i % TV_COLS) * TILE_SIZE;
                                 self.tiles[(xx, yy)] = PALETTE[pixel as usize];
+                            }
+                        }
+                    }
+                    for b in 0..TV_NUM_HBORDERS {
+                        for y in 0..TV_BORDER_SIZE {
+                            for x in 0..TV_X_SIZE {
+                                self.tiles[(x, y + b * (TILE_SIZE + TV_BORDER_SIZE))] = WHITE;
+                            }
+                        }
+                    }
+                    for b in 0..TV_NUM_VBORDERS {
+                        for x in 0..TV_BORDER_SIZE {
+                            for y in 0..TV_Y_SIZE {
+                                self.tiles[(x + b * (TILE_SIZE + TV_BORDER_SIZE), y)] = WHITE;
                             }
                         }
                     }
