@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use eframe::Frame;
 use egui::{Color32, Context, TextureOptions, Ui};
+use fpt::bitwise::*;
 use fpt::ppu::tile::Tile;
 use log::info;
 
@@ -194,8 +195,15 @@ impl FPT {
     }
 
     fn get_tile(&self, tile_i: usize) -> Tile {
-        let start = 0x8000 + tile_i * 16;
-        let end = 0x8000 + (tile_i + 1) * 16;
+        let [start, end] = if test_bit8::<4>(self.gb.bus().lcdc()) {
+            [0x8000 + tile_i * 16, 0x8000 + (tile_i + 1) * 16]
+        } else {
+            if tile_i >= 128 {
+                [0x8800 + tile_i * 16, 0x8800 + (tile_i + 1) * 16]
+            } else {
+                [0x9000 + tile_i * 16, 0x9000 + (tile_i + 1) * 16]
+            }
+        };
         let tile_vec = self.gb.bus().slice(start..end);
         let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
         Tile::load(&tile_slice)
@@ -248,11 +256,10 @@ impl FPT {
                 texture.set(self.tiles.clone(), TextureOptions::NEAREST);
                 ui.image((texture.id(), 2. * texture.size_vec2()));
 
-                // TODO check LCDC.4
-                let bg_map = if self.gb.bus().lcdc() & 0b0000_1000 == 0 {
-                    self.gb.bus().slice(0x9800..0x9C00)
-                } else {
+                let bg_map = if test_bit8::<3>(self.gb.bus().lcdc()) {
                     self.gb.bus().slice(0x9C00..0xA000)
+                } else {
+                    self.gb.bus().slice(0x9800..0x9C00)
                 };
                 for (i, tile_address) in bg_map.iter().enumerate() {
                     let tile = self.get_tile(*tile_address as usize);
