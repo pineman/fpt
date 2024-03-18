@@ -746,6 +746,7 @@ dependencies = [
  "egui",
  "env_logger",
  "fpt",
+ "fpt-cli",
  "js-sys",
  "log",
  "wasm-bindgen",
