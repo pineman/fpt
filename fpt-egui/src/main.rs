@@ -7,6 +7,7 @@ use eframe::Frame;
 use egui::{Color32, Context, TextureOptions, Ui};
 use fpt::bitwise::*;
 use fpt::ppu::tile::Tile;
+use fpt_cli::debugger::Debugger;
 use log::info;
 
 const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;

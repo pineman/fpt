@@ -4,10 +4,9 @@ use std::fs::File;
 use std::io::Write;
 use std::rc::Rc;
 
+use fpt::Gameboy;
 use hlua::AnyHashableLuaValue as LuaValue;
 use hlua::Lua;
-
-use crate::Gameboy;
 
 const ALIASES: [(&str, &str); 7] = [
     ("b", "_G['break']"),
@@ -75,7 +74,7 @@ impl Breakpoint {
         }
     }
 }
-struct Debugger {
+pub struct Debugger {
     gameboy: Gameboy,
     breakpoints: Vec<Breakpoint>,
 }
