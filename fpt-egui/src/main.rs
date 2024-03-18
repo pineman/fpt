@@ -34,12 +34,14 @@ const TV_ROWS: usize = 24;
 const TV_NUM_HBORDERS: usize = TV_ROWS + 1;
 const TV_X_SIZE: usize = TILE_SIZE * TV_COLS + TV_BORDER_SIZE * TV_NUM_VBORDERS;
 const TV_Y_SIZE: usize = TILE_SIZE * TV_ROWS + TV_BORDER_SIZE * TV_NUM_HBORDERS;
+const TV_TEXTURE_SCALE: f32 = 1.0;
 
 // Debug view Background Map Viewer (BMV)
 const BMV_BORDER_SIZE: usize = 1;
 const BMV_TILES_PER: usize = 32;
 const BMV_X_SIZE: usize = 256 + BMV_BORDER_SIZE * 2;
 const BMV_Y_SIZE: usize = 256 + BMV_BORDER_SIZE * 2;
+const BMV_TEXTURE_SCALE: f32 = 1.0;
 
 #[cfg(target_arch = "wasm32")]
 #[allow(dead_code)]
@@ -252,7 +254,7 @@ impl FPT {
                         )
                     });
                 texture.set(self.tiles.clone(), TextureOptions::NEAREST);
-                ui.image((texture.id(), 2. * texture.size_vec2()));
+                ui.image((texture.id(), TV_TEXTURE_SCALE * texture.size_vec2()));
 
                 let bg_map = if test_bit8::<3>(self.gb.bus().lcdc()) {
                     self.gb.bus().slice(0x9C00..0xA000)
@@ -304,7 +306,7 @@ impl FPT {
                         )
                     });
                 texture.set(self.bg_map.clone(), TextureOptions::NEAREST);
-                ui.image((texture.id(), 1. * texture.size_vec2()));
+                ui.image((texture.id(), BMV_TEXTURE_SCALE * texture.size_vec2()));
             });
     }
 
