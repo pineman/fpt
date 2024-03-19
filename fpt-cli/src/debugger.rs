@@ -3,7 +3,6 @@ use std::fmt;
 use std::fs::File;
 use std::io::Write;
 use std::rc::Rc;
-use std::sync::{Arc, Mutex, MutexGuard};
 
 use fpt::Gameboy;
 use hlua::AnyHashableLuaValue as LuaValue;
@@ -76,30 +75,26 @@ impl Breakpoint {
     }
 }
 pub struct Debugger {
-    gameboy: Arc<Mutex<Gameboy>>,
+    gameboy: Rc<RefCell<Gameboy>>,
     breakpoints: Vec<Breakpoint>,
 }
 
 impl Debugger {
     fn new() -> Self {
-        let gameboy = Arc::new(Mutex::new(Gameboy::new()));
+        let gameboy = Rc::new(RefCell::new(Gameboy::new()));
         Self::with_gameboy(gameboy)
     }
 
-    pub fn with_gameboy(gameboy: Arc<Mutex<Gameboy>>) -> Self {
+    pub fn with_gameboy(gameboy: Rc<RefCell<Gameboy>>) -> Self {
         Self {
             gameboy,
             breakpoints: Vec::new(),
         }
     }
 
-    pub fn gameboy(&self) -> MutexGuard<'_, Gameboy> {
-        self.gameboy.lock().unwrap()
-    }
-
     pub fn check(&self) -> bool {
         for breakpoint in &self.breakpoints {
-            if breakpoint.check(&self.gameboy()) {
+            if breakpoint.check(&self.gameboy.borrow()) {
                 return true;
             }
         }
@@ -108,7 +103,7 @@ impl Debugger {
     }
 
     pub fn start(&mut self) {
-        let mut gameboy = self.gameboy();
+        let mut gameboy = self.gameboy.borrow_mut();
         loop {
             println!("{:#02X}: {}", gameboy.cpu().pc(), gameboy.cpu().decode());
             if self.check() {
@@ -120,7 +115,7 @@ impl Debugger {
     }
 
     pub fn next(&mut self) {
-        let mut gameboy = self.gameboy();
+        let mut gameboy = self.gameboy.borrow_mut();
         println!("{:#02X}: {}", gameboy.cpu().pc(), gameboy.cpu().decode());
         gameboy.instruction();
     }
@@ -137,8 +132,8 @@ impl Debugger {
             .collect::<String>()
     }
 
-    pub fn pc(&mut self) -> u16 {
-        self.gameboy().cpu().pc()
+    pub fn pc(&self) -> u16 {
+        self.gameboy.borrow().cpu().pc()
     }
 }
 
@@ -258,7 +253,7 @@ impl DebuggerTextInterface<'_> {
             debug_commands.set(
                 "pc",
                 hlua::function0(move || -> LuaValue {
-                    LuaValue::LuaNumber(d1.borrow_mut().pc().into())
+                    LuaValue::LuaNumber(d1.borrow().pc().into())
                 }),
             );
 
@@ -266,7 +261,7 @@ impl DebuggerTextInterface<'_> {
             debug_commands.set(
                 "af",
                 hlua::function0(move || -> LuaValue {
-                    LuaValue::LuaNumber(d1.borrow_mut().gameboy().cpu().af().into())
+                    LuaValue::LuaNumber(d1.borrow().gameboy.borrow().cpu().af().into())
                 }),
             );
 
@@ -274,7 +269,7 @@ impl DebuggerTextInterface<'_> {
             debug_commands.set(
                 "bc",
                 hlua::function0(move || -> LuaValue {
-                    LuaValue::LuaNumber(d1.borrow_mut().gameboy().cpu().bc().into())
+                    LuaValue::LuaNumber(d1.borrow().gameboy.borrow().cpu().bc().into())
                 }),
             );
 
@@ -282,7 +277,7 @@ impl DebuggerTextInterface<'_> {
             debug_commands.set(
                 "de",
                 hlua::function0(move || -> LuaValue {
-                    LuaValue::LuaNumber(d1.borrow_mut().gameboy().cpu().de().into())
+                    LuaValue::LuaNumber(d1.borrow().gameboy.borrow().cpu().de().into())
                 }),
             );
 
@@ -290,7 +285,7 @@ impl DebuggerTextInterface<'_> {
             debug_commands.set(
                 "hl",
                 hlua::function0(move || -> LuaValue {
-                    LuaValue::LuaNumber(d1.borrow_mut().gameboy().cpu().hl().into())
+                    LuaValue::LuaNumber(d1.borrow().gameboy.borrow().cpu().hl().into())
                 }),
             );
 
@@ -298,7 +293,7 @@ impl DebuggerTextInterface<'_> {
             debug_commands.set(
                 "sp",
                 hlua::function0(move || -> LuaValue {
-                    LuaValue::LuaNumber(d1.borrow_mut().gameboy().cpu().sp().into())
+                    LuaValue::LuaNumber(d1.borrow().gameboy.borrow().cpu().sp().into())
                 }),
             );
 
@@ -306,7 +301,7 @@ impl DebuggerTextInterface<'_> {
             debug_commands.set(
                 "mem",
                 hlua::function1(move |address: u16| -> LuaValue {
-                    LuaValue::LuaNumber(d1.borrow_mut().gameboy().cpu().mem8(address).into())
+                    LuaValue::LuaNumber(d1.borrow().gameboy.borrow().cpu().mem8(address).into())
                 }),
             );
 
@@ -314,7 +309,7 @@ impl DebuggerTextInterface<'_> {
             debug_commands.set(
                 "next_cb",
                 hlua::function0(move || -> LuaValue {
-                    LuaValue::LuaNumber(d1.borrow_mut().gameboy().cpu().next_cb().into())
+                    LuaValue::LuaNumber(d1.borrow().gameboy.borrow().cpu().next_cb().into())
                 }),
             );
 
@@ -322,7 +317,14 @@ impl DebuggerTextInterface<'_> {
             debug_commands.set(
                 "clock_cycle",
                 hlua::function0(move || -> LuaValue {
-                    LuaValue::LuaString(d1.borrow_mut().gameboy().cpu().clock_cycles().to_string())
+                    LuaValue::LuaString(
+                        d1.borrow()
+                            .gameboy
+                            .borrow()
+                            .cpu()
+                            .clock_cycles()
+                            .to_string(),
+                    )
                 }),
             );
 
@@ -331,10 +333,11 @@ impl DebuggerTextInterface<'_> {
                 "load_rom",
                 hlua::function1(move |filename: String| -> LuaValue {
                     let rom = std::fs::read(filename).unwrap();
-                    d1.borrow_mut().gameboy().load_rom(&rom);
+                    d1.borrow().gameboy.borrow_mut().load_rom(&rom);
                     let game_name = String::from_utf8(
                         d1.borrow()
-                            .gameboy()
+                            .gameboy
+                            .borrow()
                             .bus()
                             .memory()
                             .slice(0x134..0x143)
@@ -355,7 +358,7 @@ impl DebuggerTextInterface<'_> {
                                 format!(
                                     "{:#02X} {:#02X}",
                                     i,
-                                    d1.borrow_mut().gameboy().cpu().mem8(i)
+                                    d1.borrow().gameboy.borrow().cpu().mem8(i)
                                 )
                             })
                             .intersperse("\n".to_string())
@@ -374,7 +377,7 @@ impl DebuggerTextInterface<'_> {
                                 format!(
                                     "{:#02X} {:#02X}",
                                     i,
-                                    d1.borrow_mut().gameboy().cpu().mem8(i)
+                                    d1.borrow().gameboy.borrow().cpu().mem8(i)
                                 )
                             })
                             .intersperse("\n".to_string())
@@ -398,7 +401,7 @@ impl DebuggerTextInterface<'_> {
 
                     // Our Game Boy's framebuffer seems to have a direct correspondence to this!
                     let d1 = d1.borrow();
-                    let gameboy = d1.gameboy();
+                    let gameboy = d1.gameboy.borrow();
                     let frame = gameboy.get_frame();
 
                     for line in frame.array_chunks::<160>() {

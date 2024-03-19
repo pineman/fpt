@@ -1,7 +1,8 @@
 #![feature(lazy_cell)]
 #![feature(array_chunks)]
 
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::time::Duration;
 
 use eframe::Frame;
@@ -81,14 +82,14 @@ pub struct FPT {
     bg_map: egui::ColorImage,
     bg_map_texture: Option<egui::TextureHandle>,
 
-    gb: Arc<Mutex<fpt::Gameboy>>,
+    gb: Rc<RefCell<fpt::Gameboy>>,
     db: Debugger,
     paused: bool,
 }
 
 impl Default for FPT {
     fn default() -> Self {
-        let gameboy = Arc::new(Mutex::new(fpt::Gameboy::new()));
+        let gameboy = Rc::new(RefCell::new(fpt::Gameboy::new()));
         Self {
             egui_frame_count: 0,
             gb_frame_count: 0,
@@ -114,16 +115,12 @@ impl FPT {
         if std::env::var("CI").is_err() {
             const ROM_PATH: &str = "roms/Tetris_World_Rev_1.gb";
             if let Ok(rom) = std::fs::read(ROM_PATH) {
-                app.gb().load_rom(&rom);
+                app.gb.borrow_mut().load_rom(&rom);
             } else {
                 panic!("Unable to open {}", ROM_PATH);
             }
         }
         app
-    }
-
-    pub fn gb(&self) -> MutexGuard<fpt::Gameboy> {
-        self.gb.lock().unwrap()
     }
 
     fn top_panel(&mut self, ctx: &Context) {
@@ -147,12 +144,12 @@ impl FPT {
         if self.accum_time >= GB_FRAME_IN_SECONDS {
             self.gb_frame_count += 1;
             self.accum_time -= GB_FRAME_IN_SECONDS;
-            // I didn't manage to work with a reference from self.gb().frame()
+            // I didn't manage to work with a reference from self.gb.borrow().frame()
             // because that borrows self immutably,
             // and then `self.image[(x, y)] = ... frame[z] ...` borrows self mutably and reads frame
             let frame = {
                 let mut ppu_frame_copy: fpt::ppu::Frame = [0; 23040]; // should be optimized away?
-                ppu_frame_copy.copy_from_slice(self.gb().frame());
+                ppu_frame_copy.copy_from_slice(self.gb.borrow_mut().frame());
                 ppu_frame_copy
             };
             for z in 0..(WIDTH * HEIGHT) {
@@ -212,14 +209,14 @@ impl FPT {
     }
 
     fn get_tile(&self, tile_i: usize) -> Tile {
-        let [start, end] = if bitwise::test_bit8::<4>(self.gb().bus().lcdc()) {
+        let [start, end] = if bitwise::test_bit8::<4>(self.gb.borrow().bus().lcdc()) {
             [0x8000 + tile_i * 16, 0x8000 + (tile_i + 1) * 16]
         } else if tile_i >= 128 {
             [0x8800 + tile_i * 16, 0x8800 + (tile_i + 1) * 16]
         } else {
             [0x9000 + tile_i * 16, 0x9000 + (tile_i + 1) * 16]
         };
-        let tile_vec = self.gb().bus().slice(start..end);
+        let tile_vec = self.gb.borrow().bus().slice(start..end);
         let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
         Tile::load(&tile_slice)
     }
@@ -279,10 +276,10 @@ impl FPT {
                         ui.image((texture.id(), TV_TEXTURE_SCALE * texture.size_vec2()));
                     });
 
-                    let bg_map = if bitwise::test_bit8::<3>(self.gb().bus().lcdc()) {
-                        self.gb().bus().slice(0x9C00..0xA000)
+                    let bg_map = if bitwise::test_bit8::<3>(self.gb.borrow().bus().lcdc()) {
+                        self.gb.borrow().bus().slice(0x9C00..0xA000)
                     } else {
-                        self.gb().bus().slice(0x9800..0x9C00)
+                        self.gb.borrow().bus().slice(0x9800..0x9C00)
                     };
                     for (i, tile_address) in bg_map.iter().enumerate() {
                         let tile = self.get_tile(*tile_address as usize);
@@ -304,10 +301,10 @@ impl FPT {
                         self.bg_map[(0, y)] = Color32::TRANSPARENT;
                         self.bg_map[(BMV_X_SIZE - 1, y)] = Color32::TRANSPARENT;
                     }
-                    let top = self.gb().bus().scy() as usize;
-                    let left = self.gb().bus().scx() as usize;
-                    let bottom = ((self.gb().bus().scy() as u16 + 143u16) % 256u16) as usize;
-                    let right = ((self.gb().bus().scx() as u16 + 159u16) % 256u16) as usize;
+                    let top = self.gb.borrow().bus().scy() as usize;
+                    let left = self.gb.borrow().bus().scx() as usize;
+                    let bottom = ((self.gb.borrow().bus().scy() as u16 + 143u16) % 256u16) as usize;
+                    let right = ((self.gb.borrow().bus().scx() as u16 + 159u16) % 256u16) as usize;
                     let btop = top;
                     let bleft = left;
                     let bbottom = bottom + 2 * BMV_BORDER_SIZE;
@@ -336,7 +333,7 @@ impl FPT {
                 });
                 ui.collapsing("Registers", |ui| {
                     ui.horizontal(|ui| {
-                        let gb = self.gb();
+                        let gb = self.gb.borrow();
                         let bus = gb.bus();
                         egui::Grid::new("VRAM-registers-1").striped(true).show(ui, |ui| {
                             ui.monospace("LCDC");
@@ -379,7 +376,7 @@ impl FPT {
                             $ui.colored_label(Color32::LIGHT_BLUE, $low_label);
                         }
                     }
-                    let gb = self.gb();
+                    let gb = self.gb.borrow();
                     let cpu = gb.cpu();
                     egui::Grid::new("cpu_registers_a-e").num_columns(4).min_col_width(10.0).striped(true).show(ui, |ui| {
                         cpu_register!(ui, "A": cpu.a(), "F": cpu.f()); ui.end_row();
@@ -410,7 +407,7 @@ impl FPT {
                         self.paused = true;
                     }
                     if ui.button("Step").clicked() {
-                        self.gb().frame();
+                        self.gb.borrow_mut().frame();
                     }
                     if ui.button("Continue").clicked() {
                         self.paused = false;
