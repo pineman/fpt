@@ -406,9 +406,6 @@ impl FPT {
                     if ui.button("Pause").clicked() {
                         self.paused = true;
                     }
-                    if ui.button("Step").clicked() {
-                        self.gb.borrow_mut().frame();
-                    }
                     if ui.button("Continue").clicked() {
                         self.paused = false;
                     }
