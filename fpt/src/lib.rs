@@ -45,6 +45,13 @@ impl Gameboy {
         &mut self.cpu
     }
 
+    pub fn ppu(&self) -> &Ppu {
+        &self.ppu
+    }
+    pub fn ppu_mut(&mut self) -> &mut Ppu {
+        &mut self.ppu
+    }
+
     pub fn instruction(&mut self) -> u32 {
         let cycles = self.cpu.instruction() as u32;
         // TODO: care for double speed mode (need to run half as much dots)
@@ -54,8 +61,8 @@ impl Gameboy {
 
     pub fn frame(&mut self) -> &Frame {
         for _ in 0..DOTS_IN_ONE_FRAME {
-            // TODO: care for double speed mode (need to run two cpu cycles)
-            self.cpu.cycle();
+            // TODO: care for double speed mode (need to run two cpu t_cycles)
+            self.cpu.t_cycle();
             self.ppu.step(1);
         }
         self.ppu.get_frame()
@@ -63,5 +70,10 @@ impl Gameboy {
 
     pub fn get_frame(&self) -> &Frame {
         self.ppu.get_frame()
+    }
+
+    pub fn cycles_in_one_frame(&self) -> u32 {
+        // TODO: care for double speed mode
+        DOTS_IN_ONE_FRAME
     }
 }

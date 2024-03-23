@@ -12,7 +12,9 @@ use fpt::ppu::tile::Tile;
 use fpt_cli::debugger::Debugger;
 use log::info;
 
-const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
+// TODO: the gameboy doesn't run at exactly 60fps
+const SIXTY_FPS_FRAMETIME: f64 = 0.016666666667;
+const T_CYCLE: f64 = 0.0000002384185791015625;
 
 const TEXTURE_SCALE_FACTOR: f32 = 3.0;
 
@@ -83,8 +85,12 @@ pub struct FPT {
     bg_map_texture: Option<egui::TextureHandle>,
 
     gb: Rc<RefCell<fpt::Gameboy>>,
-    db: Debugger,
+    dbg: Debugger,
     paused: bool,
+    slow_factor_s: String,
+    slow_factor: f64,
+    cycles_since_last_frame: u32,
+    total_cycles: u64,
 }
 
 impl Default for FPT {
@@ -101,8 +107,12 @@ impl Default for FPT {
             bg_map: egui::ColorImage::new([BMV_X_SIZE, BMV_Y_SIZE], Color32::TRANSPARENT),
             bg_map_texture: None,
             gb: gameboy.clone(),
-            db: Debugger::with_gameboy(gameboy),
+            dbg: Debugger::with_gameboy(gameboy),
             paused: false,
+            slow_factor_s: "1".to_string(),
+            slow_factor: 1.0,
+            cycles_since_last_frame: 0,
+            total_cycles: 0,
         }
     }
 }
@@ -138,18 +148,50 @@ impl FPT {
     }
 
     fn emulator(&mut self, ui: &mut Ui) {
+        self.egui_frame_count += 1;
+        let mut frame: Option<fpt::ppu::Frame> = None;
         let delta_time = ui.input(|i| i.unstable_dt) as f64;
         self.accum_time += delta_time;
-        self.egui_frame_count += 1;
-        if self.accum_time >= GB_FRAME_IN_SECONDS {
+
+        // if self.slow_factor != 1.0 {
+        if true {
+            let cycles = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
+            self.accum_time -= cycles as f64 * T_CYCLE * self.slow_factor;
+            for _ in 0..cycles {
+                // TODO: care for double speed mode
+                self.gb.borrow_mut().cpu_mut().t_cycle();
+                self.gb.borrow_mut().ppu_mut().step(1);
+                self.cycles_since_last_frame += 1;
+                if self.cycles_since_last_frame == self.gb.borrow().cycles_in_one_frame() {
+                    frame = {
+                        let mut ppu_frame_copy: fpt::ppu::Frame = [0; 23040]; // should be optimized away?
+                        ppu_frame_copy.copy_from_slice(self.gb.borrow_mut().get_frame());
+                        Option::from(ppu_frame_copy)
+                    };
+                    self.gb_frame_count += 1;
+                    self.cycles_since_last_frame = 0;
+                }
+            }
+            self.total_cycles += cycles as u64;
+            if let Some(frame) = frame {
+                for z in 0..(WIDTH * HEIGHT) {
+                    let x = z % WIDTH;
+                    let y = z / WIDTH;
+                    self.image[(x, y)] = PALETTE[frame[z] as usize];
+                }
+            }
+        } else if self.accum_time >= SIXTY_FPS_FRAMETIME {
+            self.accum_time -= SIXTY_FPS_FRAMETIME;
             self.gb_frame_count += 1;
-            self.accum_time -= GB_FRAME_IN_SECONDS;
+            self.cycles_since_last_frame = 0;
+            self.total_cycles += 70224;
+            self.gb.borrow_mut().frame();
             // I didn't manage to work with a reference from self.gb.borrow().frame()
             // because that borrows self immutably,
             // and then `self.image[(x, y)] = ... frame[z] ...` borrows self mutably and reads frame
             let frame = {
                 let mut ppu_frame_copy: fpt::ppu::Frame = [0; 23040]; // should be optimized away?
-                ppu_frame_copy.copy_from_slice(self.gb.borrow_mut().frame());
+                ppu_frame_copy.copy_from_slice(self.gb.borrow_mut().get_frame());
                 ppu_frame_copy
             };
             for z in 0..(WIDTH * HEIGHT) {
@@ -176,7 +218,7 @@ impl FPT {
         if _ccc {
             info!("time_taken2 {:.8}", time_taken);
         }
-        let sleep_time = GB_FRAME_IN_SECONDS - time_taken;
+        let sleep_time = SIXTY_FPS_FRAMETIME - time_taken;
         info!("sleep_time {:.8}", sleep_time);
         if sleep_time < 0.0 {
             ctx.request_repaint();
@@ -202,7 +244,7 @@ impl FPT {
             stat!("time"        : "{:.8}", time);
             stat!("dt"          : "{:.8}", delta_time);
             stat!("accum. time" : "{:.8}", self.accum_time);
-            stat!("Ideal count" : "{:.3}", time / GB_FRAME_IN_SECONDS);
+            stat!("Ideal count" : "{:.3}", time / SIXTY_FPS_FRAMETIME);
             stat!("Frame count" : "{}"   , self.gb_frame_count);
             stat!("UI updates"  : "{}"   , self.egui_frame_count);
         });
@@ -225,11 +267,14 @@ impl FPT {
         egui::ScrollArea::vertical()
             .id_source("debug_panel")
             .show(ui, |ui| {
+                ui.heading("VRAM");
                 ui.horizontal(|ui| {
-                    ui.heading("VRAM");
-                    ui.with_layout(Layout::right_to_left(Align::Max), |ui| {
+                    // ui.with_layout(Layout::right_to_left(Align::Max), |ui| {
+                        ui.monospace("Slow factor:");
+                        ui.add(egui::TextEdit::singleline(&mut self.slow_factor_s).desired_width(16.0));
+                        self.slow_factor = self.slow_factor_s.parse().unwrap_or(1.0);
                         ui.checkbox(&mut self.paused, "Paused")
-                    });
+                    // });
                 });
                 ui.separator();
                 ui.horizontal_wrapped(|ui| {
@@ -410,12 +455,12 @@ impl FPT {
                         self.paused = false;
                     }
                     ui.with_layout(Layout::right_to_left(Align::Max), |ui| {
-                        ui.monospace(self.db.pc().to_string());
+                        ui.monospace(self.dbg.pc().to_string());
                         ui.label("PC: ");
                     });
                 });
                 ui.separator();
-                let breakpoints_string = self.db.list_breakpoints();
+                let breakpoints_string = self.dbg.list_breakpoints();
                 if breakpoints_string.is_empty() {
                     ui.centered_and_justified(|ui| ui.label("No breakpoints (WIP)"));
                 } else {
