@@ -165,7 +165,7 @@ impl FPT {
                 if self.cycles_since_last_frame == self.gb.borrow().cycles_in_one_frame() {
                     frame = {
                         let mut ppu_frame_copy: fpt::ppu::Frame = [0; 23040]; // should be optimized away?
-                        ppu_frame_copy.copy_from_slice(self.gb.borrow_mut().get_frame());
+                        ppu_frame_copy.copy_from_slice(self.gb.borrow().get_frame());
                         Option::from(ppu_frame_copy)
                     };
                     self.gb_frame_count += 1;
@@ -191,7 +191,7 @@ impl FPT {
             // and then `self.image[(x, y)] = ... frame[z] ...` borrows self mutably and reads frame
             let frame = {
                 let mut ppu_frame_copy: fpt::ppu::Frame = [0; 23040]; // should be optimized away?
-                ppu_frame_copy.copy_from_slice(self.gb.borrow_mut().get_frame());
+                ppu_frame_copy.copy_from_slice(self.gb.borrow().get_frame());
                 ppu_frame_copy
             };
             for z in 0..(WIDTH * HEIGHT) {
