@@ -87,7 +87,6 @@ pub struct FPT {
     gb: Rc<RefCell<fpt::Gameboy>>,
     dbg: Debugger,
     paused: bool,
-    slow_factor_s: String,
     slow_factor: f64,
     cycles_since_last_frame: u32,
     total_cycles: u64,
@@ -109,7 +108,6 @@ impl Default for FPT {
             gb: gameboy.clone(),
             dbg: Debugger::with_gameboy(gameboy),
             paused: false,
-            slow_factor_s: "1".to_string(),
             slow_factor: 1.0,
             cycles_since_last_frame: 0,
             total_cycles: 0,
@@ -268,14 +266,6 @@ impl FPT {
             .id_source("debug_panel")
             .show(ui, |ui| {
                 ui.heading("VRAM");
-                ui.horizontal(|ui| {
-                    // ui.with_layout(Layout::right_to_left(Align::Max), |ui| {
-                        ui.monospace("Slow factor:");
-                        ui.add(egui::TextEdit::singleline(&mut self.slow_factor_s).desired_width(16.0));
-                        self.slow_factor = self.slow_factor_s.parse().unwrap_or(1.0);
-                        ui.checkbox(&mut self.paused, "Paused")
-                    // });
-                });
                 ui.separator();
                 ui.horizontal_wrapped(|ui| {
                     for tile_i in 0..fpt::ppu::tile::NUM_TILES {
@@ -446,20 +436,22 @@ impl FPT {
                     });
                 });
                 ui.add_space(20.0);
+                ui.heading("Debugger:");
+                ui.separator();
                 ui.horizontal(|ui| {
-                    ui.heading("Debugger:");
-                    if ui.button("Pause").clicked() {
-                        self.paused = true;
+                    if ui.button(if self.paused { "Continue" } else { "Pause" }).clicked() {
+                        self.paused = !self.paused;
                     }
-                    if ui.button("Continue").clicked() {
-                        self.paused = false;
-                    }
+                    ui.horizontal(|ui| {
+                        ui.monospace("Slow factor:");
+                        ui.add(egui::DragValue::new(&mut self.slow_factor).clamp_range(1..=1000).speed(0.5));
+                    });
                     ui.with_layout(Layout::right_to_left(Align::Max), |ui| {
                         ui.monospace(self.dbg.pc().to_string());
                         ui.label("PC: ");
+                        ui.separator();
                     });
                 });
-                ui.separator();
                 let breakpoints_string = self.dbg.list_breakpoints();
                 if breakpoints_string.is_empty() {
                     ui.centered_and_justified(|ui| ui.label("No breakpoints (WIP)"));
@@ -484,7 +476,6 @@ impl FPT {
         });
         texture.set(self.image.clone(), TextureOptions::NEAREST);
         ui.image((texture.id(), TEXTURE_SCALE_FACTOR * texture.size_vec2()));
-        ui.centered_and_justified(|ui| self.debug_info(ui));
         // TODO: fix sleep timings for displays > 60hz. til then we burn cpu
         // self.sleep(ctx, frame_start, gb_frame_count_before);
         ctx.request_repaint();
@@ -498,6 +489,7 @@ impl eframe::App for FPT {
             .resizable(true)
             .default_width(350.0)
             .show(ctx, |ui| {
+                self.debug_info(ui);
                 self.debug_panel(ui);
             });
 
@@ -519,11 +511,7 @@ fn main() -> eframe::Result<()> {
         },
         ..Default::default()
     };
-    eframe::run_native(
-        "eframe template",
-        native_options,
-        Box::new(|cc| Box::new(FPT::new(cc))),
-    )
+    eframe::run_native("FPT", native_options, Box::new(|cc| Box::new(FPT::new(cc))))
 }
 
 #[cfg(target_arch = "wasm32")]
