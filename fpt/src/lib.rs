@@ -59,7 +59,7 @@ impl Gameboy {
         cycles
     }
 
-    pub fn frame(&mut self) -> &Frame {
+    pub fn advance_frame(&mut self) -> &Frame {
         for _ in 0..DOTS_IN_ONE_FRAME {
             // TODO: care for double speed mode (need to run two cpu t_cycles)
             self.cpu.t_cycle();

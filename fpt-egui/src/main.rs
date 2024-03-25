@@ -162,7 +162,6 @@ impl FPT {
                 if self.cycles_since_last_frame == self.gb.borrow().cycles_in_one_frame() {
                     let gb = self.gb.borrow();
                     frame = Some(*gb.get_frame()); // Copies the whole [u8; WIDTH * HEIGHT] into frame
-
                     self.gb_frame_count += 1;
                     self.cycles_since_last_frame = 0;
                 }
@@ -178,11 +177,9 @@ impl FPT {
             self.gb_frame_count += 1;
             self.cycles_since_last_frame = 0;
             self.total_cycles += 70224;
-            self.gb.borrow_mut().frame();
-
-            let gb = self.gb.borrow();
-            let frame = gb.get_frame();
-
+            // Run for a whole frame and decode the resulting picture into our GUI's image
+            let mut gb = self.gb.borrow_mut();
+            let frame = gb.advance_frame();
             for (i, &gb_pixel) in frame.iter().enumerate() {
                 self.image.pixels[i] = PALETTE[gb_pixel as usize];
             }
