@@ -235,14 +235,23 @@ impl FPT {
     }
 
     fn get_tile(&self, tile_i: usize) -> Tile {
-        let [start, end] = if bitwise::test_bit8::<4>(self.gb.borrow().bus().lcdc()) {
-            [0x8000 + tile_i * 16, 0x8000 + (tile_i + 1) * 16]
-        } else if tile_i >= 128 {
-            [0x8800 + tile_i * 16, 0x8800 + (tile_i + 1) * 16]
+        let lcdc = self.gb.borrow().bus().lcdc();
+        let lcdc_4 = bitwise::test_bit8::<4>(lcdc);
+        let tile_start = if lcdc_4 {
+            // Unsigned addressing from $8000:
+            // tiles 0-127 are in block 0, and tiles 128-255 are in block 1
+            0x8000 + 16 * tile_i
         } else {
-            [0x9000 + tile_i * 16, 0x9000 + (tile_i + 1) * 16]
+            // Signed addressing from $9000:
+            // tiles 0-127 are in block 2, and tiles 128-255 (i.e. -128 to -1) are in block 1
+            if tile_i < 128 {
+                0x9000 + 16 * tile_i
+            } else {
+                0x8800 + 16 * (tile_i - 128)
+            }
         };
-        let tile_vec = self.gb.borrow().bus().slice(start..end);
+
+        let tile_vec = self.gb.borrow().bus().slice(tile_start..tile_start + 16);
         let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
         Tile::load(&tile_slice)
     }
