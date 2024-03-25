@@ -12,7 +12,9 @@ use fpt::ppu::tile::Tile;
 use fpt_cli::debugger::Debugger;
 use log::info;
 
-const GB_FRAME_IN_SECONDS: f64 = 0.016666666667;
+// TODO: the gameboy doesn't run at exactly 60fps
+const SIXTY_FPS_FRAMETIME: f64 = 0.016666666667;
+const T_CYCLE: f64 = 0.0000002384185791015625;
 
 const TEXTURE_SCALE_FACTOR: f32 = 3.0;
 
@@ -83,8 +85,11 @@ pub struct FPT {
     bg_map_texture: Option<egui::TextureHandle>,
 
     gb: Rc<RefCell<fpt::Gameboy>>,
-    db: Debugger,
+    dbg: Debugger,
     paused: bool,
+    slow_factor: f64,
+    cycles_since_last_frame: u32,
+    total_cycles: u64,
 }
 
 impl Default for FPT {
@@ -101,8 +106,11 @@ impl Default for FPT {
             bg_map: egui::ColorImage::new([BMV_X_SIZE, BMV_Y_SIZE], Color32::TRANSPARENT),
             bg_map_texture: None,
             gb: gameboy.clone(),
-            db: Debugger::with_gameboy(gameboy),
+            dbg: Debugger::with_gameboy(gameboy),
             paused: false,
+            slow_factor: 1.0,
+            cycles_since_last_frame: 0,
+            total_cycles: 0,
         }
     }
 }
@@ -138,18 +146,50 @@ impl FPT {
     }
 
     fn emulator(&mut self, ui: &mut Ui) {
+        self.egui_frame_count += 1;
+        let mut frame: Option<fpt::ppu::Frame> = None;
         let delta_time = ui.input(|i| i.unstable_dt) as f64;
         self.accum_time += delta_time;
-        self.egui_frame_count += 1;
-        if self.accum_time >= GB_FRAME_IN_SECONDS {
+
+        // if self.slow_factor != 1.0 {
+        if true {
+            let cycles = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
+            self.accum_time -= cycles as f64 * T_CYCLE * self.slow_factor;
+            for _ in 0..cycles {
+                // TODO: care for double speed mode
+                self.gb.borrow_mut().cpu_mut().t_cycle();
+                self.gb.borrow_mut().ppu_mut().step(1);
+                self.cycles_since_last_frame += 1;
+                if self.cycles_since_last_frame == self.gb.borrow().cycles_in_one_frame() {
+                    frame = {
+                        let mut ppu_frame_copy: fpt::ppu::Frame = [0; 23040]; // should be optimized away?
+                        ppu_frame_copy.copy_from_slice(self.gb.borrow().get_frame());
+                        Option::from(ppu_frame_copy)
+                    };
+                    self.gb_frame_count += 1;
+                    self.cycles_since_last_frame = 0;
+                }
+            }
+            self.total_cycles += cycles as u64;
+            if let Some(frame) = frame {
+                for z in 0..(WIDTH * HEIGHT) {
+                    let x = z % WIDTH;
+                    let y = z / WIDTH;
+                    self.image[(x, y)] = PALETTE[frame[z] as usize];
+                }
+            }
+        } else if self.accum_time >= SIXTY_FPS_FRAMETIME {
+            self.accum_time -= SIXTY_FPS_FRAMETIME;
             self.gb_frame_count += 1;
-            self.accum_time -= GB_FRAME_IN_SECONDS;
+            self.cycles_since_last_frame = 0;
+            self.total_cycles += 70224;
+            self.gb.borrow_mut().frame();
             // I didn't manage to work with a reference from self.gb.borrow().frame()
             // because that borrows self immutably,
             // and then `self.image[(x, y)] = ... frame[z] ...` borrows self mutably and reads frame
             let frame = {
                 let mut ppu_frame_copy: fpt::ppu::Frame = [0; 23040]; // should be optimized away?
-                ppu_frame_copy.copy_from_slice(self.gb.borrow_mut().frame());
+                ppu_frame_copy.copy_from_slice(self.gb.borrow().get_frame());
                 ppu_frame_copy
             };
             for z in 0..(WIDTH * HEIGHT) {
@@ -176,7 +216,7 @@ impl FPT {
         if _ccc {
             info!("time_taken2 {:.8}", time_taken);
         }
-        let sleep_time = GB_FRAME_IN_SECONDS - time_taken;
+        let sleep_time = SIXTY_FPS_FRAMETIME - time_taken;
         info!("sleep_time {:.8}", sleep_time);
         if sleep_time < 0.0 {
             ctx.request_repaint();
@@ -202,7 +242,7 @@ impl FPT {
             stat!("time"        : "{:.8}", time);
             stat!("dt"          : "{:.8}", delta_time);
             stat!("accum. time" : "{:.8}", self.accum_time);
-            stat!("Ideal count" : "{:.3}", time / GB_FRAME_IN_SECONDS);
+            stat!("Ideal count" : "{:.3}", time / SIXTY_FPS_FRAMETIME);
             stat!("Frame count" : "{}"   , self.gb_frame_count);
             stat!("UI updates"  : "{}"   , self.egui_frame_count);
         });
@@ -225,12 +265,7 @@ impl FPT {
         egui::ScrollArea::vertical()
             .id_source("debug_panel")
             .show(ui, |ui| {
-                ui.horizontal(|ui| {
-                    ui.heading("VRAM");
-                    ui.with_layout(Layout::right_to_left(Align::Max), |ui| {
-                        ui.checkbox(&mut self.paused, "Paused")
-                    });
-                });
+                ui.heading("VRAM");
                 ui.separator();
                 ui.horizontal_wrapped(|ui| {
                     for tile_i in 0..fpt::ppu::tile::NUM_TILES {
@@ -401,21 +436,23 @@ impl FPT {
                     });
                 });
                 ui.add_space(20.0);
+                ui.heading("Debugger:");
+                ui.separator();
                 ui.horizontal(|ui| {
-                    ui.heading("Debugger:");
-                    if ui.button("Pause").clicked() {
-                        self.paused = true;
+                    if ui.button(if self.paused { "Continue" } else { "Pause" }).clicked() {
+                        self.paused = !self.paused;
                     }
-                    if ui.button("Continue").clicked() {
-                        self.paused = false;
-                    }
+                    ui.horizontal(|ui| {
+                        ui.monospace("Slow factor:");
+                        ui.add(egui::DragValue::new(&mut self.slow_factor).clamp_range(1..=1000).speed(0.5));
+                    });
                     ui.with_layout(Layout::right_to_left(Align::Max), |ui| {
-                        ui.monospace(self.db.pc().to_string());
+                        ui.monospace(self.dbg.pc().to_string());
                         ui.label("PC: ");
+                        ui.separator();
                     });
                 });
-                ui.separator();
-                let breakpoints_string = self.db.list_breakpoints();
+                let breakpoints_string = self.dbg.list_breakpoints();
                 if breakpoints_string.is_empty() {
                     ui.centered_and_justified(|ui| ui.label("No breakpoints (WIP)"));
                 } else {
@@ -439,7 +476,6 @@ impl FPT {
         });
         texture.set(self.image.clone(), TextureOptions::NEAREST);
         ui.image((texture.id(), TEXTURE_SCALE_FACTOR * texture.size_vec2()));
-        ui.centered_and_justified(|ui| self.debug_info(ui));
         // TODO: fix sleep timings for displays > 60hz. til then we burn cpu
         // self.sleep(ctx, frame_start, gb_frame_count_before);
         ctx.request_repaint();
@@ -453,6 +489,7 @@ impl eframe::App for FPT {
             .resizable(true)
             .default_width(350.0)
             .show(ctx, |ui| {
+                self.debug_info(ui);
                 self.debug_panel(ui);
             });
 
@@ -474,11 +511,7 @@ fn main() -> eframe::Result<()> {
         },
         ..Default::default()
     };
-    eframe::run_native(
-        "eframe template",
-        native_options,
-        Box::new(|cc| Box::new(FPT::new(cc))),
-    )
+    eframe::run_native("FPT", native_options, Box::new(|cc| Box::new(FPT::new(cc))))
 }
 
 #[cfg(target_arch = "wasm32")]
