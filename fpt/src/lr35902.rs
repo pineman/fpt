@@ -15,6 +15,7 @@ pub struct LR35902 {
     hl: u16,
     sp: u16,
     pc: u16,
+    ime: bool,
     mem: Bus,
     next_cb: bool,
     clock_cycles: u64,
@@ -43,6 +44,7 @@ impl LR35902 {
             hl: 0,
             sp: 0,
             pc: 0,
+            ime: false,
             mem: memory,
             next_cb: false,
             clock_cycles: 0,
@@ -201,6 +203,14 @@ impl LR35902 {
     }
     pub fn next_cb(&self) -> bool {
         self.next_cb
+    }
+
+    pub fn interrupt_master_enable(&self) -> bool {
+        self.ime
+    }
+
+    pub fn set_interrupt_master_enable(&mut self, ime: bool) {
+        self.ime = ime;
     }
 
     pub fn set_next_cb(&mut self, value: bool) {
@@ -525,9 +535,13 @@ impl LR35902 {
     }
 
     fn reti(&mut self) {
+        // TODO: The interrupt master enable flag is returned to its pre-interrupt status.
+        // BUT: https://gbdev.io/pandocs/Interrupts.htm claims that RETI is EI followed by RET
+        self.set_interrupt_master_enable(true);
+
+        // RET
         let address = self.pop();
         self.jump(address);
-        // TODO: The master interrupt enable flag is returned to its pre-interrupt status.
     }
 
     fn bit<const INDEX: u8>(&mut self, x: u8) {
@@ -1710,7 +1724,7 @@ impl LR35902 {
             }
             0xF3 => {
                 // DI
-                // todo!("0xF3 DI")
+                self.set_interrupt_master_enable(false);
             }
             0xF4 => {
                 // Not implemented
@@ -1744,7 +1758,7 @@ impl LR35902 {
             }
             0xFB => {
                 // EI
-                todo!("0xFB EI")
+                self.set_interrupt_master_enable(true);
             }
             0xFC => {
                 // Not implemented
