@@ -666,7 +666,7 @@ impl LR35902 {
             }
             0x10 => {
                 // STOP 0
-                todo!()
+                todo!("0x10 STOP 0")
             }
             0x11 => {
                 // LD DE,d16
@@ -775,7 +775,7 @@ impl LR35902 {
             }
             0x27 => {
                 // DAA
-                todo!()
+                todo!("0x27 DAA")
             }
             0x28 => {
                 // JR Z,r8
@@ -1119,7 +1119,7 @@ impl LR35902 {
                 // HALT
                 // Take care for halt bug: https://gbdev.io/pandocs/halt.html
                 // https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#HALT
-                todo!()
+                todo!("0x76 HALT")
             }
             0x77 => {
                 // LD (HL),A
@@ -1710,7 +1710,7 @@ impl LR35902 {
             }
             0xF3 => {
                 // DI
-                // todo!()
+                // todo!("0xF3 DI")
             }
             0xF4 => {
                 // Not implemented
@@ -1744,7 +1744,7 @@ impl LR35902 {
             }
             0xFB => {
                 // EI
-                todo!()
+                todo!("0xFB EI")
             }
             0xFC => {
                 // Not implemented
@@ -2850,8 +2850,8 @@ impl LR35902 {
                 // SET 7,A
                 self.set_a(bw::set_bit8::<7>(self.a(), true));
             }
-            _ => {
-                todo!()
+            i => {
+                unimplemented!("no idea what opcode {i} is")
             }
         }
     }
