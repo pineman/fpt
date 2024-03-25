@@ -64,7 +64,6 @@ pub mod map {
 
 //#[derive(Clone)]
 pub struct Memory {
-    mem: [u8; 65536],
     cartridge: Vec<u8>,
     bootrom: [u8; 256],
     memory_controller: Box<dyn MemoryController>,
@@ -85,7 +84,6 @@ impl Default for Memory {
 impl Memory {
     pub fn new() -> Self {
         Self {
-            mem: [0; 65536],
             cartridge: Vec::new(),
             bootrom: [0; 256],
             memory_controller: Box::new(Mbc0::new()),
@@ -102,11 +100,11 @@ impl Memory {
     }
 
     pub fn slice(&self, range: MemoryRange) -> &[u8] {
-        &self.mem[range.start..range.end]
+        self.memory_controller.slice(range, &self.cartridge)
     }
 
     pub fn slice_mut(&mut self, range: MemoryRange) -> &mut [u8] {
-        &mut self.mem[range.start..range.end]
+        self.memory_controller.slice_mut(range, &mut self.cartridge)
     }
 }
 
@@ -125,7 +123,8 @@ impl Bus {
 
     pub fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
         self.memory().bootrom.clone_from_slice(bootrom);
-        self.clone_from_slice(map::BOOTROM, bootrom);
+        self.memory().cartridge[..256].clone_from_slice(bootrom);
+        //self.clone_from_slice(map::BOOTROM, bootrom);
     }
 
     pub fn load_cartridge(&mut self, cartridge: &Vec<u8>) {
@@ -133,20 +132,22 @@ impl Bus {
             println!("This is not a  rom, fuck you!");
             panic!();
         }
+
         self.memory().cartridge = cartridge.to_vec();
-        self.clone_from_slice(0x100..0x8000, &cartridge[0x100..cartridge.len()]);
+        //self.clone_from_slice(0x100..0x8000, &cartridge[0x100..cartridge.len()]);
     }
 
     pub fn read(&self, address: GBAddress) -> u8 {
-        self.memory().mem[address as Address]
+        //self.memory().mem[address as Address]
+        self._read(address.into())
     }
 
-    pub fn read_range(&self, range: MemoryRange) -> Vec<u8> {
-        self.memory().slice(range).to_vec()
-    }
+    //pub fn read_range(&self, range: MemoryRange) -> Vec<u8> {
+    //    self.memory().slice(range).to_vec()
+    //}
 
     pub fn write(&mut self, address: GBAddress, value: u8) {
-        self.memory().mem[address as Address] = value;
+        self._write(address.into(), value);
     }
 
     fn _read(&self, address: Address) -> u8 {
@@ -158,7 +159,7 @@ impl Bus {
     }
 
     pub fn clone_from_slice(&mut self, range: MemoryRange, slice: &[u8]) {
-        self.memory().mem[range.start..range.end].clone_from_slice(slice);
+        dbg!(self.memory().slice_mut(dbg!(range))).clone_from_slice(slice);
     }
 
     //pub fn slice(&self, range: MemoryRange) -> &[u8] {
@@ -169,15 +170,15 @@ impl Bus {
     //    &mut self.memory().mem[(range.start as usize)..(range.end as usize)]
     //}
 
-    pub fn each_byte(&self) -> std::iter::Enumerate<std::array::IntoIter<u8, 65536>> {
-        self.memory().mem.into_iter().enumerate()
-    }
+    //pub fn each_byte(&self) -> std::iter::Enumerate<std::array::IntoIter<u8, 65536>> {
+    //    self.memory().mem.into_iter().enumerate()
+    //}
 
-    pub fn title(&mut self) -> String {
-        std::str::from_utf8(&self.read_range(map::TITLE))
-            .unwrap()
-            .to_string()
-    }
+    //pub fn title(&mut self) -> String {
+    //    std::str::from_utf8(&self.read_range(map::TITLE))
+    //        .unwrap()
+    //        .to_string()
+    //}
 
     pub fn cartridge_type(&self) -> u8 {
         self._read(map::CARTRIDGE_TYPE)
@@ -233,6 +234,6 @@ impl Bus {
     }
 
     pub fn vram(&self) -> Vec<u8> {
-        self.memory().mem[map::VRAM].to_vec()
+        self.memory().slice(map::VRAM).to_vec()
     }
 }
