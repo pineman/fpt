@@ -151,8 +151,7 @@ impl FPT {
         let delta_time = ui.input(|i| i.unstable_dt) as f64;
         self.accum_time += delta_time;
 
-        // if self.slow_factor != 1.0 {
-        if true {
+        if self.slow_factor != 1.0 {
             let cycles = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
             self.accum_time -= cycles as f64 * T_CYCLE * self.slow_factor;
             for _ in 0..cycles {
@@ -161,21 +160,17 @@ impl FPT {
                 self.gb.borrow_mut().ppu_mut().step(1);
                 self.cycles_since_last_frame += 1;
                 if self.cycles_since_last_frame == self.gb.borrow().cycles_in_one_frame() {
-                    frame = {
-                        let mut ppu_frame_copy: fpt::ppu::Frame = [0; 23040]; // should be optimized away?
-                        ppu_frame_copy.copy_from_slice(self.gb.borrow().get_frame());
-                        Option::from(ppu_frame_copy)
-                    };
+                    let gb = self.gb.borrow();
+                    frame = Some(*gb.get_frame()); // Copies the whole [u8; WIDTH * HEIGHT] into frame
+
                     self.gb_frame_count += 1;
                     self.cycles_since_last_frame = 0;
                 }
             }
             self.total_cycles += cycles as u64;
             if let Some(frame) = frame {
-                for z in 0..(WIDTH * HEIGHT) {
-                    let x = z % WIDTH;
-                    let y = z / WIDTH;
-                    self.image[(x, y)] = PALETTE[frame[z] as usize];
+                for (i, &gb_pixel) in frame.iter().enumerate() {
+                    self.image.pixels[i] = PALETTE[gb_pixel as usize];
                 }
             }
         } else if self.accum_time >= SIXTY_FPS_FRAMETIME {
@@ -184,18 +179,12 @@ impl FPT {
             self.cycles_since_last_frame = 0;
             self.total_cycles += 70224;
             self.gb.borrow_mut().frame();
-            // I didn't manage to work with a reference from self.gb.borrow().frame()
-            // because that borrows self immutably,
-            // and then `self.image[(x, y)] = ... frame[z] ...` borrows self mutably and reads frame
-            let frame = {
-                let mut ppu_frame_copy: fpt::ppu::Frame = [0; 23040]; // should be optimized away?
-                ppu_frame_copy.copy_from_slice(self.gb.borrow().get_frame());
-                ppu_frame_copy
-            };
-            for z in 0..(WIDTH * HEIGHT) {
-                let x = z % WIDTH;
-                let y = z / WIDTH;
-                self.image[(x, y)] = PALETTE[frame[z] as usize];
+
+            let gb = self.gb.borrow();
+            let frame = gb.get_frame();
+
+            for (i, &gb_pixel) in frame.iter().enumerate() {
+                self.image.pixels[i] = PALETTE[gb_pixel as usize];
             }
         }
     }
