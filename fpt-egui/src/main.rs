@@ -1,14 +1,14 @@
 #![feature(lazy_cell)]
 #![feature(array_chunks)]
 
-use std::cell::RefCell;
+use std::cell::{Ref, RefCell, RefMut};
 use std::rc::Rc;
 use std::time::Duration;
 
 use eframe::Frame;
 use egui::{Align, Color32, Context, Layout, TextureOptions, Ui};
-use fpt::bitwise;
 use fpt::ppu::tile::Tile;
+use fpt::{bitwise, Gameboy};
 use fpt_cli::debugger::Debugger;
 use log::info;
 
@@ -131,6 +131,16 @@ impl FPT {
         app
     }
 
+    /// Gameboy accessor
+    fn gb(&self) -> Ref<'_, Gameboy> {
+        self.gb.borrow()
+    }
+
+    /// Gameboy accessor, mutable edition
+    fn gb_mut(&mut self) -> RefMut<'_, Gameboy> {
+        self.gb.borrow_mut()
+    }
+
     fn top_panel(&mut self, ctx: &Context) {
         #[cfg(not(target_arch = "wasm32"))]
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
@@ -156,12 +166,11 @@ impl FPT {
             self.accum_time -= cycles as f64 * T_CYCLE * self.slow_factor;
             for _ in 0..cycles {
                 // TODO: care for double speed mode
-                self.gb.borrow_mut().cpu_mut().t_cycle();
-                self.gb.borrow_mut().ppu_mut().step(1);
+                self.gb_mut().cpu_mut().t_cycle();
+                self.gb_mut().ppu_mut().step(1);
                 self.cycles_since_last_frame += 1;
-                if self.cycles_since_last_frame == self.gb.borrow().cycles_in_one_frame() {
-                    let gb = self.gb.borrow();
-                    frame = Some(*gb.get_frame()); // Copies the whole [u8; WIDTH * HEIGHT] into frame
+                if self.cycles_since_last_frame == self.gb().cycles_in_one_frame() {
+                    frame = Some(*self.gb().get_frame()); // Copies the whole [u8; WIDTH * HEIGHT] into frame
                     self.gb_frame_count += 1;
                     self.cycles_since_last_frame = 0;
                 }
@@ -225,35 +234,25 @@ impl FPT {
             }
             let time = ui.input(|i| i.time);
             let delta_time = ui.input(|i| i.unstable_dt) as f64;
-            stat!("time"        : "{:.8}", time);
-            stat!("dt"          : "{:.8}", delta_time);
-            stat!("accum. time" : "{:.8}", self.accum_time);
-            stat!("Ideal count" : "{:.3}", time / SIXTY_FPS_FRAMETIME);
-            stat!("Frame count" : "{}"   , self.gb_frame_count);
-            stat!("UI updates"  : "{}"   , self.egui_frame_count);
+            stat!("time"        : "{:>9.3}" , time);
+            stat!("dt"          : "{:>9.3}" , delta_time);
+            stat!("accum. time" : "{:>9.3}" , self.accum_time);
+            stat!("Ideal count" : "{:>9.3}" , time / SIXTY_FPS_FRAMETIME);
+            stat!("Frame count" : "{:>5}"   , self.gb_frame_count);
+            stat!("UI updates"  : "{:>5}"   , self.egui_frame_count);
         });
     }
 
     fn get_tile(&self, tile_i: usize) -> Tile {
-        let lcdc = self.gb.borrow().bus().lcdc();
-        let lcdc_4 = bitwise::test_bit8::<4>(lcdc);
-        let tile_start = if lcdc_4 {
-            // Unsigned addressing from $8000:
-            // tiles 0-127 are in block 0, and tiles 128-255 are in block 1
-            0x8000 + 16 * tile_i
-        } else {
-            // Signed addressing from $9000:
-            // tiles 0-127 are in block 2, and tiles 128-255 (i.e. -128 to -1) are in block 1
-            if tile_i < 128 {
-                0x9000 + 16 * tile_i
-            } else {
-                0x8800 + 16 * (tile_i - 128)
-            }
-        };
-
-        let tile_vec = self.gb.borrow().bus().slice(tile_start..tile_start + 16);
-        let tile_slice: [u8; 16] = tile_vec.try_into().unwrap();
-        Tile::load(&tile_slice)
+        let lcdc4 = bitwise::test_bit8::<4>(self.gb().bus().lcdc());
+        self.gb().bus().with_fixed_size_slice(
+            16 * tile_i
+                + match lcdc4 || tile_i > 127 {
+                    true => 0x8000,
+                    false => 0x8800,
+                },
+            Tile::load,
+        )
     }
 
     fn debug_panel(&mut self, ui: &mut Ui) {
@@ -306,13 +305,15 @@ impl FPT {
                         ui.image((texture.id(), TV_TEXTURE_SCALE * texture.size_vec2()));
                     });
 
-                    let bg_map = if bitwise::test_bit8::<3>(self.gb.borrow().bus().lcdc()) {
-                        self.gb.borrow().bus().slice(0x9C00..0xA000)
-                    } else {
-                        self.gb.borrow().bus().slice(0x9800..0x9C00)
+                    let lcdc = self.gb().bus().lcdc();
+                    let gb_map_area = match bitwise::test_bit8::<3>(lcdc) {
+                        false => 0x9800..0x9C00,
+                        true => 0x9C00..0xA000
                     };
-                    for (i, tile_address) in bg_map.iter().enumerate() {
-                        let tile = self.get_tile(*tile_address as usize);
+                    let bg_map_iter = gb_map_area.map(|addr| self.gb.borrow().bus().read(addr));
+
+                    for (i, tile_address) in bg_map_iter.enumerate() {
+                        let tile = self.get_tile(tile_address as usize);
                         for y in 0..TILE_SIZE {
                             let yy = y + (i / BMV_TILES_PER) * TILE_SIZE + BMV_BORDER_SIZE;
                             for x in 0..TILE_SIZE {
@@ -331,10 +332,10 @@ impl FPT {
                         self.bg_map[(0, y)] = Color32::TRANSPARENT;
                         self.bg_map[(BMV_X_SIZE - 1, y)] = Color32::TRANSPARENT;
                     }
-                    let top = self.gb.borrow().bus().scy() as usize;
-                    let left = self.gb.borrow().bus().scx() as usize;
-                    let bottom = ((self.gb.borrow().bus().scy() as u16 + 143u16) % 256u16) as usize;
-                    let right = ((self.gb.borrow().bus().scx() as u16 + 159u16) % 256u16) as usize;
+                    let top = self.gb().bus().scy() as usize;
+                    let left = self.gb().bus().scx() as usize;
+                    let bottom = ((self.gb().bus().scy() as u16 + 143u16) % 256u16) as usize;
+                    let right = ((self.gb().bus().scx() as u16 + 159u16) % 256u16) as usize;
                     let btop = top;
                     let bleft = left;
                     let bbottom = bottom + 2 * BMV_BORDER_SIZE;
@@ -363,7 +364,7 @@ impl FPT {
                 });
                 ui.collapsing("Registers", |ui| {
                     ui.horizontal(|ui| {
-                        let gb = self.gb.borrow();
+                        let gb = self.gb();
                         let bus = gb.bus();
                         egui::Grid::new("VRAM-registers-1").striped(true).show(ui, |ui| {
                             ui.monospace("LCDC");
@@ -406,7 +407,7 @@ impl FPT {
                             $ui.colored_label(Color32::LIGHT_BLUE, $low_label);
                         }
                     }
-                    let gb = self.gb.borrow();
+                    let gb = self.gb();
                     let cpu = gb.cpu();
                     egui::Grid::new("cpu_registers_a-e").num_columns(4).min_col_width(10.0).striped(true).show(ui, |ui| {
                         cpu_register!(ui, "A": cpu.a(), "F": cpu.f()); ui.end_row();
