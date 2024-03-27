@@ -277,7 +277,7 @@ impl Bus {
     }
 
     /// Runs closure `consumer` with access to a fixed-size slice of `N` bytes.
-    pub fn with_array_ref<const N: usize, T>(
+    pub fn with_span<const N: usize, T>(
         &self,
         start: Address,
         consumer: impl FnOnce(&[u8; N]) -> T,
