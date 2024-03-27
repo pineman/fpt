@@ -339,7 +339,7 @@ impl DebuggerTextInterface<'_> {
                             .gameboy
                             .borrow()
                             .bus()
-                            .memory()
+                            .memory_mut()
                             .slice(0x134..0x143)
                             .to_vec(),
                     )

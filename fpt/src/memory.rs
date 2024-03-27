@@ -1,4 +1,4 @@
-use std::cell::{RefCell, RefMut};
+use std::cell::{Ref, RefCell, RefMut};
 use std::ops::Range;
 use std::rc::Rc;
 
@@ -222,12 +222,16 @@ impl Bus {
         Bus(Rc::new(RefCell::new(Memory::new())))
     }
 
-    pub fn memory(&self) -> RefMut<Memory> {
+    pub fn memory(&self) -> Ref<Memory> {
+        self.0.borrow()
+    }
+
+    pub fn memory_mut(&self) -> RefMut<Memory> {
         self.0.borrow_mut()
     }
 
     pub fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
-        self.memory().bootrom.clone_from_slice(bootrom);
+        self.memory_mut().bootrom.clone_from_slice(bootrom);
         self.clone_from_slice(map::BOOTROM, bootrom);
     }
 
@@ -236,40 +240,51 @@ impl Bus {
             println!("This is not a  rom, fuck you!");
             panic!();
         }
-        self.memory().cartridge = cartridge.to_vec();
+        self.memory_mut().cartridge = cartridge.to_vec();
         self.clone_from_slice(0x100..0x8000, &cartridge[0x100..cartridge.len()]);
     }
 
     pub fn read(&self, address: GBAddress) -> u8 {
-        self.memory().mem[address as Address]
+        self.memory_mut().mem[address as Address]
     }
 
     pub fn write(&mut self, address: GBAddress, value: u8) {
-        self.memory().mem[address as Address] = value;
+        self.memory_mut().mem[address as Address] = value;
     }
 
     fn _read(&self, address: Address) -> u8 {
-        self.memory().mem[address]
+        self.memory_mut().mem[address]
     }
 
     fn _write(&mut self, address: Address, value: u8) {
-        self.memory().mem[address] = value;
+        self.memory_mut().mem[address] = value;
     }
 
     pub fn clone_from_slice(&mut self, range: MemoryRange, slice: &[u8]) {
-        self.memory().mem[range.start..range.end].clone_from_slice(slice);
+        self.memory_mut().mem[range.start..range.end].clone_from_slice(slice);
     }
 
-    pub fn slice(&self, range: MemoryRange) -> Vec<u8> {
-        self.memory().mem[range.start..range.end].to_vec()
+    pub fn copy_range(&self, range: MemoryRange) -> Vec<u8> {
+        self.memory_mut().mem[range.start..range.end].to_vec()
     }
 
-    //pub fn mut_slice(&mut self, range: MemoryRange) -> &mut [u8] {
-    //    &mut self.memory().mem[(range.start as usize)..(range.end as usize)]
-    //}
+    pub fn with_slice<T>(&self, range: MemoryRange, consumer: impl FnOnce(&[u8]) -> T) -> T {
+        consumer(&self.memory().mem[range])
+    }
+
+    /// Runs closure `consumer` with access to a fixed-size slice of `N` bytes.
+    pub fn with_fixed_size_slice<const N: usize, T>(
+        &self,
+        start: Address,
+        consumer: impl FnOnce(&[u8; N]) -> T,
+    ) -> T {
+        let m = self.memory();
+        let fixed_size_slice: &[u8; N] = m.mem[start..start + N].try_into().unwrap();
+        consumer(fixed_size_slice)
+    }
 
     pub fn each_byte(&self) -> std::iter::Enumerate<std::array::IntoIter<u8, 65536>> {
-        self.memory().mem.into_iter().enumerate()
+        self.memory_mut().mem.into_iter().enumerate()
     }
 
     // registers
@@ -322,6 +337,6 @@ impl Bus {
     }
 
     pub fn vram(&self) -> Vec<u8> {
-        self.memory().mem[map::VRAM].to_vec()
+        self.memory_mut().mem[map::VRAM].to_vec()
     }
 }
