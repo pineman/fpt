@@ -244,15 +244,17 @@ impl FPT {
     }
 
     fn get_tile(&self, tile_i: usize) -> Tile {
-        let lcdc4 = bitwise::test_bit8::<4>(self.gb().bus().lcdc());
-        self.gb().bus().with_fixed_size_slice(
-            16 * tile_i
-                + match lcdc4 || tile_i > 127 {
-                    true => 0x8000,
-                    false => 0x8800,
-                },
-            Tile::load,
-        )
+        let gb = self.gb();
+        let bus = gb.bus();
+        let lcdc4 = bitwise::test_bit8::<4>(bus.lcdc());
+        let tile_address = 16 * tile_i
+            + if lcdc4 || tile_i > 127 {
+                0x8000
+            } else {
+                0x8800
+            };
+        let tile = Tile::load(bus.memory().array_ref(tile_address));
+        tile // yes, the borrow checker offered me this fix
     }
 
     fn debug_panel(&mut self, ui: &mut Ui) {

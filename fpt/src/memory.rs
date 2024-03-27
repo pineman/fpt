@@ -204,12 +204,16 @@ impl Memory {
         }
     }
 
+    pub fn array_ref<const N: usize>(&self, from: Address) -> &[u8; N] {
+        self.mem[from..from + N].try_into().unwrap() // guaranteed to have size N
+    }
+
     pub fn slice(&self, range: MemoryRange) -> &[u8] {
-        &self.mem[range.start..range.end]
+        &self.mem[range]
     }
 
     pub fn slice_mut(&mut self, range: MemoryRange) -> &mut [u8] {
-        &mut self.mem[range.start..range.end]
+        &mut self.mem[range]
     }
 }
 
@@ -273,14 +277,12 @@ impl Bus {
     }
 
     /// Runs closure `consumer` with access to a fixed-size slice of `N` bytes.
-    pub fn with_fixed_size_slice<const N: usize, T>(
+    pub fn with_array_ref<const N: usize, T>(
         &self,
         start: Address,
         consumer: impl FnOnce(&[u8; N]) -> T,
     ) -> T {
-        let m = self.memory();
-        let fixed_size_slice: &[u8; N] = m.mem[start..start + N].try_into().unwrap();
-        consumer(fixed_size_slice)
+        consumer(self.memory().array_ref(start))
     }
 
     pub fn each_byte(&self) -> std::iter::Enumerate<std::array::IntoIter<u8, 65536>> {
