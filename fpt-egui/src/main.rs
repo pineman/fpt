@@ -253,8 +253,7 @@ impl FPT {
             } else {
                 0x8800
             };
-        let tile = Tile::load(bus.memory().array_ref(tile_address));
-        tile // yes, the borrow checker offered me this fix
+        bus.with_span(tile_address, Tile::load)
     }
 
     fn debug_panel(&mut self, ui: &mut Ui) {
