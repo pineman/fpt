@@ -13,6 +13,10 @@ pub type MemoryRange = Range<Address>;
 pub mod map {
     use super::{Address, MemoryRange};
 
+    //-------------------------------------------------------------------------
+    // Memory map
+    //-------------------------------------------------------------------------
+
     /// This is where the bootrom lives
     pub const BOOTROM: MemoryRange = 0x0000..0x0100;
 
@@ -42,137 +46,158 @@ pub mod map {
     /// Not usable https://gbdev.io/pandocs/Memory_Map.html#fea0-feff-range
     pub const NOT_USABLE2: MemoryRange = 0xFEA0..0xFF00;
 
-    /// I/O Registers
-    // Joypad
+    //-------------------------------------------------------------------------
+    // I/O Registers
+    //-------------------------------------------------------------------------
+
+    /// Joypad
     pub const P1: Address = 0xFF00;
-    // Serial transfer data
+    /// Serial transfer data
     pub const SB: Address = 0xFF01;
-    // Serial transfer control
+    /// Serial transfer control
     pub const SC: Address = 0xFF02;
-    // Divider register
+    /// Divider register
     pub const DIV: Address = 0xFF04;
-    // Timer counter
+    /// Timer counter
     pub const TIMA: Address = 0xFF05;
-    // Timer modulo
+    /// Timer modulo
     pub const TMA: Address = 0xFF06;
-    // Timer control
+    /// Timer control
     pub const TAC: Address = 0xFF07;
-    /// Sound
-    // Sound channel 1 sweep
+
+    //-------------------------------------------------------------------------
+    // I/O: Sound
+    //-------------------------------------------------------------------------
+
+    /// Sound channel 1 sweep
     pub const NR10: Address = 0xFF10;
-    // Sound channel 1 length timer & duty cycle
+    /// Sound channel 1 length timer & duty cycle
     pub const NR11: Address = 0xFF11;
-    // Sound channel 1 volume & envelope
+    /// Sound channel 1 volume & envelope
     pub const NR12: Address = 0xFF12;
-    // Sound channel 1 period low
+    /// Sound channel 1 period low
     pub const NR13: Address = 0xFF13;
-    // Sound channel 1 period high & control
+    /// Sound channel 1 period high & control
     pub const NR14: Address = 0xFF14;
-    // Sound channel 2 length timer & duty cycle
+    /// Sound channel 2 length timer & duty cycle
     pub const NR21: Address = 0xFF16;
-    // Sound channel 2 volume & envelope
+    /// Sound channel 2 volume & envelope
     pub const NR22: Address = 0xFF17;
-    // Sound channel 2 period low
+    /// Sound channel 2 period low
     pub const NR23: Address = 0xFF18;
-    // Sound channel 2 period high & control
+    /// Sound channel 2 period high & control
     pub const NR24: Address = 0xFF19;
-    // Sound channel 3 DAC enable
+    /// Sound channel 3 DAC enable
     pub const NR30: Address = 0xFF1A;
-    // Sound channel 3 length timer
+    /// Sound channel 3 length timer
     pub const NR31: Address = 0xFF1B;
-    // Sound channel 3 output level
+    /// Sound channel 3 output level
     pub const NR32: Address = 0xFF1C;
-    // Sound channel 3 period low
+    /// Sound channel 3 period low
     pub const NR33: Address = 0xFF1D;
-    // Sound channel 3 period high & control
+    /// Sound channel 3 period high & control
     pub const NR34: Address = 0xFF1E;
-    // Sound channel 4 length timer
+    /// Sound channel 4 length timer
     pub const NR41: Address = 0xFF20;
-    // Sound channel 4 volume & envelope
+    /// Sound channel 4 volume & envelope
     pub const NR42: Address = 0xFF21;
-    // Sound channel 4 frequency & randomness
+    /// Sound channel 4 frequency & randomness
     pub const NR43: Address = 0xFF22;
-    // Sound channel 4 control
+    /// Sound channel 4 control
     pub const NR44: Address = 0xFF23;
-    // Master volume & VIN panning
+    /// Master volume & VIN panning
     pub const NR50: Address = 0xFF24;
-    // Sound panning
+    /// Sound panning
     pub const NR51: Address = 0xFF25;
-    // Sound on/off
+    /// Sound on/off
     pub const NR52: Address = 0xFF26;
-    // Wave RAM
+    /// Wave RAM
     pub const WAVE_RAM: MemoryRange = 0xFF30..0xFF40;
 
-    /// PPU
-    // LCD control
+    //-------------------------------------------------------------------------
+    // IO: PPU
+    //-------------------------------------------------------------------------
+
+    /// LCD control
     pub const LCDC: Address = 0xFF40;
-    // LCD status
+    /// LCD status
     pub const STAT: Address = 0xFF41;
-    // Viewport Y position
+    /// Viewport Y position
     pub const SCY: Address = 0xFF42;
-    // Viewport X position
+    /// Viewport X position
     pub const SCX: Address = 0xFF43;
-    // LCD Y coordinate
+    /// LCD Y coordinate
     pub const LY: Address = 0xFF44;
-    // LY compare
+    /// LY compare
     pub const LYC: Address = 0xFF45;
-    // OAM DMA source address & start
+    /// OAM DMA source address & start
     pub const DMA: Address = 0xFF46;
-    // BG palette data (DMG)
+    /// BG palette data (DMG)
     pub const BGP: Address = 0xFF47;
-    // OBJ palette 0 data (DMG)
+    /// OBJ palette 0 data (DMG)
     pub const OBP0: Address = 0xFF48;
-    // OBJ palette 1 data (DMG)
+    /// OBJ palette 1 data (DMG)
     pub const OBP1: Address = 0xFF49;
-    // Window Y position
+    /// Window Y position
     pub const WY: Address = 0xFF4A;
-    // Window X position plus 7
+    /// Window X position plus 7
     pub const WX: Address = 0xFF4B;
 
-    // Set to non-zero to disable boot ROM
+    /// Set to non-zero to disable boot ROM
     pub const DISABLE_BOOTROM: Address = 0xFF50;
 
-    /// CGB extra https://gbdev.io/pandocs/CGB_Registers.html
-    // Prepare speed switch (CGB)
+    //-------------------------------------------------------------------------
+    // CGB extra
+    // https://gbdev.io/pandocs/CGB_Registers.html
+    //-------------------------------------------------------------------------
+
+    /// Prepare speed switch (CGB)
     pub const KEY1: Address = 0xFF4C;
-    // VRAM bank (CGB)
+    /// VRAM bank (CGB)
     pub const VBK: Address = 0xFF4F;
-    // VRAM DMA source high (CGB)
+    /// VRAM DMA source high (CGB)
     pub const HDMA1: Address = 0xFF51;
-    // VRAM DMA source low (CGB)
+    /// VRAM DMA source low (CGB)
     pub const HDMA2: Address = 0xFF52;
-    // VRAM DMA destination high (CGB)
+    /// VRAM DMA destination high (CGB)
     pub const HDMA3: Address = 0xFF53;
-    // VRAM DMA destination low (CGB)
+    /// VRAM DMA destination low (CGB)
     pub const HDMA4: Address = 0xFF54;
-    // VRAM DMA length/mode/start (CGB)
+    /// VRAM DMA length/mode/start (CGB)
     pub const HDMA5: Address = 0xFF55;
-    // Infrared communications port (GGB)
+    /// Infrared communications port (GGB)
     pub const RP: Address = 0xFF56;
-    // Background color palette specification / Background palette index (CGB)
+    /// Background color palette specification / Background palette index (CGB)
     pub const BCPS: Address = 0xFF68;
-    // Background color palette data / Background palette data (CGB)
+    /// Background color palette data / Background palette data (CGB)
     pub const BCPD: Address = 0xFF69;
-    // OBJ color palette specification / OBJ palette index (CGB)
+    /// OBJ color palette specification / OBJ palette index (CGB)
     pub const OCPS: Address = 0xFF6A;
-    // OBJ color palette data / OBJ palette data (CGB)
+    /// OBJ color palette data / OBJ palette data (CGB)
     pub const OCPD: Address = 0xFF6B;
-    // Object priority mode (CGB)
+    /// Object priority mode (CGB)
     pub const OPRI: Address = 0xFF6C;
-    // WRAM bank (CGB)
+    /// WRAM bank (CGB)
     pub const SVBK: Address = 0xFF70;
-    // Audio digital outputs 1 & 2 (CGB)
+    /// Audio digital outputs 1 & 2 (CGB)
     pub const PCM12: Address = 0xFF76;
-    // Audio digital outputs 3 & 4 (CGB)
+    /// Audio digital outputs 3 & 4 (CGB)
     pub const PCM34: Address = 0xFF77;
+
+    //-------------------------------------------------------------------------
+    // High RAM
+    //-------------------------------------------------------------------------
 
     /// Working & Stack RAM (127 bytes)
     pub const HRAM: MemoryRange = 0xFF80..0xFFFF;
 
-    /// Interrupts
-    // Interrupt enable
+    //-------------------------------------------------------------------------
+    // Interrupts
+    //-------------------------------------------------------------------------
+
+    /// Interrupt enable
     pub const IE: Address = 0xFFFF;
-    // Interrupt flag
+    /// Interrupt flag
     pub const IF: Address = 0xFF0F;
 }
 
