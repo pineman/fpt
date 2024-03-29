@@ -84,7 +84,7 @@ pub struct FPT {
     bg_map: egui::ColorImage,
     bg_map_texture: Option<egui::TextureHandle>,
 
-    gb: Rc<RefCell<fpt::Gameboy>>,
+    gb: Rc<RefCell<Gameboy>>,
     dbg: Debugger,
     paused: bool,
     slow_factor: f64,
@@ -94,7 +94,7 @@ pub struct FPT {
 
 impl Default for FPT {
     fn default() -> Self {
-        let gameboy = Rc::new(RefCell::new(fpt::Gameboy::new()));
+        let gameboy = Rc::new(RefCell::new(Gameboy::new()));
         Self {
             egui_frame_count: 0,
             gb_frame_count: 0,
@@ -161,38 +161,38 @@ impl FPT {
         let delta_time = ui.input(|i| i.unstable_dt) as f64;
         self.accum_time += delta_time;
 
-        if self.slow_factor != 1.0 {
-            let cycles = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
-            self.accum_time -= cycles as f64 * T_CYCLE * self.slow_factor;
-            for _ in 0..cycles {
-                // TODO: care for double speed mode
-                self.gb_mut().cpu_mut().t_cycle();
-                self.gb_mut().ppu_mut().step(1);
-                self.cycles_since_last_frame += 1;
-                if self.cycles_since_last_frame == self.gb().cycles_in_one_frame() {
-                    frame = Some(*self.gb().get_frame()); // Copies the whole [u8; WIDTH * HEIGHT] into frame
-                    self.gb_frame_count += 1;
-                    self.cycles_since_last_frame = 0;
-                }
+        // if self.slow_factor != 1.0 {
+        let cycles = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
+        self.accum_time -= cycles as f64 * T_CYCLE * self.slow_factor;
+        for _ in 0..cycles {
+            // TODO: care for double speed mode
+            self.gb_mut().cpu_mut().t_cycle();
+            self.gb_mut().ppu_mut().step(1);
+            self.cycles_since_last_frame += 1;
+            if self.cycles_since_last_frame == self.gb().cycles_in_one_frame() {
+                frame = Some(*self.gb().get_frame()); // Copies the whole [u8; WIDTH * HEIGHT] into frame
+                self.gb_frame_count += 1;
+                self.cycles_since_last_frame = 0;
             }
-            self.total_cycles += cycles as u64;
-            if let Some(frame) = frame {
-                for (i, &gb_pixel) in frame.iter().enumerate() {
-                    self.image.pixels[i] = PALETTE[gb_pixel as usize];
-                }
-            }
-        } else if self.accum_time >= SIXTY_FPS_FRAMETIME {
-            self.accum_time -= SIXTY_FPS_FRAMETIME;
-            self.gb_frame_count += 1;
-            self.cycles_since_last_frame = 0;
-            self.total_cycles += 70224;
-            // Run for a whole frame and decode the resulting picture into our GUI's image
-            let mut gb = self.gb.borrow_mut();
-            let frame = gb.advance_frame();
+        }
+        self.total_cycles += cycles as u64;
+        if let Some(frame) = frame {
             for (i, &gb_pixel) in frame.iter().enumerate() {
                 self.image.pixels[i] = PALETTE[gb_pixel as usize];
             }
         }
+        // } else if self.accum_time >= SIXTY_FPS_FRAMETIME {
+        //     self.accum_time -= SIXTY_FPS_FRAMETIME;
+        //     self.gb_frame_count += 1;
+        //     self.cycles_since_last_frame = 0;
+        //     self.total_cycles += 70224;
+        //     // Run for a whole frame and decode the resulting picture into our GUI's image
+        //     let mut gb = self.gb.borrow_mut();
+        //     let frame = gb.advance_frame();
+        //     for (i, &gb_pixel) in frame.iter().enumerate() {
+        //         self.image.pixels[i] = PALETTE[gb_pixel as usize];
+        //     }
+        // }
     }
 
     #[allow(dead_code)]
