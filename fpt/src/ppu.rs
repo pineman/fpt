@@ -8,7 +8,7 @@ pub mod tile;
 
 pub const WIDTH: usize = 160;
 pub const HEIGHT: usize = 144;
-pub type Frame = [u8; WIDTH * HEIGHT];
+pub type Frame = [u8; WIDTH * HEIGHT]; // TODO: wasteful, each pixel is 2 bits only
 
 //#[derive(Clone, PartialEq)]
 #[allow(unused)]
@@ -16,7 +16,7 @@ pub struct Ppu {
     bus: Bus,
     frame: Frame,
     dots_this_frame: u32,
-    counter: u32,
+    frame_counter: u32,
     mode: Mode,
     tilemap: VRamContents,
 }
@@ -59,7 +59,7 @@ impl Ppu {
             bus,
             frame: [0b00; WIDTH * HEIGHT],
             dots_this_frame: 0,
-            counter: 0,
+            frame_counter: 0,
             mode: Mode::OamScan,
             tilemap: VRamContents::default(),
         }
@@ -76,39 +76,33 @@ impl Ppu {
     }
 
     fn oam_scan(&mut self) {
-        if self.dots_this_frame % 456 == 79 {
+        if self.dots_this_frame % 456 == (80 - 1) {
             self.tilemap = VRamContents::load(&self.bus.vram());
             self.set_mode(Mode::PixelTransfer);
         }
     }
 
+    /// Currently only draws the background pixels, not the window or sprites
     #[allow(clippy::format_collect)]
     fn pixel_transfer(&mut self) {
-        if self.dots_this_frame % 456 == 238 {
+        if self.dots_this_frame % 456 == (80 + 160) as u32 {
             self.set_mode(Mode::HBlank);
             return;
         }
 
-        let current_pixel = ((self.dots_this_frame % 456) - 80) as usize; // TODO I'm pretending the PPU never stalls
-        let address = WIDTH * self.bus.ly() as usize + current_pixel;
-        if address >= WIDTH * HEIGHT {
-            dbg!(self.bus.ly());
-        }
+        // TODO: + SCX, SCY
+        // TODO: LCDC.3
+        let x = ((self.dots_this_frame % 456) - 80) as usize; // TODO I'm pretending the PPU never stalls
+        let y = self.bus.ly() as usize;
+        let xx: usize = ((x as u8 + self.bus.scx()) as u16 % 256u16) as usize; // TODO I'm pretending the PPU never stalls
+        let yy: usize = ((self.bus.ly() + self.bus.scy()) as u16 % 256u16) as usize;
 
-        let column = address % WIDTH;
-        let line = address / WIDTH;
-
-        let tile_address = 32 * line / 8 + column / 8;
-
-        let tile_data_address = self.tilemap.tile_map0[tile_address];
-
-        let tile_x = column % 8;
-        let tile_y = line % 8;
-
+        // TODO: LCDC.4
+        let tile_i = xx / 8 + yy / 8 * 32;
+        let tile_data_address = self.tilemap.tile_map0[tile_i];
         let tile = self.tilemap.tile_data[tile_data_address as usize];
-        let pixel = tile.get_pixel(tile_y, tile_x);
-
-        self.frame[address] = pixel;
+        let pixel = tile.get_pixel(yy % 8, xx % 8);
+        self.frame[WIDTH * y + x] = pixel;
     }
 
     fn h_blank(&mut self) {
@@ -123,15 +117,6 @@ impl Ppu {
         if self.dots_this_frame == DOTS_IN_ONE_FRAME - 1 {
             self.set_mode(Mode::OamScan);
         }
-    }
-
-    fn state_machine(&mut self) {
-        match self.mode {
-            Mode::OamScan => self.oam_scan(),
-            Mode::PixelTransfer => self.pixel_transfer(),
-            Mode::HBlank => self.h_blank(),
-            Mode::VBlank => self.v_blank(),
-        };
     }
 
     /// Simulates a "dot", as described in https://gbdev.io/pandocs/Rendering.html.
@@ -158,7 +143,12 @@ impl Ppu {
         //    Mode::VBlank // Mode 1
         //};
 
-        self.state_machine();
+        match self.mode {
+            Mode::OamScan => self.oam_scan(),
+            Mode::PixelTransfer => self.pixel_transfer(),
+            Mode::HBlank => self.h_blank(),
+            Mode::VBlank => self.v_blank(),
+        };
 
         // Update "LYC == LY" and "PPU mode" flags in STAT register
         self.bus.set_stat(
@@ -172,7 +162,7 @@ impl Ppu {
         // Advance one "dot"
         self.dots_this_frame = (self.dots_this_frame + 1) % DOTS_IN_ONE_FRAME;
         if self.dots_this_frame == 0 {
-            self.counter += 1;
+            self.frame_counter += 1;
         }
     }
 
