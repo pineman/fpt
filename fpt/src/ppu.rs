@@ -89,14 +89,11 @@ impl Ppu {
             self.set_mode(Mode::HBlank);
             return;
         }
-
-        // TODO: + SCX, SCY
         // TODO: LCDC.3
         let x = ((self.dots_this_frame % 456) - 80) as usize; // TODO I'm pretending the PPU never stalls
         let y = self.bus.ly() as usize;
-        let xx: usize = ((x as u8 + self.bus.scx()) as u16 % 256u16) as usize; // TODO I'm pretending the PPU never stalls
-        let yy: usize = ((self.bus.ly() + self.bus.scy()) as u16 % 256u16) as usize;
-
+        let xx = ((x as u8 + self.bus.scx()) as u16 % 256u16) as usize;
+        let yy = ((self.bus.ly() + self.bus.scy()) as u16 % 256u16) as usize;
         // TODO: LCDC.4
         let tile_i = xx / 8 + yy / 8 * 32;
         let tile_data_address = self.tilemap.tile_map0[tile_i];
