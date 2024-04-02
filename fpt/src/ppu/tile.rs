@@ -20,6 +20,8 @@ impl Tile {
         Tile { bytes: *data }
     }
 
+    // Returns the color of the pixel - a byte with only the last two bits set
+    // TODO: should return a bitfield
     pub fn get_pixel(&self, y: usize, x: usize) -> u8 {
         let low_bit = (self.bytes[2 * y] >> (7 - x)) & 1;
         let high_bit = (self.bytes[2 * y + 1] >> (7 - x)) & 1;

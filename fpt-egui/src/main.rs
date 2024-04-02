@@ -307,14 +307,14 @@ impl FPT {
                     });
 
                     let lcdc = self.gb().bus().lcdc();
-                    let gb_map_area = match bitwise::test_bit8::<3>(lcdc) {
+                    let bg_map_area = match bitwise::test_bit8::<3>(lcdc) {
                         false => 0x9800..0x9C00,
                         true => 0x9C00..0xA000
                     };
-                    let bg_map_iter = gb_map_area.map(|addr| self.gb.borrow().bus().read(addr));
+                    let bg_map_iter = bg_map_area.map(|addr| self.gb.borrow().bus().read(addr));
 
-                    for (i, tile_address) in bg_map_iter.enumerate() {
-                        let tile = self.get_tile(tile_address as usize);
+                    for (i, tile_i) in bg_map_iter.enumerate() {
+                        let tile = self.get_tile(tile_i as usize);
                         for y in 0..TILE_SIZE {
                             let yy = y + (i / BMV_TILES_PER) * TILE_SIZE + BMV_BORDER_SIZE;
                             for x in 0..TILE_SIZE {
@@ -359,7 +359,7 @@ impl FPT {
                         });
                     texture.set(self.bg_map.clone(), TextureOptions::NEAREST);
                     ui.vertical(|ui| {
-                        ui.label("Tilemap 0");
+                        ui.label("BG Map");
                         ui.image((texture.id(), BMV_TEXTURE_SCALE * texture.size_vec2()));
                     });
                 });
