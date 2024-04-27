@@ -16,6 +16,7 @@ pub struct LR35902 {
     sp: u16,
     pc: u16,
     ime: bool,
+    imenc: bool,
     mem: Bus,
     next_cb: bool,
     clock_cycles: u64,
@@ -45,6 +46,7 @@ impl LR35902 {
             sp: 0,
             pc: 0,
             ime: false,
+            imenc: false,
             mem: memory,
             next_cb: false,
             clock_cycles: 0,
@@ -211,6 +213,10 @@ impl LR35902 {
 
     pub fn set_interrupt_master_enable(&mut self, ime: bool) {
         self.ime = ime;
+    }
+
+    pub fn set_interrupt_master_enable_next_instruction(&mut self) {
+        self.imenc = true;
     }
 
     pub fn set_next_cb(&mut self, value: bool) {
@@ -537,7 +543,7 @@ impl LR35902 {
     fn reti(&mut self) {
         // TODO: The interrupt master enable flag is returned to its pre-interrupt status.
         // BUT: https://gbdev.io/pandocs/Interrupts.htm claims that RETI is EI followed by RET
-        self.set_interrupt_master_enable(true);
+        self.set_interrupt_master_enable_next_instruction();
 
         // RET
         let address = self.pop();
@@ -575,6 +581,10 @@ impl LR35902 {
         // Only actually mutate CPU state on the last t-cycle of the instruction
         if self.inst_cycle_count() < instruction.cycles {
             return;
+        }
+        if self.imenc {
+            self.set_interrupt_master_enable(true);
+            self.imenc = false;
         }
         if self.next_cb() {
             self.set_next_cb(false);
@@ -1758,7 +1768,7 @@ impl LR35902 {
             }
             0xFB => {
                 // EI
-                self.set_interrupt_master_enable(true);
+                self.set_interrupt_master_enable_next_instruction();
             }
             0xFC => {
                 // Not implemented
