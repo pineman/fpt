@@ -1,13 +1,12 @@
 #![feature(lazy_cell)]
 #![feature(array_chunks)]
 
-use std::collections::HashMap;
 use std::time::Duration;
 
 use eframe::Frame;
 use egui::{
     menu, Align, CentralPanel, Color32, ColorImage, Context, DragValue, Grid, Layout, ScrollArea,
-    SidePanel, TextBuffer, TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2,
+    SidePanel, TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2,
     ViewportBuilder, ViewportCommand,
 };
 use fpt::lr35902::instructions::Instruction;
@@ -92,7 +91,6 @@ pub struct FPT {
     slow_factor: f64,
     cycles_since_last_frame: u32,
     total_cycles: u64,
-    inst_map: HashMap<u16, Instruction>,
 }
 
 impl Default for FPT {
@@ -112,7 +110,6 @@ impl Default for FPT {
             slow_factor: 1.0,
             cycles_since_last_frame: 0,
             total_cycles: 0,
-            inst_map: HashMap::new(),
         }
     }
 }

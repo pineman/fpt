@@ -1,5 +1,3 @@
-use std::fmt;
-
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Instruction {
     pub opcode: u16,
