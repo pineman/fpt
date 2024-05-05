@@ -248,6 +248,38 @@ impl FPT {
         ScrollArea::vertical()
             .id_source("debug_panel")
             .show(ui, |ui| {
+                ui.collapsing("VRAM", |ui| {
+                    ui.horizontal_wrapped(|ui| self.vram_viewer(ui));
+                    ui.horizontal(|ui| {
+                        let bus = self.gb.bus();
+                        Grid::new("VRAM-registers-1").striped(true).show(ui, |ui| {
+                            ui.monospace("LCDC");
+                            ui.monospace(format!("{:08b}", bus.lcdc()));
+                            ui.end_row();
+                            ui.monospace("STAT");
+                            ui.monospace(format!("{:08b}", bus.stat()));
+                            ui.end_row();
+                        });
+                        ui.separator();
+                        Grid::new("VRAM-registers-2").striped(true).show(ui, |ui| {
+                            ui.monospace("LY");
+                            ui.monospace(format!("{:08b}", bus.ly()));
+                            ui.end_row();
+                            ui.monospace("LYC");
+                            ui.monospace(format!("{:08b}", bus.lyc()));
+                            ui.end_row();
+                        });
+                        ui.separator();
+                        Grid::new("VRAM-registers-3").striped(true).show(ui, |ui| {
+                            ui.monospace("SCX");
+                            ui.monospace(format!("{:08b}", bus.scx()));
+                            ui.end_row();
+                            ui.monospace("SCY");
+                            ui.monospace(format!("{:08b}", bus.scy()));
+                            ui.end_row();
+                        });
+                    });
+                });
                 ui.horizontal(|ui| {
                     if ui.button(if self.paused { "Continue" } else { "Pause" }).clicked() {
                         self.paused = !self.paused;
@@ -290,67 +322,16 @@ impl FPT {
                         });
                     });
                 });
-                        ScrollArea::vertical()
-            .auto_shrink(true)
-            .show(ui, |ui| {
-                ui.with_layout(
-                    Layout::top_down(Align::LEFT).with_cross_justify(true),
-                    |ui| {
-                        let insts = self.gb.cpu().decode_ahead(5);
-                        let mut aa: [Instruction; 11] = [Instruction::default(); 11];
-                        // for inst in insts.iter() {
-                        //     self.inst_map.insert(inst.opcode, *inst);
-                        // }
-                        // let mut keys: Vec<u16> = self.inst_map.keys().cloned().collect();
-                        // keys.sort();
-                        // let cur_i: usize = keys.binary_search(&self.gb.cpu().pc()).unwrap();
-                        // aa[0] = self.inst_map.get(keys.get(cur_i - 5).unwrap_or(&0)).unwrap_or(&Instruction::default()).clone();
-                        // aa[1] = self.inst_map.get(keys.get(cur_i - 4).unwrap_or(&0)).unwrap_or(&Instruction::default()).clone();
-                        // aa[2] = self.inst_map.get(keys.get(cur_i - 3).unwrap_or(&0)).unwrap_or(&Instruction::default()).clone();
-                        // aa[3] = self.inst_map.get(keys.get(cur_i - 2).unwrap_or(&0)).unwrap_or(&Instruction::default()).clone();
-                        // aa[4] = self.inst_map.get(keys.get(cur_i - 1).unwrap_or(&0)).unwrap_or(&Instruction::default()).clone();
-                        aa[5] = insts[0];
-                        aa[6] = insts[1];
-                        aa[7] = insts[2];
-                        aa[8] = insts[3];
-                        aa[9] = insts[4];
-                        aa[10] = insts[5];
-                        for inst in aa.iter() {
-                            ui.label(format!("{:#06X}: {}{}", inst.opcode, inst.mnemonic, if inst.opcode == self.gb.cpu().pc() { " <==" } else { "" }));
-                        }
-                    },
-                );
-            });
-                ui.horizontal_wrapped(|ui| self.vram_viewer(ui));
-                ui.horizontal(|ui| {
-                    let bus = self.gb.bus();
-                    Grid::new("VRAM-registers-1").striped(true).show(ui, |ui| {
-                        ui.monospace("LCDC");
-                        ui.monospace(format!("{:08b}", bus.lcdc()));
-                        ui.end_row();
-                        ui.monospace("STAT");
-                        ui.monospace(format!("{:08b}", bus.stat()));
-                        ui.end_row();
+                ScrollArea::vertical()
+                    .auto_shrink(true)
+                    .show(ui, |ui| {
+                        ui.with_layout(Layout::top_down(Align::LEFT).with_cross_justify(true), |ui| {
+                            let insts = self.gb.cpu().decode_ahead(5);
+                            for inst in insts {
+                                ui.label(format!("{:#06X}: {}{}", inst.opcode, inst.mnemonic, if inst.opcode == self.gb.cpu().pc() { " <==" } else { "" }));
+                            }
+                        });
                     });
-                    ui.separator();
-                    Grid::new("VRAM-registers-2").striped(true).show(ui, |ui| {
-                        ui.monospace("LY");
-                        ui.monospace(format!("{:08b}", bus.ly()));
-                        ui.end_row();
-                        ui.monospace("LYC");
-                        ui.monospace(format!("{:08b}", bus.lyc()));
-                        ui.end_row();
-                    });
-                    ui.separator();
-                    Grid::new("VRAM-registers-3").striped(true).show(ui, |ui| {
-                        ui.monospace("SCX");
-                        ui.monospace(format!("{:08b}", bus.scx()));
-                        ui.end_row();
-                        ui.monospace("SCY");
-                        ui.monospace(format!("{:08b}", bus.scy()));
-                        ui.end_row();
-                    });
-                });
             });
     }
 
