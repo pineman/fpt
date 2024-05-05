@@ -1,15 +1,16 @@
 #![feature(lazy_cell)]
 #![feature(array_chunks)]
 
-use std::cell::{Ref, RefCell, RefMut};
-use std::rc::Rc;
 use std::time::Duration;
 
 use eframe::Frame;
-use egui::{Align, Color32, Context, Layout, TextureOptions, Ui};
+use egui::{
+    menu, Align, CentralPanel, Color32, ColorImage, Context, DragValue, Grid, Layout, ScrollArea,
+    SidePanel, TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2, ViewportBuilder,
+    ViewportCommand,
+};
 use fpt::ppu::tile::Tile;
 use fpt::{bitwise, Gameboy};
-use fpt_cli::debugger::Debugger;
 use log::info;
 
 // TODO: the gameboy doesn't run at exactly 60fps
@@ -75,17 +76,16 @@ pub struct FPT {
     gb_frame_count: u64,
     accum_time: f64,
 
-    image: egui::ColorImage,
-    texture: Option<egui::TextureHandle>,
+    image: ColorImage,
+    texture: Option<TextureHandle>,
 
-    tiles: egui::ColorImage,
-    tiles_texture: Option<egui::TextureHandle>,
+    tiles: ColorImage,
+    tiles_texture: Option<TextureHandle>,
 
-    bg_map: egui::ColorImage,
-    bg_map_texture: Option<egui::TextureHandle>,
+    bg_map: ColorImage,
+    bg_map_texture: Option<TextureHandle>,
 
-    gb: Rc<RefCell<Gameboy>>,
-    dbg: Debugger,
+    gb: Gameboy,
     paused: bool,
     slow_factor: f64,
     cycles_since_last_frame: u32,
@@ -94,19 +94,17 @@ pub struct FPT {
 
 impl Default for FPT {
     fn default() -> Self {
-        let gameboy = Rc::new(RefCell::new(Gameboy::new()));
         Self {
             egui_frame_count: 0,
             gb_frame_count: 0,
             accum_time: 0.0,
-            image: egui::ColorImage::new([WIDTH, HEIGHT], Color32::TRANSPARENT),
+            image: ColorImage::new([WIDTH, HEIGHT], Color32::TRANSPARENT),
             texture: None,
-            tiles: egui::ColorImage::new([TV_X_SIZE, TV_Y_SIZE], Color32::TRANSPARENT),
+            tiles: ColorImage::new([TV_X_SIZE, TV_Y_SIZE], Color32::TRANSPARENT),
             tiles_texture: None,
-            bg_map: egui::ColorImage::new([BMV_X_SIZE, BMV_Y_SIZE], Color32::TRANSPARENT),
+            bg_map: ColorImage::new([BMV_X_SIZE, BMV_Y_SIZE], Color32::TRANSPARENT),
             bg_map_texture: None,
-            gb: gameboy.clone(),
-            dbg: Debugger::with_gameboy(gameboy),
+            gb: Gameboy::new(),
             paused: false,
             slow_factor: 1.0,
             cycles_since_last_frame: 0,
@@ -118,12 +116,12 @@ impl Default for FPT {
 impl FPT {
     /// Called once before the first frame.
     pub fn new(_cc: &eframe::CreationContext) -> Self {
-        let app = FPT::default();
+        let mut app = FPT::default();
         #[cfg(not(target_arch = "wasm32"))]
         if std::env::var("CI").is_err() {
             const ROM_PATH: &str = "roms/Tetris_World_Rev_1.gb";
             if let Ok(rom) = std::fs::read(ROM_PATH) {
-                app.gb.borrow_mut().load_rom(&rom);
+                app.gb.load_rom(&rom);
             } else {
                 panic!("Unable to open {}", ROM_PATH);
             }
@@ -131,23 +129,13 @@ impl FPT {
         app
     }
 
-    /// Gameboy accessor
-    fn gb(&self) -> Ref<'_, Gameboy> {
-        self.gb.borrow()
-    }
-
-    /// Gameboy accessor, mutable edition
-    fn gb_mut(&mut self) -> RefMut<'_, Gameboy> {
-        self.gb.borrow_mut()
-    }
-
     fn top_panel(&mut self, ctx: &Context) {
         #[cfg(not(target_arch = "wasm32"))]
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            egui::menu::bar(ui, |ui| {
+        TopBottomPanel::top("top_panel").show(ctx, |ui| {
+            menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Quit").clicked() {
-                        ctx.send_viewport_cmd(egui::ViewportCommand::Close)
+                        ctx.send_viewport_cmd(ViewportCommand::Close)
                     }
                 });
                 ui.add_space(16.0);
@@ -166,11 +154,11 @@ impl FPT {
         self.accum_time -= cycles as f64 * T_CYCLE * self.slow_factor;
         for _ in 0..cycles {
             // TODO: care for double speed mode
-            self.gb_mut().cpu_mut().t_cycle();
-            self.gb_mut().ppu_mut().step(1);
+            self.gb.cpu_mut().t_cycle();
+            self.gb.ppu_mut().step(1);
             self.cycles_since_last_frame += 1;
-            if self.cycles_since_last_frame == self.gb().cycles_in_one_frame() {
-                frame = Some(*self.gb().get_frame()); // Copies the whole [u8; WIDTH * HEIGHT] into frame
+            if self.cycles_since_last_frame == self.gb.cycles_in_one_frame() {
+                frame = Some(*self.gb.get_frame()); // Copies the whole [u8; WIDTH * HEIGHT] into frame
                 self.gb_frame_count += 1;
                 self.cycles_since_last_frame = 0;
             }
@@ -222,8 +210,8 @@ impl FPT {
     }
 
     #[allow(dead_code)]
-    fn debug_info(&self, ui: &mut Ui) {
-        egui::Grid::new("my_grid").striped(true).show(ui, |ui| {
+    fn timing_info(&self, ui: &mut Ui) {
+        Grid::new("my_grid").striped(true).show(ui, |ui| {
             macro_rules! stat {
                 ($label:literal : $fmt:literal, $value:expr) => {
                     ui.colored_label(Color32::LIGHT_GRAY, $label);
@@ -244,8 +232,7 @@ impl FPT {
     }
 
     fn get_tile(&self, tile_i: usize) -> Tile {
-        let gb = self.gb();
-        let bus = gb.bus();
+        let bus = self.gb.bus();
         let lcdc4 = bitwise::test_bit8::<4>(bus.lcdc());
         let tile_address = 16 * tile_i
             + if lcdc4 || tile_i > 127 {
@@ -257,147 +244,18 @@ impl FPT {
     }
 
     fn debug_panel(&mut self, ui: &mut Ui) {
-        egui::ScrollArea::vertical()
+        ScrollArea::vertical()
             .id_source("debug_panel")
             .show(ui, |ui| {
-                ui.heading("VRAM");
-                ui.separator();
-                ui.horizontal_wrapped(|ui| {
-                    for tile_i in 0..fpt::ppu::tile::NUM_TILES {
-                        let tile = self.get_tile(tile_i);
-                        for y in 0..TILE_SIZE {
-                            let yy = y
-                                + (tile_i / TV_COLS + 1) * TV_BORDER_SIZE
-                                + (tile_i / TV_COLS) * TILE_SIZE;
-                            for x in 0..TILE_SIZE {
-                                let pixel = tile.get_pixel(y, x);
-                                let xx = x
-                                    + (tile_i % TV_COLS + 1) * TV_BORDER_SIZE
-                                    + (tile_i % TV_COLS) * TILE_SIZE;
-                                self.tiles[(xx, yy)] = PALETTE[pixel as usize];
-                            }
-                        }
+                ui.horizontal(|ui| {
+                    if ui.button(if self.paused { "Continue" } else { "Pause" }).clicked() {
+                        self.paused = !self.paused;
                     }
-                    for b in 0..TV_NUM_HBORDERS {
-                        for y in 0..TV_BORDER_SIZE {
-                            for x in 0..TV_X_SIZE {
-                                self.tiles[(x, y + b * (TILE_SIZE + TV_BORDER_SIZE))] = GREY;
-                            }
-                        }
-                    }
-                    for b in 0..TV_NUM_VBORDERS {
-                        for x in 0..TV_BORDER_SIZE {
-                            for y in 0..TV_Y_SIZE {
-                                self.tiles[(x + b * (TILE_SIZE + TV_BORDER_SIZE), y)] = GREY;
-                            }
-                        }
-                    }
-                    let texture: &mut egui::TextureHandle =
-                        self.tiles_texture.get_or_insert_with(|| {
-                            ui.ctx().load_texture(
-                                "tile_viewer",
-                                self.tiles.clone(),
-                                TextureOptions::NEAREST,
-                            )
-                        });
-                    texture.set(self.tiles.clone(), TextureOptions::NEAREST);
-                    ui.vertical(|ui| {
-                        ui.label("Tile data");
-                        ui.image((texture.id(), TV_TEXTURE_SCALE * texture.size_vec2()));
-                    });
-
-                    let lcdc = self.gb().bus().lcdc();
-                    let bg_map_area = match bitwise::test_bit8::<3>(lcdc) {
-                        false => 0x9800..0x9C00,
-                        true => 0x9C00..0xA000
-                    };
-                    let bg_map_iter = bg_map_area.map(|addr| self.gb.borrow().bus().read(addr));
-
-                    for (i, tile_i) in bg_map_iter.enumerate() {
-                        let tile = self.get_tile(tile_i as usize);
-                        for y in 0..TILE_SIZE {
-                            let yy = y + (i / BMV_TILES_PER) * TILE_SIZE + BMV_BORDER_SIZE;
-                            for x in 0..TILE_SIZE {
-                                let pixel = tile.get_pixel(y, x);
-                                let xx = x + (i % BMV_TILES_PER) * TILE_SIZE + BMV_BORDER_SIZE;
-                                self.bg_map[(xx, yy)] = PALETTE[pixel as usize];
-                            }
-                        }
-                    }
-                    // clear edges of bg_map viewer
-                    for x in 0..BMV_X_SIZE {
-                        self.bg_map[(x, 0)] = Color32::TRANSPARENT;
-                        self.bg_map[(x, BMV_Y_SIZE - 1)] = Color32::TRANSPARENT;
-                    }
-                    for y in 0..BMV_Y_SIZE {
-                        self.bg_map[(0, y)] = Color32::TRANSPARENT;
-                        self.bg_map[(BMV_X_SIZE - 1, y)] = Color32::TRANSPARENT;
-                    }
-                    let top = self.gb().bus().scy() as usize;
-                    let left = self.gb().bus().scx() as usize;
-                    let bottom = ((self.gb().bus().scy() as u16 + 143u16) % 256u16) as usize;
-                    let right = ((self.gb().bus().scx() as u16 + 159u16) % 256u16) as usize;
-                    let btop = top;
-                    let bleft = left;
-                    let bbottom = bottom + 2 * BMV_BORDER_SIZE;
-                    let bright = right + 2 * BMV_BORDER_SIZE;
-                    for x in bleft..(bright + 1) {
-                        self.bg_map[(x, btop)] = GREY;
-                        self.bg_map[(x, bbottom)] = GREY;
-                    }
-                    for y in btop..(bbottom + 1) {
-                        self.bg_map[(bleft, y)] = GREY;
-                        self.bg_map[(bright, y)] = GREY;
-                    }
-                    let texture: &mut egui::TextureHandle =
-                        self.bg_map_texture.get_or_insert_with(|| {
-                            ui.ctx().load_texture(
-                                "bg_map_viewer",
-                                self.bg_map.clone(),
-                                TextureOptions::NEAREST,
-                            )
-                        });
-                    texture.set(self.bg_map.clone(), TextureOptions::NEAREST);
-                    ui.vertical(|ui| {
-                        ui.label("BG Map");
-                        ui.image((texture.id(), BMV_TEXTURE_SCALE * texture.size_vec2()));
-                    });
-                });
-                ui.collapsing("Registers", |ui| {
                     ui.horizontal(|ui| {
-                        let gb = self.gb();
-                        let bus = gb.bus();
-                        egui::Grid::new("VRAM-registers-1").striped(true).show(ui, |ui| {
-                            ui.monospace("LCDC");
-                            ui.monospace(format!("{:08b}", bus.lcdc()));
-                            ui.end_row();
-                            ui.monospace("STAT");
-                            ui.monospace(format!("{:08b}", bus.stat()));
-                            ui.end_row();
-                        });
-                        ui.separator();
-                        egui::Grid::new("VRAM-registers-2").striped(true).show(ui, |ui| {
-                            ui.monospace("LY");
-                            ui.monospace(format!("{:08b}", bus.ly()));
-                            ui.end_row();
-                            ui.monospace("LYC");
-                            ui.monospace(format!("{:08b}", bus.lyc()));
-                            ui.end_row();
-                        });
-                        ui.separator();
-                        egui::Grid::new("VRAM-registers-3").striped(true).show(ui, |ui| {
-                            ui.monospace("SCX");
-                            ui.monospace(format!("{:08b}", bus.scx()));
-                            ui.end_row();
-                            ui.monospace("SCY");
-                            ui.monospace(format!("{:08b}", bus.scy()));
-                            ui.end_row();
-                        });
+                        ui.monospace("Slow factor:");
+                        ui.add(DragValue::new(&mut self.slow_factor).clamp_range(1..=1000).speed(0.5));
                     });
                 });
-                ui.add_space(20.0);
-                ui.heading("CPU");
-                ui.separator();
                 ui.horizontal_wrapped(|ui| {
                     macro_rules! cpu_register {
                         ($ui:expr, $high_label:literal : $high_value:expr, $low_label:literal : $low_value:expr) => {
@@ -408,9 +266,8 @@ impl FPT {
                             $ui.colored_label(Color32::LIGHT_BLUE, $low_label);
                         }
                     }
-                    let gb = self.gb();
-                    let cpu = gb.cpu();
-                    egui::Grid::new("cpu_registers_a-e").num_columns(4).min_col_width(10.0).striped(true).show(ui, |ui| {
+                    let cpu = self.gb.cpu();
+                    Grid::new("cpu_registers_a-e").num_columns(4).min_col_width(10.0).striped(true).show(ui, |ui| {
                         cpu_register!(ui, "A": cpu.a(), "F": cpu.f()); ui.end_row();
                         cpu_register!(ui, "B": cpu.b(), "C": cpu.c()); ui.end_row();
                         cpu_register!(ui, "D": cpu.d(), "E": cpu.e()); ui.end_row();
@@ -432,30 +289,143 @@ impl FPT {
                         });
                     });
                 });
-                ui.add_space(20.0);
-                ui.heading("Debugger:");
-                ui.separator();
+                        ScrollArea::vertical()
+            .auto_shrink(true)
+            .show(ui, |ui| {
+                ui.with_layout(
+                    Layout::top_down(Align::LEFT).with_cross_justify(true),
+                    |ui| {
+                            ui.label("test");
+                    },
+                );
+            });
+                ui.horizontal_wrapped(|ui| self.vram_viewer(ui));
                 ui.horizontal(|ui| {
-                    if ui.button(if self.paused { "Continue" } else { "Pause" }).clicked() {
-                        self.paused = !self.paused;
-                    }
-                    ui.horizontal(|ui| {
-                        ui.monospace("Slow factor:");
-                        ui.add(egui::DragValue::new(&mut self.slow_factor).clamp_range(1..=1000).speed(0.5));
+                    let bus = self.gb.bus();
+                    Grid::new("VRAM-registers-1").striped(true).show(ui, |ui| {
+                        ui.monospace("LCDC");
+                        ui.monospace(format!("{:08b}", bus.lcdc()));
+                        ui.end_row();
+                        ui.monospace("STAT");
+                        ui.monospace(format!("{:08b}", bus.stat()));
+                        ui.end_row();
                     });
-                    ui.with_layout(Layout::right_to_left(Align::Max), |ui| {
-                        ui.monospace(self.dbg.pc().to_string());
-                        ui.label("PC: ");
-                        ui.separator();
+                    ui.separator();
+                    Grid::new("VRAM-registers-2").striped(true).show(ui, |ui| {
+                        ui.monospace("LY");
+                        ui.monospace(format!("{:08b}", bus.ly()));
+                        ui.end_row();
+                        ui.monospace("LYC");
+                        ui.monospace(format!("{:08b}", bus.lyc()));
+                        ui.end_row();
+                    });
+                    ui.separator();
+                    Grid::new("VRAM-registers-3").striped(true).show(ui, |ui| {
+                        ui.monospace("SCX");
+                        ui.monospace(format!("{:08b}", bus.scx()));
+                        ui.end_row();
+                        ui.monospace("SCY");
+                        ui.monospace(format!("{:08b}", bus.scy()));
+                        ui.end_row();
                     });
                 });
-                let breakpoints_string = self.dbg.list_breakpoints();
-                if breakpoints_string.is_empty() {
-                    ui.centered_and_justified(|ui| ui.label("No breakpoints (WIP)"));
-                } else {
-                    ui.monospace(breakpoints_string);
-                }
             });
+    }
+
+    fn vram_viewer(&mut self, ui: &mut Ui) {
+        for tile_i in 0..fpt::ppu::tile::NUM_TILES {
+            let tile = self.get_tile(tile_i);
+            for y in 0..TILE_SIZE {
+                let yy =
+                    y + (tile_i / TV_COLS + 1) * TV_BORDER_SIZE + (tile_i / TV_COLS) * TILE_SIZE;
+                for x in 0..TILE_SIZE {
+                    let pixel = tile.get_pixel(y, x);
+                    let xx = x
+                        + (tile_i % TV_COLS + 1) * TV_BORDER_SIZE
+                        + (tile_i % TV_COLS) * TILE_SIZE;
+                    self.tiles[(xx, yy)] = PALETTE[pixel as usize];
+                }
+            }
+        }
+        for b in 0..TV_NUM_HBORDERS {
+            for y in 0..TV_BORDER_SIZE {
+                for x in 0..TV_X_SIZE {
+                    self.tiles[(x, y + b * (TILE_SIZE + TV_BORDER_SIZE))] = GREY;
+                }
+            }
+        }
+        for b in 0..TV_NUM_VBORDERS {
+            for x in 0..TV_BORDER_SIZE {
+                for y in 0..TV_Y_SIZE {
+                    self.tiles[(x + b * (TILE_SIZE + TV_BORDER_SIZE), y)] = GREY;
+                }
+            }
+        }
+        let texture: &mut TextureHandle = self.tiles_texture.get_or_insert_with(|| {
+            ui.ctx()
+                .load_texture("tile_viewer", self.tiles.clone(), TextureOptions::NEAREST)
+        });
+        texture.set(self.tiles.clone(), TextureOptions::NEAREST);
+        ui.vertical(|ui| {
+            ui.label("Tile data");
+            ui.image((texture.id(), TV_TEXTURE_SCALE * texture.size_vec2()));
+        });
+
+        let lcdc = self.gb.bus().lcdc();
+        let bg_map_area = match bitwise::test_bit8::<3>(lcdc) {
+            false => 0x9800..0x9C00,
+            true => 0x9C00..0xA000,
+        };
+        let bg_map_iter = bg_map_area.map(|addr| self.gb.bus().read(addr));
+
+        for (i, tile_i) in bg_map_iter.enumerate() {
+            let tile = self.get_tile(tile_i as usize);
+            for y in 0..TILE_SIZE {
+                let yy = y + (i / BMV_TILES_PER) * TILE_SIZE + BMV_BORDER_SIZE;
+                for x in 0..TILE_SIZE {
+                    let pixel = tile.get_pixel(y, x);
+                    let xx = x + (i % BMV_TILES_PER) * TILE_SIZE + BMV_BORDER_SIZE;
+                    self.bg_map[(xx, yy)] = PALETTE[pixel as usize];
+                }
+            }
+        }
+        // clear edges of bg_map viewer
+        for x in 0..BMV_X_SIZE {
+            self.bg_map[(x, 0)] = Color32::TRANSPARENT;
+            self.bg_map[(x, BMV_Y_SIZE - 1)] = Color32::TRANSPARENT;
+        }
+        for y in 0..BMV_Y_SIZE {
+            self.bg_map[(0, y)] = Color32::TRANSPARENT;
+            self.bg_map[(BMV_X_SIZE - 1, y)] = Color32::TRANSPARENT;
+        }
+        let top = self.gb.bus().scy() as usize;
+        let left = self.gb.bus().scx() as usize;
+        let bottom = ((self.gb.bus().scy() as u16 + 143u16) % 256u16) as usize;
+        let right = ((self.gb.bus().scx() as u16 + 159u16) % 256u16) as usize;
+        let btop = top;
+        let bleft = left;
+        let bbottom = bottom + 2 * BMV_BORDER_SIZE;
+        let bright = right + 2 * BMV_BORDER_SIZE;
+        for x in bleft..(bright + 1) {
+            self.bg_map[(x, btop)] = GREY;
+            self.bg_map[(x, bbottom)] = GREY;
+        }
+        for y in btop..(bbottom + 1) {
+            self.bg_map[(bleft, y)] = GREY;
+            self.bg_map[(bright, y)] = GREY;
+        }
+        let texture: &mut TextureHandle = self.bg_map_texture.get_or_insert_with(|| {
+            ui.ctx().load_texture(
+                "bg_map_viewer",
+                self.bg_map.clone(),
+                TextureOptions::NEAREST,
+            )
+        });
+        texture.set(self.bg_map.clone(), TextureOptions::NEAREST);
+        ui.vertical(|ui| {
+            ui.label("BG Map");
+            ui.image((texture.id(), BMV_TEXTURE_SCALE * texture.size_vec2()));
+        });
     }
 
     fn central_panel(&mut self, ctx: &Context, ui: &mut Ui) {
@@ -467,7 +437,7 @@ impl FPT {
         }
         // TODO repeated work in 1st repaint
         // TODO: should be in new?
-        let texture: &mut egui::TextureHandle = self.texture.get_or_insert_with(|| {
+        let texture: &mut TextureHandle = self.texture.get_or_insert_with(|| {
             ui.ctx()
                 .load_texture("my-image", self.image.clone(), TextureOptions::NEAREST)
         });
@@ -482,15 +452,15 @@ impl FPT {
 impl eframe::App for FPT {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
         self.top_panel(ctx);
-        egui::SidePanel::right("right_panel")
+        SidePanel::right("right_panel")
             .resizable(true)
             .default_width(350.0)
             .show(ctx, |ui| {
-                self.debug_info(ui);
+                // self.timing_info(ui);
                 self.debug_panel(ui);
             });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        CentralPanel::default().show(ctx, |ui| {
             self.central_panel(ctx, ui);
         });
     }
@@ -502,8 +472,8 @@ fn main() -> eframe::Result<()> {
     env_logger::init();
 
     let native_options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder {
-            inner_size: Some(egui::Vec2::new(950.0, 700.0)),
+        viewport: ViewportBuilder {
+            inner_size: Some(Vec2::new(950.0, 700.0)),
             ..Default::default()
         },
         ..Default::default()
