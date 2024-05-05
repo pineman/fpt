@@ -18,7 +18,7 @@ pub struct LR35902 {
     ime: bool,
     imenc: bool,
     mem: Bus,
-    next_cb: bool,
+    prefix_cb: bool,
     clock_cycles: u64,
     inst_cycle_count: u8,
     branch_taken: bool,
@@ -48,7 +48,7 @@ impl LR35902 {
             ime: false,
             imenc: false,
             mem: memory,
-            next_cb: false,
+            prefix_cb: false,
             clock_cycles: 0,
             inst_cycle_count: 0,
             branch_taken: false,
@@ -204,10 +204,6 @@ impl LR35902 {
         self.pc = pc;
     }
 
-    pub fn next_cb(&self) -> bool {
-        self.next_cb
-    }
-
     pub fn interrupt_master_enable(&self) -> bool {
         self.ime
     }
@@ -218,10 +214,6 @@ impl LR35902 {
 
     pub fn set_interrupt_master_enable_next_instruction(&mut self) {
         self.imenc = true;
-    }
-
-    pub fn set_next_cb(&mut self, value: bool) {
-        self.next_cb = value;
     }
 
     pub fn clock_cycles(&self) -> u64 {
@@ -567,10 +559,10 @@ impl LR35902 {
     //    self.mem.bus().load_bootrom(bootrom);
     //}
 
-    pub fn decode(&self) -> Instruction {
+    fn decode(&self) -> Instruction {
         let mut opcode = self.mem8(self.pc()) as u16;
         // TODO: decode can return "PREFIX CB" - not good for the disasm
-        if self.next_cb() {
+        if self.prefix_cb {
             opcode += 0x100;
         }
         INSTRUCTIONS[opcode as usize]
@@ -579,8 +571,9 @@ impl LR35902 {
     pub fn decode_ahead(&self, n: usize) -> Vec<Instruction> {
         let mut ret = Vec::<Instruction>::with_capacity(n + 1);
         ret.push(self.decode());
-        // HACK: using the cycles field to store the pc
+        // HACK: using the opcode field to store the pc
         ret[0].opcode = self.pc();
+        if ret[0].mnemonic == "PREFIX CB" {}
         for i in 1..(n + 1) {
             let last_inst = ret[i - 1];
             let next_pc = last_inst.opcode + last_inst.size as u16;
@@ -606,8 +599,8 @@ impl LR35902 {
             self.set_interrupt_master_enable(true);
             self.imenc = false;
         }
-        if self.next_cb() {
-            self.set_next_cb(false);
+        if self.prefix_cb {
+            self.prefix_cb = false;
         }
         self.execute(instruction);
         if !self.branch_taken() {
@@ -1571,7 +1564,7 @@ impl LR35902 {
             }
             0xCB => {
                 // PREFIX CB
-                self.set_next_cb(true);
+                self.prefix_cb = true;
             }
             0xCC => {
                 // CALL Z,a16

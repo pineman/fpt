@@ -316,7 +316,7 @@ impl FPT {
                         aa[9] = insts[4];
                         aa[10] = insts[5];
                         for inst in aa.iter() {
-                            ui.label(format!("{:#06X}: {}{}", inst.opcode, inst.mnemonic, if inst.opcode == self.gb.cpu().pc() { " <--" } else { "" }));
+                            ui.label(format!("{:#06X}: {}{}", inst.opcode, inst.mnemonic, if inst.opcode == self.gb.cpu().pc() { " <==" } else { "" }));
                         }
                     },
                 );
