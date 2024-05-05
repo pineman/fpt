@@ -6,8 +6,8 @@ use std::time::Duration;
 use eframe::Frame;
 use egui::{
     menu, Align, CentralPanel, Color32, ColorImage, Context, DragValue, Grid, Layout, ScrollArea,
-    SidePanel, TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2,
-    ViewportBuilder, ViewportCommand,
+    SidePanel, TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2, ViewportBuilder,
+    ViewportCommand,
 };
 use fpt::lr35902::instructions::Instruction;
 use fpt::ppu::tile::Tile;
