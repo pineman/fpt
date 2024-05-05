@@ -250,35 +250,7 @@ impl FPT {
             .show(ui, |ui| {
                 ui.collapsing("VRAM", |ui| {
                     ui.horizontal_wrapped(|ui| self.vram_viewer(ui));
-                    ui.horizontal(|ui| {
-                        let bus = self.gb.bus();
-                        Grid::new("VRAM-registers-1").striped(true).show(ui, |ui| {
-                            ui.monospace("LCDC");
-                            ui.monospace(format!("{:08b}", bus.lcdc()));
-                            ui.end_row();
-                            ui.monospace("STAT");
-                            ui.monospace(format!("{:08b}", bus.stat()));
-                            ui.end_row();
-                        });
-                        ui.separator();
-                        Grid::new("VRAM-registers-2").striped(true).show(ui, |ui| {
-                            ui.monospace("LY");
-                            ui.monospace(format!("{:08b}", bus.ly()));
-                            ui.end_row();
-                            ui.monospace("LYC");
-                            ui.monospace(format!("{:08b}", bus.lyc()));
-                            ui.end_row();
-                        });
-                        ui.separator();
-                        Grid::new("VRAM-registers-3").striped(true).show(ui, |ui| {
-                            ui.monospace("SCX");
-                            ui.monospace(format!("{:08b}", bus.scx()));
-                            ui.end_row();
-                            ui.monospace("SCY");
-                            ui.monospace(format!("{:08b}", bus.scy()));
-                            ui.end_row();
-                        });
-                    });
+                    ui.horizontal(|ui| self.vram_registers(ui));
                 });
                 ui.horizontal(|ui| {
                     if ui.button(if self.paused { "Continue" } else { "Pause" }).clicked() {
@@ -286,7 +258,9 @@ impl FPT {
                     }
                     ui.horizontal(|ui| {
                         ui.monospace("Slow factor:");
-                        ui.add(DragValue::new(&mut self.slow_factor).clamp_range(1..=1000).speed(0.5));
+                        ui.radio_value(&mut self.slow_factor, 1f64, "1");
+                        ui.radio_value(&mut self.slow_factor, 1000f64, "1000");
+                        ui.radio_value(&mut self.slow_factor, 100000f64, "1000000");
                     });
                 });
                 ui.horizontal_wrapped(|ui| {
@@ -333,6 +307,36 @@ impl FPT {
                         });
                     });
             });
+    }
+
+    fn vram_registers(&mut self, ui: &mut Ui) {
+        let bus = self.gb.bus();
+        Grid::new("VRAM-registers-1").striped(true).show(ui, |ui| {
+            ui.monospace("LCDC");
+            ui.monospace(format!("{:08b}", bus.lcdc()));
+            ui.end_row();
+            ui.monospace("STAT");
+            ui.monospace(format!("{:08b}", bus.stat()));
+            ui.end_row();
+        });
+        ui.separator();
+        Grid::new("VRAM-registers-2").striped(true).show(ui, |ui| {
+            ui.monospace("LY");
+            ui.monospace(format!("{:08b}", bus.ly()));
+            ui.end_row();
+            ui.monospace("LYC");
+            ui.monospace(format!("{:08b}", bus.lyc()));
+            ui.end_row();
+        });
+        ui.separator();
+        Grid::new("VRAM-registers-3").striped(true).show(ui, |ui| {
+            ui.monospace("SCX");
+            ui.monospace(format!("{:08b}", bus.scx()));
+            ui.end_row();
+            ui.monospace("SCY");
+            ui.monospace(format!("{:08b}", bus.scy()));
+            ui.end_row();
+        });
     }
 
     fn vram_viewer(&mut self, ui: &mut Ui) {
