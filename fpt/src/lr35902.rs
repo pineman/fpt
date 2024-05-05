@@ -203,6 +203,7 @@ impl LR35902 {
     pub fn set_pc(&mut self, pc: u16) {
         self.pc = pc;
     }
+
     pub fn next_cb(&self) -> bool {
         self.next_cb
     }
@@ -568,10 +569,30 @@ impl LR35902 {
 
     pub fn decode(&self) -> Instruction {
         let mut opcode = self.mem8(self.pc()) as u16;
+        // TODO: decode can return "PREFIX CB" - not good for the disasm
         if self.next_cb() {
             opcode += 0x100;
         }
         INSTRUCTIONS[opcode as usize]
+    }
+
+    pub fn decode_ahead(&self, n: usize) -> Vec<Instruction> {
+        let mut ret = Vec::<Instruction>::with_capacity(n + 1);
+        ret.push(self.decode());
+        // HACK: using the cycles field to store the pc
+        ret[0].opcode = self.pc();
+        if ret[0].mnemonic == "PREFIX CB" {}
+        for i in 1..(n + 1) {
+            let last_inst = ret[i - 1];
+            let next_pc = last_inst.opcode + last_inst.size as u16;
+            let mut next_inst_opcode_index = self.mem8(next_pc) as usize;
+            if last_inst.mnemonic == "PREFIX CB" {
+                next_inst_opcode_index += 0x100;
+            }
+            ret.push(INSTRUCTIONS[next_inst_opcode_index]);
+            ret[i].opcode = next_pc;
+        }
+        ret
     }
 
     /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)

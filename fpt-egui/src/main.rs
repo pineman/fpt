@@ -1,14 +1,16 @@
 #![feature(lazy_cell)]
 #![feature(array_chunks)]
 
+use std::collections::HashMap;
 use std::time::Duration;
 
 use eframe::Frame;
 use egui::{
     menu, Align, CentralPanel, Color32, ColorImage, Context, DragValue, Grid, Layout, ScrollArea,
-    SidePanel, TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2, ViewportBuilder,
-    ViewportCommand,
+    SidePanel, TextBuffer, TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2,
+    ViewportBuilder, ViewportCommand,
 };
+use fpt::lr35902::instructions::Instruction;
 use fpt::ppu::tile::Tile;
 use fpt::{bitwise, Gameboy};
 use log::info;
@@ -90,6 +92,7 @@ pub struct FPT {
     slow_factor: f64,
     cycles_since_last_frame: u32,
     total_cycles: u64,
+    inst_map: HashMap<u16, Instruction>,
 }
 
 impl Default for FPT {
@@ -109,6 +112,7 @@ impl Default for FPT {
             slow_factor: 1.0,
             cycles_since_last_frame: 0,
             total_cycles: 0,
+            inst_map: HashMap::new(),
         }
     }
 }
@@ -285,7 +289,7 @@ impl FPT {
                         ui.horizontal(|ui| {
                             ui.colored_label(Color32::LIGHT_BLUE, "PC");
                             ui.monospace(format!("{:016b}", cpu.pc()));
-                            ui.code(format!("{:#04X}", cpu.pc()));
+                            ui.code(format!("{:#06X}", cpu.pc()));
                         });
                     });
                 });
@@ -295,7 +299,28 @@ impl FPT {
                 ui.with_layout(
                     Layout::top_down(Align::LEFT).with_cross_justify(true),
                     |ui| {
-                            ui.label("test");
+                        let insts = self.gb.cpu().decode_ahead(5);
+                        let mut aa: [Instruction; 11] = [Instruction::default(); 11];
+                        // for inst in insts.iter() {
+                        //     self.inst_map.insert(inst.opcode, *inst);
+                        // }
+                        // let mut keys: Vec<u16> = self.inst_map.keys().cloned().collect();
+                        // keys.sort();
+                        // let cur_i: usize = keys.binary_search(&self.gb.cpu().pc()).unwrap();
+                        // aa[0] = self.inst_map.get(keys.get(cur_i - 5).unwrap_or(&0)).unwrap_or(&Instruction::default()).clone();
+                        // aa[1] = self.inst_map.get(keys.get(cur_i - 4).unwrap_or(&0)).unwrap_or(&Instruction::default()).clone();
+                        // aa[2] = self.inst_map.get(keys.get(cur_i - 3).unwrap_or(&0)).unwrap_or(&Instruction::default()).clone();
+                        // aa[3] = self.inst_map.get(keys.get(cur_i - 2).unwrap_or(&0)).unwrap_or(&Instruction::default()).clone();
+                        // aa[4] = self.inst_map.get(keys.get(cur_i - 1).unwrap_or(&0)).unwrap_or(&Instruction::default()).clone();
+                        aa[5] = insts[0];
+                        aa[6] = insts[1];
+                        aa[7] = insts[2];
+                        aa[8] = insts[3];
+                        aa[9] = insts[4];
+                        aa[10] = insts[5];
+                        for inst in aa.iter() {
+                            ui.label(format!("{:#06X}: {}{}", inst.opcode, inst.mnemonic, if inst.opcode == self.gb.cpu().pc() { " <--" } else { "" }));
+                        }
                     },
                 );
             });

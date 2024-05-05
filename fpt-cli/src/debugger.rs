@@ -105,7 +105,11 @@ impl Debugger {
     pub fn start(&mut self) {
         let mut gameboy = self.gameboy.borrow_mut();
         loop {
-            println!("{:#02X}: {}", gameboy.cpu().pc(), gameboy.cpu().decode());
+            println!(
+                "{:#02X}: {}",
+                gameboy.cpu().pc(),
+                gameboy.cpu().decode().mnemonic
+            );
             if self.check() {
                 gameboy.instruction();
                 break;
@@ -116,7 +120,11 @@ impl Debugger {
 
     pub fn next(&mut self) {
         let mut gameboy = self.gameboy.borrow_mut();
-        println!("{:#02X}: {}", gameboy.cpu().pc(), gameboy.cpu().decode());
+        println!(
+            "{:#02X}: {}",
+            gameboy.cpu().pc(),
+            gameboy.cpu().decode().mnemonic
+        );
         gameboy.instruction();
     }
 
