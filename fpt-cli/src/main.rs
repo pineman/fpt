@@ -79,7 +79,7 @@ fn dump(args: Dump) -> Result<()> {
             .map(|i| format!("{:#02X}", gb.cpu().mem8(gb.cpu().pc() + i as u16)))
             .collect();
         println!(
-            "{:#02X}: {} ({:#02X}{}{})",
+            "{:#02X}: {:?} ({:#02X}{}{})",
             gb.cpu().pc(),
             inst,
             inst.opcode,
@@ -99,7 +99,7 @@ fn run(args: Run) -> Result<()> {
     gameboy.load_rom(&rom);
     loop {
         if args.debug.unwrap_or(false) {
-            println!("{:#02X}: {}", gameboy.cpu().pc(), gameboy.cpu().decode());
+            println!("{:#02X}: {:?}", gameboy.cpu().pc(), gameboy.cpu().decode());
         }
         gameboy.instruction();
     }
