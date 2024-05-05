@@ -3,6 +3,5 @@ resolver = "2"
 
 members = [
     "fpt",
-    "fpt-cli",
     "fpt-egui",
 ]

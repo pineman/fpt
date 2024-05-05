@@ -14,18 +14,6 @@ cd fpt-egui
 RUSTFLAGS='--cfg=web_sys_unstable_apis' trunk serve
 ```
 
-## CLI
-
-`cargo run -p fpt-cli run <rom>`
-
-Running the naive disassembler:
-
-`cargo run -p fpt-cli dump <rom>`
-
-Running the debugger:
-
-`cargo run -p fpt-cli debug`
-
 ## Testing
 
 `cargo test`
