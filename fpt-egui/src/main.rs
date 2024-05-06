@@ -91,6 +91,7 @@ pub struct FPT {
     slow_factor: f64,
     cycles_since_last_frame: u32,
     total_cycles: u64,
+    debug_console: Vec<String>,
 }
 
 impl Default for FPT {
@@ -110,6 +111,7 @@ impl Default for FPT {
             slow_factor: 1.0,
             cycles_since_last_frame: 0,
             total_cycles: 0,
+            debug_console: vec![],
         }
     }
 }
@@ -259,8 +261,9 @@ impl FPT {
                     ui.horizontal(|ui| {
                         ui.monospace("Slow factor:");
                         ui.radio_value(&mut self.slow_factor, 1f64, "1");
+                        ui.radio_value(&mut self.slow_factor, 10f64, "10");
                         ui.radio_value(&mut self.slow_factor, 1000f64, "1000");
-                        ui.radio_value(&mut self.slow_factor, 100000f64, "1000000");
+                        ui.radio_value(&mut self.slow_factor, 1e6, "1_000_000");
                     });
                 });
                 ui.horizontal_wrapped(|ui| {
@@ -296,16 +299,25 @@ impl FPT {
                         });
                     });
                 });
+                self.debug_console = vec!["Hello, World!".to_string()];
+                for i in 0..10000 {
+                    self.debug_console.push(format!("This is row {}/{}", i + 1, self.debug_console.len()));
+                }
                 ScrollArea::vertical()
-                    .auto_shrink(true)
-                    .show(ui, |ui| {
-                        ui.with_layout(Layout::top_down(Align::LEFT).with_cross_justify(true), |ui| {
-                            let insts = self.gb.cpu().decode_ahead(5);
-                            for inst in insts {
-                                ui.label(format!("{:#06X}: {}{}", inst.opcode, inst.mnemonic, if inst.opcode == self.gb.cpu().pc() { " <==" } else { "" }));
-                            }
-                        });
-                    });
+                    .auto_shrink(false).stick_to_bottom(true).show_rows(
+                    ui,
+                    ui.text_style_height(&egui::TextStyle::Body),
+                    self.debug_console.len(),
+                    |ui, row_range| {
+                        for row in row_range {
+                            let text = format!("This is row {}/{}", row + 1, self.debug_console.len());
+                            ui.label(text);
+                        }
+                        let mut s = String::from("hi");
+                        ui.add(egui::TextEdit::singleline(&mut s));
+                        dbg!(s);
+                    },
+                );
             });
     }
 
