@@ -573,7 +573,7 @@ impl LR35902 {
         ret.push(self.decode());
         // HACK: using the opcode field to store the pc
         ret[0].opcode = self.pc();
-        if ret[0].mnemonic == "PREFIX CB" {}
+        // if ret[0].mnemonic == "PREFIX CB" {} // TODO
         for i in 1..(n + 1) {
             let last_inst = ret[i - 1];
             let next_pc = last_inst.opcode + last_inst.size as u16;
