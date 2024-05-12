@@ -588,12 +588,12 @@ impl LR35902 {
     }
 
     /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
-    pub fn t_cycle(&mut self) {
+    pub fn t_cycle(&mut self) -> bool {
         let instruction = self.decode();
         self.set_inst_cycle_count(self.inst_cycle_count() + 1);
         // Only actually mutate CPU state on the last t-cycle of the instruction
         if self.inst_cycle_count() < instruction.cycles {
-            return;
+            return false;
         }
         if self.imenc {
             self.set_interrupt_master_enable(true);
@@ -614,6 +614,7 @@ impl LR35902 {
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
         self.set_branch_taken(false);
         self.set_inst_cycle_count(0);
+        true
     }
 
     /// Run one complete instruction - NOT a machine cycle (4 t-cycles)
