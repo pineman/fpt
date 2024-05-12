@@ -5,8 +5,8 @@ use std::time::Duration;
 
 use eframe::Frame;
 use egui::{
-    menu, CentralPanel, Color32, ColorImage, Context, Grid, ScrollArea, SidePanel, TextureHandle,
-    TextureOptions, TopBottomPanel, Ui, Vec2, ViewportBuilder, ViewportCommand,
+    menu, CentralPanel, Color32, ColorImage, Context, Grid, Key, RichText, ScrollArea, SidePanel,
+    TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2, ViewportBuilder, ViewportCommand,
 };
 use fpt::ppu::tile::Tile;
 use fpt::{bitwise, Gameboy};
@@ -90,6 +90,9 @@ pub struct FPT {
     cycles_since_last_frame: u32,
     total_cycles: u64,
     debug_console: Vec<String>,
+    debug_console_cmd: String,
+    debug_console_last_cmd: String,
+    debug_console_was_focused: bool,
 }
 
 impl Default for FPT {
@@ -110,6 +113,9 @@ impl Default for FPT {
             cycles_since_last_frame: 0,
             total_cycles: 0,
             debug_console: vec![],
+            debug_console_cmd: String::new(),
+            debug_console_last_cmd: String::new(),
+            debug_console_was_focused: false,
         }
     }
 }
@@ -151,9 +157,9 @@ impl FPT {
         self.accum_time += delta_time;
 
         // if self.slow_factor != 1.0 {
-        let cycles = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
-        self.accum_time -= cycles as f64 * T_CYCLE * self.slow_factor;
-        for _ in 0..cycles {
+        let cycles_want = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
+        let mut cycles_ran = 0;
+        while cycles_ran < cycles_want {
             // TODO: care for double speed mode
             self.gb.cpu_mut().t_cycle();
             self.gb.ppu_mut().step(1);
@@ -163,8 +169,14 @@ impl FPT {
                 self.gb_frame_count += 1;
                 self.cycles_since_last_frame = 0;
             }
+            cycles_ran += 1;
+            if self.gb.cpu().pc() == 0x0100 {
+                self.paused = true;
+                break;
+            }
         }
-        self.total_cycles += cycles as u64;
+        self.accum_time -= cycles_ran as f64 * T_CYCLE * self.slow_factor;
+        self.total_cycles += cycles_ran as u64;
         if let Some(frame) = frame {
             for (i, &gb_pixel) in frame.iter().enumerate() {
                 self.image.pixels[i] = PALETTE[gb_pixel as usize];
@@ -244,79 +256,109 @@ impl FPT {
         bus.with_span(tile_address, Tile::load)
     }
 
-    fn debug_panel(&mut self, ui: &mut Ui) {
-        ScrollArea::vertical()
-            .id_source("debug_panel")
-            .show(ui, |ui| {
-                ui.collapsing("VRAM", |ui| {
-                    ui.horizontal_wrapped(|ui| self.vram_viewer(ui));
-                    ui.horizontal(|ui| self.vram_registers(ui));
-                });
-                ui.horizontal(|ui| {
-                    if ui.button(if self.paused { "Continue" } else { "Pause" }).clicked() {
-                        self.paused = !self.paused;
-                    }
-                    ui.horizontal(|ui| {
-                        ui.monospace("Slow factor:");
-                        ui.radio_value(&mut self.slow_factor, 1f64, "1");
-                        ui.radio_value(&mut self.slow_factor, 10f64, "10");
-                        ui.radio_value(&mut self.slow_factor, 1000f64, "1000");
-                        ui.radio_value(&mut self.slow_factor, 1e6, "1_000_000");
-                    });
-                });
-                ui.horizontal_wrapped(|ui| {
-                    macro_rules! cpu_register {
-                        ($ui:expr, $high_label:literal : $high_value:expr, $low_label:literal : $low_value:expr) => {
-                            $ui.colored_label(Color32::LIGHT_BLUE, $high_label);
-                            $ui.monospace(format!("{:08b}", $high_value));
-                            $ui.code(format!("{:04X}", bitwise::word16($high_value, $low_value)));
-                            $ui.monospace(format!("{:08b}", $low_value));
-                            $ui.colored_label(Color32::LIGHT_BLUE, $low_label);
-                        }
-                    }
-                    let cpu = self.gb.cpu();
-                    Grid::new("cpu_registers_a-e").num_columns(4).min_col_width(10.0).striped(true).show(ui, |ui| {
-                        cpu_register!(ui, "A": cpu.a(), "F": cpu.f()); ui.end_row();
-                        cpu_register!(ui, "B": cpu.b(), "C": cpu.c()); ui.end_row();
-                        cpu_register!(ui, "D": cpu.d(), "E": cpu.e()); ui.end_row();
-                    });
-                    ui.separator();
-                    ui.vertical(|ui| {
-                        ui.horizontal(|ui| {
-                            cpu_register!(ui, "H": cpu.h(), "L": cpu.l());
-                        });
-                        ui.horizontal(|ui| {
-                            ui.colored_label(Color32::LIGHT_BLUE, "SP");
-                            ui.monospace(format!("{:016b}", cpu.sp()));
-                            ui.code(format!("{:#04X}", cpu.sp()));
-                        });
-                        ui.horizontal(|ui| {
-                            ui.colored_label(Color32::LIGHT_BLUE, "PC");
-                            ui.monospace(format!("{:016b}", cpu.pc()));
-                            ui.code(format!("{:#06X}", cpu.pc()));
-                        });
-                    });
-                });
-                self.debug_console = vec!["Hello, World!".to_string()];
-                for i in 0..10000 {
-                    self.debug_console.push(format!("This is row {}/{}", i + 1, self.debug_console.len()));
-                }
-                ScrollArea::vertical()
-                    .auto_shrink(false).stick_to_bottom(true).show_rows(
-                    ui,
-                    ui.text_style_height(&egui::TextStyle::Body),
-                    self.debug_console.len(),
-                    |ui, row_range| {
-                        for row in row_range {
-                            let text = format!("This is row {}/{}", row + 1, self.debug_console.len());
-                            ui.label(text);
-                        }
-                        let mut s = String::from("hi");
-                        ui.add(egui::TextEdit::singleline(&mut s));
-                        dbg!(s);
-                    },
-                );
+    fn debug_panel(&mut self, ctx: &Context, ui: &mut Ui) {
+        ui.collapsing("VRAM", |ui| {
+            ui.horizontal_wrapped(|ui| self.vram_viewer(ui));
+            ui.horizontal(|ui| self.vram_registers(ui));
+        });
+        ui.horizontal(|ui| {
+            if ui
+                .button(if self.paused { "Continue" } else { "Pause" })
+                .clicked()
+            {
+                self.paused = !self.paused;
+            }
+            ui.horizontal(|ui| {
+                ui.monospace("Slow factor:");
+                ui.radio_value(&mut self.slow_factor, 0.1f64, "0.1");
+                ui.radio_value(&mut self.slow_factor, 1f64, "1");
+                ui.radio_value(&mut self.slow_factor, 10f64, "10");
+                ui.radio_value(&mut self.slow_factor, 1000f64, "1000");
+                ui.radio_value(&mut self.slow_factor, 1e6, "1_000_000");
             });
+        });
+        ui.horizontal_wrapped(|ui| {
+                macro_rules! cpu_register {
+                    ($ui:expr, $high_label:literal : $high_value:expr, $low_label:literal : $low_value:expr) => {
+                        $ui.colored_label(Color32::LIGHT_BLUE, $high_label);
+                        $ui.monospace(format!("{:08b}", $high_value));
+                        $ui.code(format!("{:04X}", bitwise::word16($high_value, $low_value)));
+                        $ui.monospace(format!("{:08b}", $low_value));
+                        $ui.colored_label(Color32::LIGHT_BLUE, $low_label);
+                    }
+                }
+                let cpu = self.gb.cpu();
+                Grid::new("cpu_registers_a-e").num_columns(4).min_col_width(10.0).striped(true).show(ui, |ui| {
+                    cpu_register!(ui, "A": cpu.a(), "F": cpu.f()); ui.end_row();
+                    cpu_register!(ui, "B": cpu.b(), "C": cpu.c()); ui.end_row();
+                    cpu_register!(ui, "D": cpu.d(), "E": cpu.e()); ui.end_row();
+                });
+                ui.separator();
+                ui.vertical(|ui| {
+                    ui.horizontal(|ui| {
+                        cpu_register!(ui, "H": cpu.h(), "L": cpu.l());
+                    });
+                    ui.horizontal(|ui| {
+                        ui.colored_label(Color32::LIGHT_BLUE, "SP");
+                        ui.monospace(format!("{:016b}", cpu.sp()));
+                        ui.code(format!("{:#04X}", cpu.sp()));
+                    });
+                    ui.horizontal(|ui| {
+                        ui.colored_label(Color32::LIGHT_BLUE, "PC");
+                        ui.monospace(format!("{:016b}", cpu.pc()));
+                        ui.code(format!("{:#06X}", cpu.pc()));
+                    });
+                });
+            });
+        ScrollArea::vertical()
+            .auto_shrink(false)
+            .stick_to_bottom(true)
+            .max_height(ui.available_rect_before_wrap().height() - 24.0)
+            .show_rows(
+                ui,
+                ui.text_style_height(&egui::TextStyle::Body),
+                self.debug_console.len(),
+                |ui, row_range| {
+                    for row in row_range {
+                        ui.label(RichText::new(self.debug_console[row].clone()).monospace());
+                    }
+                },
+            );
+        let edit = egui::TextEdit::multiline(&mut self.debug_console_cmd)
+            .desired_rows(1)
+            .font(egui::TextStyle::Monospace)
+            .desired_width(f32::INFINITY);
+        let response = ui.add(edit);
+        if self.debug_console_was_focused {
+            response.request_focus();
+            self.debug_console_was_focused = false;
+        }
+        if response.has_focus() && ctx.input(|i| i.key_pressed(Key::Enter)) {
+            self.debug_console_was_focused = true;
+            self.debug_console_cmd = self.debug_console_cmd.trim().to_string();
+            if self.debug_console_cmd == "" {
+                self.debug_console_cmd = self.debug_console_last_cmd.clone();
+            }
+            self.debug_console
+                .push(format!("> {}", self.debug_console_cmd));
+            if self.debug_console_cmd == "d" {
+                self.gb.cpu().decode_ahead(5).iter().for_each(|i| {
+                    let args = self
+                        .gb
+                        .bus()
+                        .copy_range((i.opcode as usize)..((i.opcode + i.size as u16) as usize))
+                        .iter()
+                        .fold(String::new(), |acc, &b| acc + &format!("{:#02X} ", b))
+                        .trim()
+                        .to_string();
+
+                    self.debug_console
+                        .push(format!("{:#06X}: {} ({})", i.opcode, i.mnemonic, args));
+                });
+            }
+            self.debug_console_last_cmd = self.debug_console_cmd.clone();
+            self.debug_console_cmd = String::new();
+        }
     }
 
     fn vram_registers(&mut self, ui: &mut Ui) {
@@ -471,10 +513,9 @@ impl eframe::App for FPT {
         self.top_panel(ctx);
         SidePanel::right("right_panel")
             .resizable(true)
-            .default_width(350.0)
             .show(ctx, |ui| {
                 // self.timing_info(ui);
-                self.debug_panel(ui);
+                self.debug_panel(ctx, ui);
             });
 
         CentralPanel::default().show(ctx, |ui| {
