@@ -161,7 +161,7 @@ impl FPT {
         let mut cycles_ran = 0;
         while cycles_ran < cycles_want {
             // TODO: care for double speed mode
-            self.gb.cpu_mut().t_cycle();
+            let ran_inst = self.gb.cpu_mut().t_cycle();
             self.gb.ppu_mut().step(1);
             self.cycles_since_last_frame += 1;
             if self.cycles_since_last_frame == self.gb.cycles_in_one_frame() {
@@ -170,9 +170,12 @@ impl FPT {
                 self.cycles_since_last_frame = 0;
             }
             cycles_ran += 1;
-            if self.gb.cpu().pc() == 0x0100 {
-                self.paused = true;
-                break;
+            if ran_inst {
+                // TODO: check breakpoints
+                if ran_inst && self.gb.cpu().pc() == 0x0100 {
+                    self.paused = true;
+                    break;
+                }
             }
         }
         self.accum_time -= cycles_ran as f64 * T_CYCLE * self.slow_factor;
@@ -278,38 +281,50 @@ impl FPT {
             });
         });
         ui.horizontal_wrapped(|ui| {
-                macro_rules! cpu_register {
-                    ($ui:expr, $high_label:literal : $high_value:expr, $low_label:literal : $low_value:expr) => {
-                        $ui.colored_label(Color32::LIGHT_BLUE, $high_label);
-                        $ui.monospace(format!("{:08b}", $high_value));
-                        $ui.code(format!("{:04X}", bitwise::word16($high_value, $low_value)));
-                        $ui.monospace(format!("{:08b}", $low_value));
-                        $ui.colored_label(Color32::LIGHT_BLUE, $low_label);
-                    }
+            macro_rules! cpu_register {
+                ($ui:expr, $high_label:literal : $high_value:expr, $low_label:literal : $low_value:expr) => {
+                    $ui.colored_label(Color32::LIGHT_BLUE, $high_label);
+                    $ui.monospace(format!("{:08b}", $high_value));
+                    $ui.code(format!("{:04X}", bitwise::word16($high_value, $low_value)));
+                    $ui.monospace(format!("{:08b}", $low_value));
+                    $ui.colored_label(Color32::LIGHT_BLUE, $low_label);
                 }
-                let cpu = self.gb.cpu();
+            }
+            let cpu = self.gb.cpu();
+            ui.vertical(|ui| {
                 Grid::new("cpu_registers_a-e").num_columns(4).min_col_width(10.0).striped(true).show(ui, |ui| {
-                    cpu_register!(ui, "A": cpu.a(), "F": cpu.f()); ui.end_row();
+                    ui.colored_label(Color32::LIGHT_BLUE, "A");
+                    ui.monospace(format!("{:08b}", cpu.a()));
+                    ui.code(format!("{:#04X}", cpu.a()));
+                    ui.end_row();
                     cpu_register!(ui, "B": cpu.b(), "C": cpu.c()); ui.end_row();
                     cpu_register!(ui, "D": cpu.d(), "E": cpu.e()); ui.end_row();
-                });
-                ui.separator();
-                ui.vertical(|ui| {
-                    ui.horizontal(|ui| {
-                        cpu_register!(ui, "H": cpu.h(), "L": cpu.l());
-                    });
-                    ui.horizontal(|ui| {
-                        ui.colored_label(Color32::LIGHT_BLUE, "SP");
-                        ui.monospace(format!("{:016b}", cpu.sp()));
-                        ui.code(format!("{:#04X}", cpu.sp()));
-                    });
-                    ui.horizontal(|ui| {
-                        ui.colored_label(Color32::LIGHT_BLUE, "PC");
-                        ui.monospace(format!("{:016b}", cpu.pc()));
-                        ui.code(format!("{:#06X}", cpu.pc()));
-                    });
+                    cpu_register!(ui, "H": cpu.a(), "L": cpu.f()); ui.end_row();
                 });
             });
+            ui.separator();
+            ui.vertical(|ui| {
+                Grid::new("flags").num_columns(1).min_col_width(10.0).striped(true).show(ui, |ui| {
+                    ui.colored_label(Color32::LIGHT_BLUE, "Z");
+                    ui.code(if cpu.z_flag() { "1" } else { "0" });
+                    ui.colored_label(Color32::LIGHT_BLUE, "N");
+                    ui.code(if cpu.n_flag() { "1" } else { "0" });
+                    ui.end_row();
+                    ui.colored_label(Color32::LIGHT_BLUE, "H");
+                    ui.code(if cpu.h_flag() { "1" } else { "0" });
+                    ui.colored_label(Color32::LIGHT_BLUE, "C");
+                    ui.code(if cpu.c_flag() { "1" } else { "0" });
+                });
+                ui.horizontal(|ui| {
+                    ui.colored_label(Color32::LIGHT_BLUE, "SP");
+                    ui.code(format!("{:#06X}", cpu.sp()));
+                });
+                ui.horizontal(|ui| {
+                    ui.colored_label(Color32::LIGHT_BLUE, "PC");
+                    ui.code(format!("{:#06X}", cpu.pc()));
+                });
+            });
+        });
         ScrollArea::vertical()
             .auto_shrink(false)
             .stick_to_bottom(true)
@@ -336,8 +351,9 @@ impl FPT {
         if response.has_focus() && ctx.input(|i| i.key_pressed(Key::Enter)) {
             self.debug_console_was_focused = true;
             self.debug_console_cmd = self.debug_console_cmd.trim().to_string();
-            if self.debug_console_cmd == "" {
-                self.debug_console_cmd = self.debug_console_last_cmd.clone();
+            if self.debug_console_cmd.is_empty() {
+                self.debug_console_cmd
+                    .clone_from(&self.debug_console_last_cmd);
             }
             self.debug_console
                 .push(format!("> {}", self.debug_console_cmd));
@@ -351,44 +367,54 @@ impl FPT {
                         .fold(String::new(), |acc, &b| acc + &format!("{:#02X} ", b))
                         .trim()
                         .to_string();
-
                     self.debug_console
                         .push(format!("{:#06X}: {} ({})", i.opcode, i.mnemonic, args));
                 });
             }
-            self.debug_console_last_cmd = self.debug_console_cmd.clone();
+            self.debug_console_last_cmd
+                .clone_from(&self.debug_console_cmd);
             self.debug_console_cmd = String::new();
         }
     }
 
     fn vram_registers(&mut self, ui: &mut Ui) {
         let bus = self.gb.bus();
-        Grid::new("VRAM-registers-1").striped(true).show(ui, |ui| {
-            ui.monospace("LCDC");
-            ui.monospace(format!("{:08b}", bus.lcdc()));
-            ui.end_row();
-            ui.monospace("STAT");
-            ui.monospace(format!("{:08b}", bus.stat()));
-            ui.end_row();
-        });
-        ui.separator();
-        Grid::new("VRAM-registers-2").striped(true).show(ui, |ui| {
-            ui.monospace("LY");
-            ui.monospace(format!("{:08b}", bus.ly()));
-            ui.end_row();
-            ui.monospace("LYC");
-            ui.monospace(format!("{:08b}", bus.lyc()));
-            ui.end_row();
-        });
-        ui.separator();
-        Grid::new("VRAM-registers-3").striped(true).show(ui, |ui| {
-            ui.monospace("SCX");
-            ui.monospace(format!("{:08b}", bus.scx()));
-            ui.end_row();
-            ui.monospace("SCY");
-            ui.monospace(format!("{:08b}", bus.scy()));
-            ui.end_row();
-        });
+        Grid::new("VRAM-registers-parent")
+            .striped(true)
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    Grid::new("VRAM-registers-1").striped(true).show(ui, |ui| {
+                        ui.monospace("LCDC");
+                        ui.monospace(format!("{:08b}", bus.lcdc()));
+                        ui.end_row();
+                        ui.monospace("STAT");
+                        ui.monospace(format!("{:08b}", bus.stat()));
+                        ui.end_row();
+                    });
+                    ui.separator();
+                });
+                ui.horizontal(|ui| {
+                    Grid::new("VRAM-registers-2").striped(true).show(ui, |ui| {
+                        ui.monospace("LY");
+                        ui.monospace(format!("{:08b}", bus.ly()));
+                        ui.end_row();
+                        ui.monospace("LYC");
+                        ui.monospace(format!("{:08b}", bus.lyc()));
+                        ui.end_row();
+                    });
+                    ui.separator();
+                });
+                ui.horizontal(|ui| {
+                    Grid::new("VRAM-registers-3").striped(true).show(ui, |ui| {
+                        ui.monospace("SCX");
+                        ui.monospace(format!("{:08b}", bus.scx()));
+                        ui.end_row();
+                        ui.monospace("SCY");
+                        ui.monospace(format!("{:08b}", bus.scy()));
+                        ui.end_row();
+                    });
+                });
+            });
     }
 
     fn vram_viewer(&mut self, ui: &mut Ui) {
