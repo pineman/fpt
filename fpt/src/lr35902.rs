@@ -201,6 +201,7 @@ impl LR35902 {
     }
 
     pub fn set_pc(&mut self, pc: u16) {
+        //println!("pc: {}", pc);
         self.pc = pc;
     }
 
@@ -214,6 +215,10 @@ impl LR35902 {
 
     pub fn set_interrupt_master_enable_next_instruction(&mut self) {
         self.imenc = true;
+    }
+
+    pub fn prefix_cb(&self) -> bool {
+        self.prefix_cb
     }
 
     pub fn clock_cycles(&self) -> u64 {
@@ -559,7 +564,7 @@ impl LR35902 {
     //    self.mem.bus().load_bootrom(bootrom);
     //}
 
-    fn decode(&self) -> Instruction {
+    pub fn decode(&self) -> Instruction {
         let mut opcode = self.mem8(self.pc()) as u16;
         // TODO: decode can return "PREFIX CB" - not good for the disasm
         if self.prefix_cb {
