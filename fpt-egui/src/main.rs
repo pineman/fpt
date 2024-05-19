@@ -71,9 +71,20 @@ fn now() -> f64 {
 }
 
 pub struct FPT {
+    gb: Gameboy,
+    cycles_since_last_frame: u32,
+    accum_time: f64,
     egui_frame_count: u64,
     gb_frame_count: u64,
-    accum_time: f64,
+
+    paused: bool,
+    slow_factor: f64,
+
+    debug_console: Vec<String>,
+    debug_console_cmd: String,
+    debug_console_last_cmd: String,
+    debug_console_was_focused: bool,
+    code: Vec<(u16, String)>,
 
     image: ColorImage,
     texture: Option<TextureHandle>,
@@ -83,39 +94,34 @@ pub struct FPT {
 
     bg_map: ColorImage,
     bg_map_texture: Option<TextureHandle>,
-
-    gb: Gameboy,
-    paused: bool,
-    slow_factor: f64,
-    cycles_since_last_frame: u32,
-    total_cycles: u64,
-    debug_console: Vec<String>,
-    debug_console_cmd: String,
-    debug_console_last_cmd: String,
-    debug_console_was_focused: bool,
 }
 
 impl Default for FPT {
     fn default() -> Self {
         Self {
+            gb: Gameboy::new(),
+            cycles_since_last_frame: 0,
+            accum_time: 0.0,
             egui_frame_count: 0,
             gb_frame_count: 0,
-            accum_time: 0.0,
-            image: ColorImage::new([WIDTH, HEIGHT], Color32::TRANSPARENT),
-            texture: None,
-            tiles: ColorImage::new([TV_X_SIZE, TV_Y_SIZE], Color32::TRANSPARENT),
-            tiles_texture: None,
-            bg_map: ColorImage::new([BMV_X_SIZE, BMV_Y_SIZE], Color32::TRANSPARENT),
-            bg_map_texture: None,
-            gb: Gameboy::new(),
+
             paused: false,
             slow_factor: 1.0,
-            cycles_since_last_frame: 0,
-            total_cycles: 0,
+
             debug_console: vec![],
             debug_console_cmd: String::new(),
             debug_console_last_cmd: String::new(),
             debug_console_was_focused: false,
+            code: Vec::new(),
+
+            image: ColorImage::new([WIDTH, HEIGHT], Color32::TRANSPARENT),
+            texture: None,
+
+            tiles: ColorImage::new([TV_X_SIZE, TV_Y_SIZE], Color32::TRANSPARENT),
+            tiles_texture: None,
+
+            bg_map: ColorImage::new([BMV_X_SIZE, BMV_Y_SIZE], Color32::TRANSPARENT),
+            bg_map_texture: None,
         }
     }
 }
@@ -156,11 +162,11 @@ impl FPT {
         let delta_time = ui.input(|i| i.unstable_dt) as f64;
         self.accum_time += delta_time;
 
-        // if self.slow_factor != 1.0 {
         let cycles_want = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
         let mut cycles_ran = 0;
         while cycles_ran < cycles_want {
             // TODO: care for double speed mode
+            let pc = self.gb.cpu().pc();
             let ran_inst = self.gb.cpu_mut().t_cycle();
             self.gb.ppu_mut().step(1);
             self.cycles_since_last_frame += 1;
@@ -170,33 +176,42 @@ impl FPT {
                 self.cycles_since_last_frame = 0;
             }
             cycles_ran += 1;
-            if ran_inst {
+            if let Some(inst) = ran_inst {
+                // TODO https://github.com/pineman/fpt/blob/bedc4cffaff88fbdb019dab609e535185113d39f/fpt-cli/src/main.rs#L77
+                let result: Vec<String> = (1..inst.size)
+                    .map(|i| format!("{:#02X}", self.gb.cpu().mem8(pc + i as u16)))
+                    .collect();
+                let str = format!(
+                    "{:#06X}: {} ({:#02X}{}{})",
+                    pc,
+                    inst.mnemonic,
+                    inst.opcode,
+                    if result.is_empty() { "" } else { " " },
+                    result.join(" ")
+                );
+                match self.code.binary_search_by_key(&pc, |&(pc, _)| pc) {
+                    Ok(pos) => {
+                        if str != self.code[pos].1 {
+                            dbg!("different");
+                            self.code[pos] = (pc, str)
+                        }
+                    }
+                    Err(pos) => self.code.insert(pos, (pc, str)),
+                }
                 // TODO: check breakpoints
-                if ran_inst && self.gb.cpu().pc() == 0x0100 {
+                // TODO: this breaks *after* the instruction has been executed
+                if pc == 0x02FA {
                     self.paused = true;
                     break;
                 }
             }
         }
         self.accum_time -= cycles_ran as f64 * T_CYCLE * self.slow_factor;
-        self.total_cycles += cycles_ran as u64;
         if let Some(frame) = frame {
             for (i, &gb_pixel) in frame.iter().enumerate() {
                 self.image.pixels[i] = PALETTE[gb_pixel as usize];
             }
         }
-        // } else if self.accum_time >= SIXTY_FPS_FRAMETIME {
-        //     self.accum_time -= SIXTY_FPS_FRAMETIME;
-        //     self.gb_frame_count += 1;
-        //     self.cycles_since_last_frame = 0;
-        //     self.total_cycles += 70224;
-        //     // Run for a whole frame and decode the resulting picture into our GUI's image
-        //     let mut gb = self.gb.borrow_mut();
-        //     let frame = gb.advance_frame();
-        //     for (i, &gb_pixel) in frame.iter().enumerate() {
-        //         self.image.pixels[i] = PALETTE[gb_pixel as usize];
-        //     }
-        // }
     }
 
     #[allow(dead_code)]
@@ -325,56 +340,72 @@ impl FPT {
                 });
             });
         });
-        ScrollArea::vertical()
-            .auto_shrink(false)
-            .stick_to_bottom(true)
-            .max_height(ui.available_rect_before_wrap().height() - 24.0)
-            .show_rows(
+        // TODO: scroll into line of current pc (need to find index)
+        ui.collapsing("Code", |ui| {
+            ScrollArea::vertical().show_rows(
                 ui,
                 ui.text_style_height(&egui::TextStyle::Body),
-                self.debug_console.len(),
+                self.code.len(),
                 |ui, row_range| {
                     for row in row_range {
-                        ui.label(RichText::new(self.debug_console[row].clone()).monospace());
+                        ui.label(RichText::new(self.code[row].1.clone()).monospace());
                     }
                 },
             );
-        let edit = egui::TextEdit::multiline(&mut self.debug_console_cmd)
-            .desired_rows(1)
-            .font(egui::TextStyle::Monospace)
-            .desired_width(f32::INFINITY);
-        let response = ui.add(edit);
-        if self.debug_console_was_focused {
-            response.request_focus();
-            self.debug_console_was_focused = false;
-        }
-        if response.has_focus() && ctx.input(|i| i.key_pressed(Key::Enter)) {
-            self.debug_console_was_focused = true;
-            self.debug_console_cmd = self.debug_console_cmd.trim().to_string();
-            if self.debug_console_cmd.is_empty() {
-                self.debug_console_cmd
-                    .clone_from(&self.debug_console_last_cmd);
+        });
+        ui.collapsing("Console", |ui| {
+            ScrollArea::vertical()
+                .auto_shrink(false)
+                .stick_to_bottom(true)
+                // XXX: dirty hack to make the console input always stick to the bottom
+                .max_height(ui.available_rect_before_wrap().height() - 24.0)
+                .show_rows(
+                    ui,
+                    ui.text_style_height(&egui::TextStyle::Body),
+                    self.debug_console.len(),
+                    |ui, row_range| {
+                        for row in row_range {
+                            ui.label(RichText::new(self.debug_console[row].clone()).monospace());
+                        }
+                    },
+                );
+            let edit = egui::TextEdit::multiline(&mut self.debug_console_cmd)
+                .desired_rows(1)
+                .font(egui::TextStyle::Monospace)
+                .desired_width(f32::INFINITY);
+            let response = ui.add(edit);
+            if self.debug_console_was_focused {
+                response.request_focus();
+                self.debug_console_was_focused = false;
             }
-            self.debug_console
-                .push(format!("> {}", self.debug_console_cmd));
-            if self.debug_console_cmd == "d" {
-                self.gb.cpu().decode_ahead(5).iter().for_each(|i| {
-                    let args = self
-                        .gb
-                        .bus()
-                        .copy_range((i.opcode as usize)..((i.opcode + i.size as u16) as usize))
-                        .iter()
-                        .fold(String::new(), |acc, &b| acc + &format!("{:#02X} ", b))
-                        .trim()
-                        .to_string();
-                    self.debug_console
-                        .push(format!("{:#06X}: {} ({})", i.opcode, i.mnemonic, args));
-                });
+            if response.has_focus() && ctx.input(|i| i.key_pressed(Key::Enter)) {
+                self.debug_console_was_focused = true;
+                self.debug_console_cmd = self.debug_console_cmd.trim().to_string();
+                if self.debug_console_cmd.is_empty() {
+                    self.debug_console_cmd
+                        .clone_from(&self.debug_console_last_cmd);
+                }
+                self.debug_console
+                    .push(format!("> {}", self.debug_console_cmd));
+                if self.debug_console_cmd == "d" {
+                    self.gb.cpu().decode_ahead(5).iter().for_each(|i| {
+                        let args = self
+                            .gb
+                            .bus()
+                            .copy_range((i.opcode as usize)..((i.opcode + i.size as u16) as usize))
+                            .iter()
+                            .fold(String::new(), |acc, &b| acc + &format!("{:#02X} ", b))
+                            .trim()
+                            .to_string();
+                        self.debug_console
+                            .push(format!("{:#06X}: {} ({})", i.opcode, i.mnemonic, args));
+                    });
+                }
+                self.debug_console_last_cmd
+                    .clone_from(&self.debug_console_cmd);
+                self.debug_console_cmd = String::new();
             }
-            self.debug_console_last_cmd
-                .clone_from(&self.debug_console_cmd);
-            self.debug_console_cmd = String::new();
-        }
+        });
     }
 
     fn vram_registers(&mut self, ui: &mut Ui) {
@@ -514,9 +545,6 @@ impl FPT {
     }
 
     fn central_panel(&mut self, ctx: &Context, ui: &mut Ui) {
-        // Emulator + screen
-        // let frame_start = now();
-        // let gb_frame_count_before = self.gb_frame_count;
         if !self.paused {
             self.emulator(ui);
         }
