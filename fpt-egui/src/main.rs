@@ -191,7 +191,6 @@ impl FPT {
                 match self.code.binary_search_by_key(&pc, |&(pc, _)| pc) {
                     Ok(pos) => {
                         if str != self.code[pos].1 {
-                            dbg!("different");
                             self.code[pos] = (pc, str)
                         }
                     }
