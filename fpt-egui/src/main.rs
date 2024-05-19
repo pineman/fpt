@@ -177,7 +177,6 @@ impl FPT {
             }
             cycles_ran += 1;
             if let Some(inst) = ran_inst {
-                // TODO https://github.com/pineman/fpt/blob/bedc4cffaff88fbdb019dab609e535185113d39f/fpt-cli/src/main.rs#L77
                 let result: Vec<String> = (1..inst.size)
                     .map(|i| format!("{:#02X}", self.gb.cpu().mem8(pc + i as u16)))
                     .collect();
