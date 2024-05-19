@@ -559,9 +559,9 @@ impl LR35902 {
     //    self.mem.bus().load_bootrom(bootrom);
     //}
 
+    // TODO: decode can return "PREFIX CB" - not good for the disasm
     fn decode(&self) -> Instruction {
         let mut opcode = self.mem8(self.pc()) as u16;
-        // TODO: decode can return "PREFIX CB" - not good for the disasm
         if self.prefix_cb {
             opcode += 0x100;
         }
@@ -588,12 +588,14 @@ impl LR35902 {
     }
 
     /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
-    pub fn t_cycle(&mut self) -> bool {
+    /// Returns a instruction if we actually mutated CPU state, since we only
+    /// execute the instruction itself on its last t-cycle
+    pub fn t_cycle(&mut self) -> Option<Instruction> {
         let instruction = self.decode();
         self.set_inst_cycle_count(self.inst_cycle_count() + 1);
         // Only actually mutate CPU state on the last t-cycle of the instruction
         if self.inst_cycle_count() < instruction.cycles {
-            return false;
+            return None;
         }
         if self.imenc {
             self.set_interrupt_master_enable(true);
@@ -614,7 +616,7 @@ impl LR35902 {
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
         self.set_branch_taken(false);
         self.set_inst_cycle_count(0);
-        true
+        Some(instruction)
     }
 
     /// Run one complete instruction - NOT a machine cycle (4 t-cycles)
