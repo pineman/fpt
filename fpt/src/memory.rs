@@ -25,8 +25,7 @@ pub mod map {
 
     /// User Program Area (32 KB)
     /// 0x0000..0x4000 From cartridge, usually a fixed bank
-    /// 0x4000..0x8000 From cartridge, switchable bank via mapper (if any)
-    pub const USER_PROGRAM: MemoryRange = 0x0000..0x8000;
+    /// 0x4000..0x8000 From cartridge, switchable bank via mapper (if any) pub const USER_PROGRAM: MemoryRange = 0x0000..0x8000;
 
     /// Video RAM (8 KB) - In CGB mode, switchable bank 0/1
     pub const VRAM: MemoryRange = 0x8000..0xA000;
@@ -177,8 +176,7 @@ pub mod map {
     pub const OCPD: Address = 0xFF6B;
     /// Object priority mode (CGB)
     pub const OPRI: Address = 0xFF6C;
-    /// WRAM bank (CGB)
-    pub const SVBK: Address = 0xFF70;
+    /// WRAM bank (CGB) pub const SVBK: Address = 0xFF70;
     /// Audio digital outputs 1 & 2 (CGB)
     pub const PCM12: Address = 0xFF76;
     /// Audio digital outputs 3 & 4 (CGB)
@@ -205,7 +203,7 @@ pub mod map {
 pub struct Memory {
     mem: [u8; 65536],
     cartridge: Vec<u8>,
-    bootrom: [u8; 256],
+    bootrom: &'static [u8; 256],
 }
 
 impl PartialEq for Memory {
@@ -225,7 +223,7 @@ impl Memory {
         Self {
             mem: [0; 65536],
             cartridge: Vec::new(),
-            bootrom: [0; 256],
+            bootrom: include_bytes!("../dmg0.bin"),
         }
     }
 
@@ -259,18 +257,19 @@ impl Bus {
         self.0.borrow_mut()
     }
 
-    pub fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
-        self.memory_mut().bootrom.clone_from_slice(bootrom);
+    pub fn load_bootrom(&mut self) {
+        let bootrom = self.memory().bootrom;
         self.clone_from_slice(map::BOOTROM, bootrom);
     }
 
+    pub fn unload_bootrom(&mut self) {
+        let cartridge = self.memory_mut().cartridge[0x0000..0x0100].to_vec();
+        self.clone_from_slice(map::BOOTROM, &cartridge);
+    }
+
     pub fn load_cartridge(&mut self, cartridge: &[u8]) {
-        if cartridge.len() < 0x8000 {
-            println!("This is not a  rom, fuck you!");
-            panic!();
-        }
         self.memory_mut().cartridge = cartridge.to_vec();
-        self.clone_from_slice(0x100..0x8000, &cartridge[0x100..cartridge.len()]);
+        self.clone_from_slice(0x0100..0x8000, &cartridge[0x0100..0x8000]);
     }
 
     pub fn read(&self, address: GBAddress) -> u8 {

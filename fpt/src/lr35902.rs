@@ -3,7 +3,7 @@ use std::fmt;
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use super::memory::Bus;
-use crate::bitwise as bw;
+use crate::{bitwise as bw, memory};
 
 pub mod instructions;
 
@@ -53,7 +53,8 @@ impl LR35902 {
             inst_cycle_count: 0,
             branch_taken: false,
         };
-        cpu.mem.load_bootrom(include_bytes!("../dmg0.bin"));
+        // TODO: should be done elsewhere, separation of concerns yada-yada?
+        cpu.mem.load_bootrom();
         cpu
     }
 
@@ -550,14 +551,6 @@ impl LR35902 {
         self.set_n_flag(false);
         self.set_h_flag(true);
     }
-
-    //pub fn load_rom(&mut self, rom: Vec<u8>) {
-    //    self.mem.bus().load_cartridge(&rom);
-    //}
-
-    //fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
-    //    self.mem.bus().load_bootrom(bootrom);
-    //}
 
     // TODO: decode can return "PREFIX CB" - not good for the disasm
     fn decode(&self) -> Instruction {
@@ -1669,7 +1662,11 @@ impl LR35902 {
             }
             0xE0 => {
                 // LDH (a8),A
-                self.set_mem8(0xFF00 | self.get_d8(0) as u16, self.a());
+                let mem = 0xFF00 | self.get_d8(0) as u16;
+                if mem as usize == memory::map::DISABLE_BOOTROM && self.a() != 0 {
+                    self.mem.unload_bootrom();
+                }
+                self.set_mem8(mem, self.a());
             }
             0xE1 => {
                 // POP HL
