@@ -198,10 +198,6 @@ impl FPT {
                 }
                 // TODO: check breakpoints
                 // TODO: this breaks *after* the instruction has been executed
-                if pc == 0x02FA {
-                    self.paused = true;
-                    break;
-                }
             }
         }
         self.accum_time -= cycles_ran as f64 * T_CYCLE * self.slow_factor;
