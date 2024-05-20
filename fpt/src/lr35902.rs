@@ -1663,7 +1663,7 @@ impl LR35902 {
             0xE0 => {
                 // LDH (a8),A
                 let mem = 0xFF00 | self.get_d8(0) as u16;
-                if mem as usize == memory::map::DISABLE_BOOTROM && self.a() != 0 {
+                if mem as usize == memory::map::BANK && self.a() != 0 {
                     self.mem.unload_bootrom();
                 }
                 self.set_mem8(mem, self.a());

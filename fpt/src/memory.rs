@@ -142,8 +142,8 @@ pub mod map {
     /// Window X position plus 7
     pub const WX: Address = 0xFF4B;
 
-    /// Set to non-zero to disable boot ROM
-    pub const DISABLE_BOOTROM: Address = 0xFF50;
+    /// BANK register: Set to non-zero to disable boot ROM
+    pub const BANK: Address = 0xFF50;
 
     //-------------------------------------------------------------------------
     // CGB extra
