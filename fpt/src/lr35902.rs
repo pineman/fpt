@@ -536,7 +536,7 @@ impl LR35902 {
 
     fn reti(&mut self) {
         // TODO: The interrupt master enable flag is returned to its pre-interrupt status.
-        // BUT: https://gbdev.io/pandocs/Interrupts.htm claims that RETI is EI followed by RET
+        //  BUT: https://gbdev.io/pandocs/Interrupts.htm claims that RETI is EI followed by RET
         self.set_interrupt_master_enable_next_instruction();
 
         // RET
@@ -564,7 +564,7 @@ impl LR35902 {
     pub fn decode_ahead(&self, n: usize) -> Vec<Instruction> {
         let mut ret = Vec::<Instruction>::with_capacity(n + 1);
         ret.push(self.decode());
-        // HACK: using the opcode field to store the pc
+        // TODO: using the opcode field to store the pc
         ret[0].opcode = self.pc();
         // if ret[0].mnemonic == "PREFIX CB" {} // TODO
         for i in 1..(n + 1) {
