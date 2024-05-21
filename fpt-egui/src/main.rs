@@ -177,6 +177,7 @@ impl FPT {
             }
             cycles_ran += 1;
             if let Some(inst) = ran_inst {
+                // TODO: only need to do this formatting work if the instruction actually isn't in the code vec
                 let result: Vec<String> = (1..inst.size)
                     .map(|i| format!("{:#02X}", self.gb.cpu().mem8(pc + i as u16)))
                     .collect();
@@ -188,6 +189,8 @@ impl FPT {
                     if result.is_empty() { "" } else { " " },
                     result.join(" ")
                 );
+                // TODO: since this is ran much more often than the rendering code,
+                //  it'd probably be best to have an O(1) insert here and then sort before rendering
                 match self.code.binary_search_by_key(&pc, |&(pc, _)| pc) {
                     Ok(pos) => {
                         if str != self.code[pos].1 {
@@ -351,7 +354,7 @@ impl FPT {
             ScrollArea::vertical()
                 .auto_shrink(false)
                 .stick_to_bottom(true)
-                // XXX: dirty hack to make the console input always stick to the bottom
+                // TODO: dirty hack to make the console input always stick to the bottom
                 .max_height(ui.available_rect_before_wrap().height() - 24.0)
                 .show_rows(
                     ui,
