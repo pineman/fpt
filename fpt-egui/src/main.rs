@@ -194,7 +194,7 @@ impl FPT {
                 match self.code.binary_search_by_key(&pc, |&(pc, _)| pc) {
                     Ok(pos) => {
                         if str != self.code[pos].1 {
-                            self.code[pos] = (pc, str)
+                            self.code[pos].1 = str
                         }
                     }
                     Err(pos) => self.code.insert(pos, (pc, str)),
@@ -385,17 +385,17 @@ impl FPT {
                 self.debug_console
                     .push(format!("> {}", self.debug_console_cmd));
                 if self.debug_console_cmd == "d" {
-                    self.gb.cpu().decode_ahead(5).iter().for_each(|i| {
+                    self.gb.cpu().decode_ahead(5).iter().for_each(|inst| {
                         let args = self
                             .gb
                             .bus()
-                            .copy_range((i.0 as usize)..((i.0 + i.1.size as u16) as usize))
+                            .copy_range((inst.0 as usize)..((inst.0 + inst.1.size as u16) as usize))
                             .iter()
                             .fold(String::new(), |acc, &b| acc + &format!("{:#02X} ", b))
                             .trim()
                             .to_string();
                         self.debug_console
-                            .push(format!("{:#06X}: {} ({})", i.0, i.1.mnemonic, args));
+                            .push(format!("{:#06X}: {} ({})", inst.0, inst.1.mnemonic, args));
                     });
                 }
                 self.debug_console_last_cmd
