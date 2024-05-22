@@ -7,24 +7,13 @@ Natively:
 `cargo run -p fpt-egui`
 
 WASM:
+
 ```
 rustup target add wasm32-unknown-unknown
 cargo install trunk
 cd fpt-egui
 RUSTFLAGS='--cfg=web_sys_unstable_apis' trunk serve
 ```
-
-## CLI
-
-`cargo run -p fpt-cli run <rom>`
-
-Running the naive disassembler:
-
-`cargo run -p fpt-cli dump <rom>`
-
-Running the debugger:
-
-`cargo run -p fpt-cli debug`
 
 ## Testing
 
@@ -55,6 +44,7 @@ Running the debugger:
   ([Part 1](https://www.youtube.com/watch?v=RZUDEaLa5Nw),
   [Part 1.5](https://www.youtube.com/watch?v=t0V-D2YMhrs),
   [Part 2](https://www.youtube.com/watch?v=ecTQVa42sJc))
+- [Tetris disassembly](https://github.com/alexsteb/tetris_disassembly/blob/master/main.asm)
 
 ## Resources
 

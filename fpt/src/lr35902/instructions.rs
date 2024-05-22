@@ -1,5 +1,3 @@
-use std::fmt;
-
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Instruction {
     pub opcode: u16,
@@ -10,10 +8,16 @@ pub struct Instruction {
     pub kind: InstructionKind,
 }
 
-// TODO
-impl fmt::Display for Instruction {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.mnemonic)
+impl Default for Instruction {
+    fn default() -> Self {
+        Self {
+            opcode: 0,
+            mnemonic: "",
+            size: 0,
+            cycles: 0,
+            cycles_not_taken: 0,
+            kind: InstructionKind::NI,
+        }
     }
 }
 

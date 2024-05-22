@@ -1,6 +1,7 @@
 /target
 .idea
 .vscode/
+.zed
 roms
 TODO.md
 .fpt_debug_history
