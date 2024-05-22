@@ -385,17 +385,17 @@ impl FPT {
                 self.debug_console
                     .push(format!("> {}", self.debug_console_cmd));
                 if self.debug_console_cmd == "d" {
-                    self.gb.cpu().decode_ahead(5).iter().for_each(|inst| {
+                    self.gb.cpu().decode_ahead(5).iter().for_each(|(pc, inst)| {
                         let args = self
                             .gb
                             .bus()
-                            .copy_range((inst.0 as usize)..((inst.0 + inst.1.size as u16) as usize))
+                            .copy_range((*pc as usize)..((pc + inst.size as u16) as usize))
                             .iter()
                             .fold(String::new(), |acc, &b| acc + &format!("{:#02X} ", b))
                             .trim()
                             .to_string();
                         self.debug_console
-                            .push(format!("{:#06X}: {} ({})", inst.0, inst.1.mnemonic, args));
+                            .push(format!("{:#06X}: {} ({})", pc, inst.mnemonic, args));
                     });
                 }
                 self.debug_console_last_cmd
