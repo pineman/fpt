@@ -196,7 +196,7 @@ impl LR35902 {
         self.af = bw::set_bit16::<4>(self.af, value);
     }
 
-    // other
+    // other getters/setters
     pub fn pc(&self) -> u16 {
         self.pc
     }
@@ -241,7 +241,7 @@ impl LR35902 {
         self.inst_cycle_count = inst_cycle_count;
     }
 
-    // helpers
+    // Memory
     pub fn mem8(&self, index: u16) -> u8 {
         self.mem.read(index)
     }
@@ -251,6 +251,7 @@ impl LR35902 {
     }
 
     pub fn set_mem8(&mut self, index: u16, value: u8) {
+        self.register_write_triggers(index, value);
         self.mem.write(index, value);
     }
 
@@ -259,6 +260,13 @@ impl LR35902 {
         self.set_mem8(index, bw::get_byte16::<0>(value));
     }
 
+    fn register_write_triggers(&mut self, index: u16, value: u8) {
+        if index == memory::map::BANK as u16 && value != 0 {
+            self.mem.unload_bootrom();
+        }
+    }
+
+    // Decoding
     /// get 8 bit immediate at position pc + 1 + pos
     fn get_d8(&self, pos: u8) -> u8 {
         self.mem8(self.pc + pos as u16 + 1)
@@ -283,6 +291,7 @@ impl LR35902 {
         self.set_mem8(self.hl(), value);
     }
 
+    // Instruction logic
     fn half_carry8(&self, x: u8, y: u8) -> bool {
         ((x & 0x0f) + (y & 0x0f)) > 0x0f
     }
@@ -1659,11 +1668,7 @@ impl LR35902 {
             }
             0xE0 => {
                 // LDH (a8),A
-                let mem = 0xFF00 | self.get_d8(0) as u16;
-                if mem as usize == memory::map::BANK && self.a() != 0 {
-                    self.mem.unload_bootrom();
-                }
-                self.set_mem8(mem, self.a());
+                self.set_mem8(0xFF00 | self.get_d8(0) as u16, self.a());
             }
             0xE1 => {
                 // POP HL
