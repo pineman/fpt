@@ -552,7 +552,6 @@ impl LR35902 {
         self.set_h_flag(true);
     }
 
-    // TODO: decode can return "PREFIX CB" - not good for the disasm
     fn decode(&self) -> Instruction {
         let mut opcode = self.mem8(self.pc()) as u16;
         if self.prefix_cb {
@@ -561,21 +560,19 @@ impl LR35902 {
         INSTRUCTIONS[opcode as usize]
     }
 
-    pub fn decode_ahead(&self, n: usize) -> Vec<Instruction> {
-        let mut ret = Vec::<Instruction>::with_capacity(n + 1);
-        ret.push(self.decode());
-        // TODO: using the opcode field to store the pc
-        ret[0].opcode = self.pc();
-        // if ret[0].mnemonic == "PREFIX CB" {} // TODO
+    pub fn decode_ahead(&self, n: usize) -> Vec<(u16, Instruction)> {
+        let mut ret = Vec::<(u16, Instruction)>::with_capacity(n + 1);
+        ret.push((self.pc(), self.decode()));
+        // TODO: decode can return "PREFIX CB" - not good for the disasm
+        //  if ret[0].mnemonic == "PREFIX CB" {}
         for i in 1..(n + 1) {
             let last_inst = ret[i - 1];
-            let next_pc = last_inst.opcode + last_inst.size as u16;
+            let next_pc = last_inst.0 + last_inst.1.size as u16;
             let mut next_inst_opcode_index = self.mem8(next_pc) as usize;
-            if last_inst.mnemonic == "PREFIX CB" {
+            if last_inst.1.mnemonic == "PREFIX CB" {
                 next_inst_opcode_index += 0x100;
             }
-            ret.push(INSTRUCTIONS[next_inst_opcode_index]);
-            ret[i].opcode = next_pc;
+            ret.push((next_pc, INSTRUCTIONS[next_inst_opcode_index]));
         }
         ret
     }

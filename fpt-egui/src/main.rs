@@ -389,13 +389,13 @@ impl FPT {
                         let args = self
                             .gb
                             .bus()
-                            .copy_range((i.opcode as usize)..((i.opcode + i.size as u16) as usize))
+                            .copy_range((i.0 as usize)..((i.0 + i.1.size as u16) as usize))
                             .iter()
                             .fold(String::new(), |acc, &b| acc + &format!("{:#02X} ", b))
                             .trim()
                             .to_string();
                         self.debug_console
-                            .push(format!("{:#06X}: {} ({})", i.opcode, i.mnemonic, args));
+                            .push(format!("{:#06X}: {} ({})", i.0, i.1.mnemonic, args));
                     });
                 }
                 self.debug_console_last_cmd
