@@ -3,7 +3,7 @@ use std::fmt;
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use super::memory::Bus;
-use crate::bitwise as bw;
+use crate::{bitwise as bw, memory};
 
 pub mod instructions;
 
@@ -18,7 +18,7 @@ pub struct LR35902 {
     ime: bool,
     imenc: bool,
     mem: Bus,
-    next_cb: bool,
+    prefix_cb: bool,
     clock_cycles: u64,
     inst_cycle_count: u8,
     branch_taken: bool,
@@ -48,12 +48,13 @@ impl LR35902 {
             ime: false,
             imenc: false,
             mem: memory,
-            next_cb: false,
+            prefix_cb: false,
             clock_cycles: 0,
             inst_cycle_count: 0,
             branch_taken: false,
         };
-        cpu.mem.load_bootrom(include_bytes!("../dmg0.bin"));
+        // TODO: should be done elsewhere, separation of concerns yada-yada?
+        cpu.mem.load_bootrom();
         cpu
     }
 
@@ -195,16 +196,13 @@ impl LR35902 {
         self.af = bw::set_bit16::<4>(self.af, value);
     }
 
-    // other
+    // other getters/setters
     pub fn pc(&self) -> u16 {
         self.pc
     }
 
     pub fn set_pc(&mut self, pc: u16) {
         self.pc = pc;
-    }
-    pub fn next_cb(&self) -> bool {
-        self.next_cb
     }
 
     pub fn interrupt_master_enable(&self) -> bool {
@@ -217,10 +215,6 @@ impl LR35902 {
 
     pub fn set_interrupt_master_enable_next_instruction(&mut self) {
         self.imenc = true;
-    }
-
-    pub fn set_next_cb(&mut self, value: bool) {
-        self.next_cb = value;
     }
 
     pub fn clock_cycles(&self) -> u64 {
@@ -247,7 +241,7 @@ impl LR35902 {
         self.inst_cycle_count = inst_cycle_count;
     }
 
-    // helpers
+    // Memory
     pub fn mem8(&self, index: u16) -> u8 {
         self.mem.read(index)
     }
@@ -257,6 +251,7 @@ impl LR35902 {
     }
 
     pub fn set_mem8(&mut self, index: u16, value: u8) {
+        self.register_write_triggers(index, value);
         self.mem.write(index, value);
     }
 
@@ -265,6 +260,13 @@ impl LR35902 {
         self.set_mem8(index, bw::get_byte16::<0>(value));
     }
 
+    fn register_write_triggers(&mut self, index: u16, value: u8) {
+        if index == memory::map::BANK as u16 && value != 0 {
+            self.mem.unload_bootrom();
+        }
+    }
+
+    // Decoding
     /// get 8 bit immediate at position pc + 1 + pos
     fn get_d8(&self, pos: u8) -> u8 {
         self.mem8(self.pc + pos as u16 + 1)
@@ -289,6 +291,7 @@ impl LR35902 {
         self.set_mem8(self.hl(), value);
     }
 
+    // Instruction logic
     fn half_carry8(&self, x: u8, y: u8) -> bool {
         ((x & 0x0f) + (y & 0x0f)) > 0x0f
     }
@@ -542,7 +545,7 @@ impl LR35902 {
 
     fn reti(&mut self) {
         // TODO: The interrupt master enable flag is returned to its pre-interrupt status.
-        // BUT: https://gbdev.io/pandocs/Interrupts.htm claims that RETI is EI followed by RET
+        //  BUT: https://gbdev.io/pandocs/Interrupts.htm claims that RETI is EI followed by RET
         self.set_interrupt_master_enable_next_instruction();
 
         // RET
@@ -558,36 +561,47 @@ impl LR35902 {
         self.set_h_flag(true);
     }
 
-    //pub fn load_rom(&mut self, rom: Vec<u8>) {
-    //    self.mem.bus().load_cartridge(&rom);
-    //}
-
-    //fn load_bootrom(&mut self, bootrom: &[u8; 256]) {
-    //    self.mem.bus().load_bootrom(bootrom);
-    //}
-
-    pub fn decode(&self) -> Instruction {
+    fn decode(&self) -> Instruction {
         let mut opcode = self.mem8(self.pc()) as u16;
-        if self.next_cb() {
+        if self.prefix_cb {
             opcode += 0x100;
         }
         INSTRUCTIONS[opcode as usize]
     }
 
+    pub fn decode_ahead(&self, n: usize) -> Vec<(u16, Instruction)> {
+        let mut ret = Vec::<(u16, Instruction)>::with_capacity(n + 1);
+        ret.push((self.pc(), self.decode()));
+        // TODO: decode can return "PREFIX CB" - not good for the disasm
+        //  if ret[0].mnemonic == "PREFIX CB" {}
+        for i in 1..(n + 1) {
+            let last_inst = ret[i - 1];
+            let next_pc = last_inst.0 + last_inst.1.size as u16;
+            let mut next_inst_opcode_index = self.mem8(next_pc) as usize;
+            if last_inst.1.mnemonic == "PREFIX CB" {
+                next_inst_opcode_index += 0x100;
+            }
+            ret.push((next_pc, INSTRUCTIONS[next_inst_opcode_index]));
+        }
+        ret
+    }
+
     /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
-    pub fn t_cycle(&mut self) {
+    /// Returns a instruction if we actually mutated CPU state, since we only
+    /// execute the instruction itself on its last t-cycle
+    pub fn t_cycle(&mut self) -> Option<Instruction> {
         let instruction = self.decode();
         self.set_inst_cycle_count(self.inst_cycle_count() + 1);
         // Only actually mutate CPU state on the last t-cycle of the instruction
         if self.inst_cycle_count() < instruction.cycles {
-            return;
+            return None;
         }
         if self.imenc {
             self.set_interrupt_master_enable(true);
             self.imenc = false;
         }
-        if self.next_cb() {
-            self.set_next_cb(false);
+        if self.prefix_cb {
+            self.prefix_cb = false;
         }
         self.execute(instruction);
         if !self.branch_taken() {
@@ -601,6 +615,7 @@ impl LR35902 {
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
         self.set_branch_taken(false);
         self.set_inst_cycle_count(0);
+        Some(instruction)
     }
 
     /// Run one complete instruction - NOT a machine cycle (4 t-cycles)
@@ -1551,7 +1566,7 @@ impl LR35902 {
             }
             0xCB => {
                 // PREFIX CB
-                self.set_next_cb(true);
+                self.prefix_cb = true;
             }
             0xCC => {
                 // CALL Z,a16

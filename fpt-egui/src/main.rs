@@ -1,15 +1,15 @@
 #![feature(lazy_cell)]
 #![feature(array_chunks)]
 
-use std::cell::{Ref, RefCell, RefMut};
-use std::rc::Rc;
 use std::time::Duration;
 
 use eframe::Frame;
-use egui::{Align, Color32, Context, Layout, TextureOptions, Ui};
+use egui::{
+    menu, CentralPanel, Color32, ColorImage, Context, Grid, Key, RichText, ScrollArea, SidePanel,
+    TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2, ViewportBuilder, ViewportCommand,
+};
 use fpt::ppu::tile::Tile;
 use fpt::{bitwise, Gameboy};
-use fpt_cli::debugger::Debugger;
 use log::info;
 
 // TODO: the gameboy doesn't run at exactly 60fps
@@ -71,46 +71,57 @@ fn now() -> f64 {
 }
 
 pub struct FPT {
+    gb: Gameboy,
+    cycles_since_last_frame: u32,
+    accum_time: f64,
     egui_frame_count: u64,
     gb_frame_count: u64,
-    accum_time: f64,
 
-    image: egui::ColorImage,
-    texture: Option<egui::TextureHandle>,
-
-    tiles: egui::ColorImage,
-    tiles_texture: Option<egui::TextureHandle>,
-
-    bg_map: egui::ColorImage,
-    bg_map_texture: Option<egui::TextureHandle>,
-
-    gb: Rc<RefCell<Gameboy>>,
-    dbg: Debugger,
     paused: bool,
     slow_factor: f64,
-    cycles_since_last_frame: u32,
-    total_cycles: u64,
+
+    debug_console: Vec<String>,
+    debug_console_cmd: String,
+    debug_console_last_cmd: String,
+    debug_console_was_focused: bool,
+    code: Vec<(u16, String)>,
+
+    image: ColorImage,
+    texture: Option<TextureHandle>,
+
+    tiles: ColorImage,
+    tiles_texture: Option<TextureHandle>,
+
+    bg_map: ColorImage,
+    bg_map_texture: Option<TextureHandle>,
 }
 
 impl Default for FPT {
     fn default() -> Self {
-        let gameboy = Rc::new(RefCell::new(Gameboy::new()));
         Self {
+            gb: Gameboy::new(),
+            cycles_since_last_frame: 0,
+            accum_time: 0.0,
             egui_frame_count: 0,
             gb_frame_count: 0,
-            accum_time: 0.0,
-            image: egui::ColorImage::new([WIDTH, HEIGHT], Color32::TRANSPARENT),
-            texture: None,
-            tiles: egui::ColorImage::new([TV_X_SIZE, TV_Y_SIZE], Color32::TRANSPARENT),
-            tiles_texture: None,
-            bg_map: egui::ColorImage::new([BMV_X_SIZE, BMV_Y_SIZE], Color32::TRANSPARENT),
-            bg_map_texture: None,
-            gb: gameboy.clone(),
-            dbg: Debugger::with_gameboy(gameboy),
+
             paused: false,
             slow_factor: 1.0,
-            cycles_since_last_frame: 0,
-            total_cycles: 0,
+
+            debug_console: vec![],
+            debug_console_cmd: String::new(),
+            debug_console_last_cmd: String::new(),
+            debug_console_was_focused: false,
+            code: Vec::new(),
+
+            image: ColorImage::new([WIDTH, HEIGHT], Color32::TRANSPARENT),
+            texture: None,
+
+            tiles: ColorImage::new([TV_X_SIZE, TV_Y_SIZE], Color32::TRANSPARENT),
+            tiles_texture: None,
+
+            bg_map: ColorImage::new([BMV_X_SIZE, BMV_Y_SIZE], Color32::TRANSPARENT),
+            bg_map_texture: None,
         }
     }
 }
@@ -118,12 +129,12 @@ impl Default for FPT {
 impl FPT {
     /// Called once before the first frame.
     pub fn new(_cc: &eframe::CreationContext) -> Self {
-        let app = FPT::default();
+        let mut app = FPT::default();
         #[cfg(not(target_arch = "wasm32"))]
         if std::env::var("CI").is_err() {
             const ROM_PATH: &str = "roms/Tetris_World_Rev_1.gb";
             if let Ok(rom) = std::fs::read(ROM_PATH) {
-                app.gb.borrow_mut().load_rom(&rom);
+                app.gb.load_rom(&rom);
             } else {
                 panic!("Unable to open {}", ROM_PATH);
             }
@@ -131,23 +142,13 @@ impl FPT {
         app
     }
 
-    /// Gameboy accessor
-    fn gb(&self) -> Ref<'_, Gameboy> {
-        self.gb.borrow()
-    }
-
-    /// Gameboy accessor, mutable edition
-    fn gb_mut(&mut self) -> RefMut<'_, Gameboy> {
-        self.gb.borrow_mut()
-    }
-
     fn top_panel(&mut self, ctx: &Context) {
         #[cfg(not(target_arch = "wasm32"))]
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            egui::menu::bar(ui, |ui| {
+        TopBottomPanel::top("top_panel").show(ctx, |ui| {
+            menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Quit").clicked() {
-                        ctx.send_viewport_cmd(egui::ViewportCommand::Close)
+                        ctx.send_viewport_cmd(ViewportCommand::Close)
                     }
                 });
                 ui.add_space(16.0);
@@ -161,38 +162,53 @@ impl FPT {
         let delta_time = ui.input(|i| i.unstable_dt) as f64;
         self.accum_time += delta_time;
 
-        // if self.slow_factor != 1.0 {
-        let cycles = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
-        self.accum_time -= cycles as f64 * T_CYCLE * self.slow_factor;
-        for _ in 0..cycles {
+        let cycles_want = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
+        let mut cycles_ran = 0;
+        while cycles_ran < cycles_want {
             // TODO: care for double speed mode
-            self.gb_mut().cpu_mut().t_cycle();
-            self.gb_mut().ppu_mut().step(1);
+            let pc = self.gb.cpu().pc();
+            let ran_inst = self.gb.cpu_mut().t_cycle();
+            self.gb.ppu_mut().step(1);
             self.cycles_since_last_frame += 1;
-            if self.cycles_since_last_frame == self.gb().cycles_in_one_frame() {
-                frame = Some(*self.gb().get_frame()); // Copies the whole [u8; WIDTH * HEIGHT] into frame
+            if self.cycles_since_last_frame == self.gb.cycles_in_one_frame() {
+                frame = Some(*self.gb.get_frame()); // Copies the whole [u8; WIDTH * HEIGHT] into frame
                 self.gb_frame_count += 1;
                 self.cycles_since_last_frame = 0;
             }
+            cycles_ran += 1;
+            if let Some(inst) = ran_inst {
+                // TODO: only need to do this formatting work if the instruction actually isn't in the code vec
+                let result: Vec<String> = (1..inst.size)
+                    .map(|i| format!("{:#02X}", self.gb.cpu().mem8(pc + i as u16)))
+                    .collect();
+                let str = format!(
+                    "{:#06X}: {} ({:#02X}{}{})",
+                    pc,
+                    inst.mnemonic,
+                    inst.opcode,
+                    if result.is_empty() { "" } else { " " },
+                    result.join(" ")
+                );
+                // TODO: since this is ran much more often than the rendering code,
+                //  it'd probably be best to have an O(1) insert here and then sort before rendering
+                match self.code.binary_search_by_key(&pc, |&(pc, _)| pc) {
+                    Ok(pos) => {
+                        if str != self.code[pos].1 {
+                            self.code[pos].1 = str
+                        }
+                    }
+                    Err(pos) => self.code.insert(pos, (pc, str)),
+                }
+                // TODO: check breakpoints
+                // TODO: this breaks *after* the instruction has been executed
+            }
         }
-        self.total_cycles += cycles as u64;
+        self.accum_time -= cycles_ran as f64 * T_CYCLE * self.slow_factor;
         if let Some(frame) = frame {
             for (i, &gb_pixel) in frame.iter().enumerate() {
                 self.image.pixels[i] = PALETTE[gb_pixel as usize];
             }
         }
-        // } else if self.accum_time >= SIXTY_FPS_FRAMETIME {
-        //     self.accum_time -= SIXTY_FPS_FRAMETIME;
-        //     self.gb_frame_count += 1;
-        //     self.cycles_since_last_frame = 0;
-        //     self.total_cycles += 70224;
-        //     // Run for a whole frame and decode the resulting picture into our GUI's image
-        //     let mut gb = self.gb.borrow_mut();
-        //     let frame = gb.advance_frame();
-        //     for (i, &gb_pixel) in frame.iter().enumerate() {
-        //         self.image.pixels[i] = PALETTE[gb_pixel as usize];
-        //     }
-        // }
     }
 
     #[allow(dead_code)]
@@ -222,8 +238,8 @@ impl FPT {
     }
 
     #[allow(dead_code)]
-    fn debug_info(&self, ui: &mut Ui) {
-        egui::Grid::new("my_grid").striped(true).show(ui, |ui| {
+    fn timing_info(&self, ui: &mut Ui) {
+        Grid::new("my_grid").striped(true).show(ui, |ui| {
             macro_rules! stat {
                 ($label:literal : $fmt:literal, $value:expr) => {
                     ui.colored_label(Color32::LIGHT_GRAY, $label);
@@ -244,8 +260,7 @@ impl FPT {
     }
 
     fn get_tile(&self, tile_i: usize) -> Tile {
-        let gb = self.gb();
-        let bus = gb.bus();
+        let bus = self.gb.bus();
         let lcdc4 = bitwise::test_bit8::<4>(bus.lcdc());
         let tile_address = 16 * tile_i
             + if lcdc4 || tile_i > 127 {
@@ -256,218 +271,283 @@ impl FPT {
         bus.with_span(tile_address, Tile::load)
     }
 
-    fn debug_panel(&mut self, ui: &mut Ui) {
-        egui::ScrollArea::vertical()
-            .id_source("debug_panel")
+    fn debug_panel(&mut self, ctx: &Context, ui: &mut Ui) {
+        ui.collapsing("VRAM", |ui| {
+            ui.horizontal_wrapped(|ui| self.vram_viewer(ui));
+            ui.horizontal(|ui| self.vram_registers(ui));
+        });
+        ui.horizontal(|ui| {
+            if ui
+                .button(if self.paused { "Continue" } else { "Pause" })
+                .clicked()
+            {
+                self.paused = !self.paused;
+            }
+            ui.horizontal(|ui| {
+                ui.monospace("Slow factor:");
+                ui.radio_value(&mut self.slow_factor, 0.1f64, "0.1");
+                ui.radio_value(&mut self.slow_factor, 1f64, "1");
+                ui.radio_value(&mut self.slow_factor, 10f64, "10");
+                ui.radio_value(&mut self.slow_factor, 1000f64, "1000");
+                ui.radio_value(&mut self.slow_factor, 1e6, "1_000_000");
+            });
+        });
+        ui.horizontal_wrapped(|ui| {
+            macro_rules! cpu_register {
+                ($ui:expr, $high_label:literal : $high_value:expr, $low_label:literal : $low_value:expr) => {
+                    $ui.colored_label(Color32::LIGHT_BLUE, $high_label);
+                    $ui.monospace(format!("{:08b}", $high_value));
+                    $ui.code(format!("{:04X}", bitwise::word16($high_value, $low_value)));
+                    $ui.monospace(format!("{:08b}", $low_value));
+                    $ui.colored_label(Color32::LIGHT_BLUE, $low_label);
+                }
+            }
+            let cpu = self.gb.cpu();
+            ui.vertical(|ui| {
+                Grid::new("cpu_registers_a-e").num_columns(4).min_col_width(10.0).striped(true).show(ui, |ui| {
+                    ui.colored_label(Color32::LIGHT_BLUE, "A");
+                    ui.monospace(format!("{:08b}", cpu.a()));
+                    ui.code(format!("{:#04X}", cpu.a()));
+                    ui.end_row();
+                    cpu_register!(ui, "B": cpu.b(), "C": cpu.c()); ui.end_row();
+                    cpu_register!(ui, "D": cpu.d(), "E": cpu.e()); ui.end_row();
+                    cpu_register!(ui, "H": cpu.a(), "L": cpu.f()); ui.end_row();
+                });
+            });
+            ui.separator();
+            ui.vertical(|ui| {
+                Grid::new("flags").num_columns(1).min_col_width(10.0).striped(true).show(ui, |ui| {
+                    ui.colored_label(Color32::LIGHT_BLUE, "Z");
+                    ui.code(if cpu.z_flag() { "1" } else { "0" });
+                    ui.colored_label(Color32::LIGHT_BLUE, "N");
+                    ui.code(if cpu.n_flag() { "1" } else { "0" });
+                    ui.end_row();
+                    ui.colored_label(Color32::LIGHT_BLUE, "H");
+                    ui.code(if cpu.h_flag() { "1" } else { "0" });
+                    ui.colored_label(Color32::LIGHT_BLUE, "C");
+                    ui.code(if cpu.c_flag() { "1" } else { "0" });
+                });
+                ui.horizontal(|ui| {
+                    ui.colored_label(Color32::LIGHT_BLUE, "SP");
+                    ui.code(format!("{:#06X}", cpu.sp()));
+                });
+                ui.horizontal(|ui| {
+                    ui.colored_label(Color32::LIGHT_BLUE, "PC");
+                    ui.code(format!("{:#06X}", cpu.pc()));
+                });
+            });
+        });
+        // TODO: scroll into line of current pc (need to find index)
+        ui.collapsing("Code", |ui| {
+            ScrollArea::vertical().show_rows(
+                ui,
+                ui.text_style_height(&egui::TextStyle::Body),
+                self.code.len(),
+                |ui, row_range| {
+                    for row in row_range {
+                        ui.label(RichText::new(self.code[row].1.clone()).monospace());
+                    }
+                },
+            );
+        });
+        ui.collapsing("Console", |ui| {
+            ScrollArea::vertical()
+                .auto_shrink(false)
+                .stick_to_bottom(true)
+                // TODO: dirty hack to make the console input always stick to the bottom
+                .max_height(ui.available_rect_before_wrap().height() - 24.0)
+                .show_rows(
+                    ui,
+                    ui.text_style_height(&egui::TextStyle::Body),
+                    self.debug_console.len(),
+                    |ui, row_range| {
+                        for row in row_range {
+                            ui.label(RichText::new(self.debug_console[row].clone()).monospace());
+                        }
+                    },
+                );
+            let edit = egui::TextEdit::multiline(&mut self.debug_console_cmd)
+                .desired_rows(1)
+                .font(egui::TextStyle::Monospace)
+                .desired_width(f32::INFINITY);
+            let response = ui.add(edit);
+            if self.debug_console_was_focused {
+                response.request_focus();
+                self.debug_console_was_focused = false;
+            }
+            if response.has_focus() && ctx.input(|i| i.key_pressed(Key::Enter)) {
+                self.debug_console_was_focused = true;
+                self.debug_console_cmd = self.debug_console_cmd.trim().to_string();
+                if self.debug_console_cmd.is_empty() {
+                    self.debug_console_cmd
+                        .clone_from(&self.debug_console_last_cmd);
+                }
+                self.debug_console
+                    .push(format!("> {}", self.debug_console_cmd));
+                if self.debug_console_cmd == "d" {
+                    self.gb.cpu().decode_ahead(5).iter().for_each(|(pc, inst)| {
+                        let args = self
+                            .gb
+                            .bus()
+                            .copy_range((*pc as usize)..((pc + inst.size as u16) as usize))
+                            .iter()
+                            .fold(String::new(), |acc, &b| acc + &format!("{:#02X} ", b))
+                            .trim()
+                            .to_string();
+                        self.debug_console
+                            .push(format!("{:#06X}: {} ({})", pc, inst.mnemonic, args));
+                    });
+                }
+                self.debug_console_last_cmd
+                    .clone_from(&self.debug_console_cmd);
+                self.debug_console_cmd = String::new();
+            }
+        });
+    }
+
+    fn vram_registers(&mut self, ui: &mut Ui) {
+        let bus = self.gb.bus();
+        Grid::new("VRAM-registers-parent")
+            .striped(true)
             .show(ui, |ui| {
-                ui.heading("VRAM");
-                ui.separator();
-                ui.horizontal_wrapped(|ui| {
-                    for tile_i in 0..fpt::ppu::tile::NUM_TILES {
-                        let tile = self.get_tile(tile_i);
-                        for y in 0..TILE_SIZE {
-                            let yy = y
-                                + (tile_i / TV_COLS + 1) * TV_BORDER_SIZE
-                                + (tile_i / TV_COLS) * TILE_SIZE;
-                            for x in 0..TILE_SIZE {
-                                let pixel = tile.get_pixel(y, x);
-                                let xx = x
-                                    + (tile_i % TV_COLS + 1) * TV_BORDER_SIZE
-                                    + (tile_i % TV_COLS) * TILE_SIZE;
-                                self.tiles[(xx, yy)] = PALETTE[pixel as usize];
-                            }
-                        }
-                    }
-                    for b in 0..TV_NUM_HBORDERS {
-                        for y in 0..TV_BORDER_SIZE {
-                            for x in 0..TV_X_SIZE {
-                                self.tiles[(x, y + b * (TILE_SIZE + TV_BORDER_SIZE))] = GREY;
-                            }
-                        }
-                    }
-                    for b in 0..TV_NUM_VBORDERS {
-                        for x in 0..TV_BORDER_SIZE {
-                            for y in 0..TV_Y_SIZE {
-                                self.tiles[(x + b * (TILE_SIZE + TV_BORDER_SIZE), y)] = GREY;
-                            }
-                        }
-                    }
-                    let texture: &mut egui::TextureHandle =
-                        self.tiles_texture.get_or_insert_with(|| {
-                            ui.ctx().load_texture(
-                                "tile_viewer",
-                                self.tiles.clone(),
-                                TextureOptions::NEAREST,
-                            )
-                        });
-                    texture.set(self.tiles.clone(), TextureOptions::NEAREST);
-                    ui.vertical(|ui| {
-                        ui.label("Tile data");
-                        ui.image((texture.id(), TV_TEXTURE_SCALE * texture.size_vec2()));
-                    });
-
-                    let lcdc = self.gb().bus().lcdc();
-                    let bg_map_area = match bitwise::test_bit8::<3>(lcdc) {
-                        false => 0x9800..0x9C00,
-                        true => 0x9C00..0xA000
-                    };
-                    let bg_map_iter = bg_map_area.map(|addr| self.gb.borrow().bus().read(addr));
-
-                    for (i, tile_i) in bg_map_iter.enumerate() {
-                        let tile = self.get_tile(tile_i as usize);
-                        for y in 0..TILE_SIZE {
-                            let yy = y + (i / BMV_TILES_PER) * TILE_SIZE + BMV_BORDER_SIZE;
-                            for x in 0..TILE_SIZE {
-                                let pixel = tile.get_pixel(y, x);
-                                let xx = x + (i % BMV_TILES_PER) * TILE_SIZE + BMV_BORDER_SIZE;
-                                self.bg_map[(xx, yy)] = PALETTE[pixel as usize];
-                            }
-                        }
-                    }
-                    // clear edges of bg_map viewer
-                    for x in 0..BMV_X_SIZE {
-                        self.bg_map[(x, 0)] = Color32::TRANSPARENT;
-                        self.bg_map[(x, BMV_Y_SIZE - 1)] = Color32::TRANSPARENT;
-                    }
-                    for y in 0..BMV_Y_SIZE {
-                        self.bg_map[(0, y)] = Color32::TRANSPARENT;
-                        self.bg_map[(BMV_X_SIZE - 1, y)] = Color32::TRANSPARENT;
-                    }
-                    let top = self.gb().bus().scy() as usize;
-                    let left = self.gb().bus().scx() as usize;
-                    let bottom = ((self.gb().bus().scy() as u16 + 143u16) % 256u16) as usize;
-                    let right = ((self.gb().bus().scx() as u16 + 159u16) % 256u16) as usize;
-                    let btop = top;
-                    let bleft = left;
-                    let bbottom = bottom + 2 * BMV_BORDER_SIZE;
-                    let bright = right + 2 * BMV_BORDER_SIZE;
-                    for x in bleft..(bright + 1) {
-                        self.bg_map[(x, btop)] = GREY;
-                        self.bg_map[(x, bbottom)] = GREY;
-                    }
-                    for y in btop..(bbottom + 1) {
-                        self.bg_map[(bleft, y)] = GREY;
-                        self.bg_map[(bright, y)] = GREY;
-                    }
-                    let texture: &mut egui::TextureHandle =
-                        self.bg_map_texture.get_or_insert_with(|| {
-                            ui.ctx().load_texture(
-                                "bg_map_viewer",
-                                self.bg_map.clone(),
-                                TextureOptions::NEAREST,
-                            )
-                        });
-                    texture.set(self.bg_map.clone(), TextureOptions::NEAREST);
-                    ui.vertical(|ui| {
-                        ui.label("BG Map");
-                        ui.image((texture.id(), BMV_TEXTURE_SCALE * texture.size_vec2()));
-                    });
-                });
-                ui.collapsing("Registers", |ui| {
-                    ui.horizontal(|ui| {
-                        let gb = self.gb();
-                        let bus = gb.bus();
-                        egui::Grid::new("VRAM-registers-1").striped(true).show(ui, |ui| {
-                            ui.monospace("LCDC");
-                            ui.monospace(format!("{:08b}", bus.lcdc()));
-                            ui.end_row();
-                            ui.monospace("STAT");
-                            ui.monospace(format!("{:08b}", bus.stat()));
-                            ui.end_row();
-                        });
-                        ui.separator();
-                        egui::Grid::new("VRAM-registers-2").striped(true).show(ui, |ui| {
-                            ui.monospace("LY");
-                            ui.monospace(format!("{:08b}", bus.ly()));
-                            ui.end_row();
-                            ui.monospace("LYC");
-                            ui.monospace(format!("{:08b}", bus.lyc()));
-                            ui.end_row();
-                        });
-                        ui.separator();
-                        egui::Grid::new("VRAM-registers-3").striped(true).show(ui, |ui| {
-                            ui.monospace("SCX");
-                            ui.monospace(format!("{:08b}", bus.scx()));
-                            ui.end_row();
-                            ui.monospace("SCY");
-                            ui.monospace(format!("{:08b}", bus.scy()));
-                            ui.end_row();
-                        });
-                    });
-                });
-                ui.add_space(20.0);
-                ui.heading("CPU");
-                ui.separator();
-                ui.horizontal_wrapped(|ui| {
-                    macro_rules! cpu_register {
-                        ($ui:expr, $high_label:literal : $high_value:expr, $low_label:literal : $low_value:expr) => {
-                            $ui.colored_label(Color32::LIGHT_BLUE, $high_label);
-                            $ui.monospace(format!("{:08b}", $high_value));
-                            $ui.code(format!("{:04X}", bitwise::word16($high_value, $low_value)));
-                            $ui.monospace(format!("{:08b}", $low_value));
-                            $ui.colored_label(Color32::LIGHT_BLUE, $low_label);
-                        }
-                    }
-                    let gb = self.gb();
-                    let cpu = gb.cpu();
-                    egui::Grid::new("cpu_registers_a-e").num_columns(4).min_col_width(10.0).striped(true).show(ui, |ui| {
-                        cpu_register!(ui, "A": cpu.a(), "F": cpu.f()); ui.end_row();
-                        cpu_register!(ui, "B": cpu.b(), "C": cpu.c()); ui.end_row();
-                        cpu_register!(ui, "D": cpu.d(), "E": cpu.e()); ui.end_row();
+                ui.horizontal(|ui| {
+                    Grid::new("VRAM-registers-1").striped(true).show(ui, |ui| {
+                        ui.monospace("LCDC");
+                        ui.monospace(format!("{:08b}", bus.lcdc()));
+                        ui.end_row();
+                        ui.monospace("STAT");
+                        ui.monospace(format!("{:08b}", bus.stat()));
+                        ui.end_row();
                     });
                     ui.separator();
-                    ui.vertical(|ui| {
-                        ui.horizontal(|ui| {
-                            cpu_register!(ui, "H": cpu.h(), "L": cpu.l());
-                        });
-                        ui.horizontal(|ui| {
-                            ui.colored_label(Color32::LIGHT_BLUE, "SP");
-                            ui.monospace(format!("{:016b}", cpu.sp()));
-                            ui.code(format!("{:#04X}", cpu.sp()));
-                        });
-                        ui.horizontal(|ui| {
-                            ui.colored_label(Color32::LIGHT_BLUE, "PC");
-                            ui.monospace(format!("{:016b}", cpu.pc()));
-                            ui.code(format!("{:#04X}", cpu.pc()));
-                        });
-                    });
                 });
-                ui.add_space(20.0);
-                ui.heading("Debugger:");
-                ui.separator();
                 ui.horizontal(|ui| {
-                    if ui.button(if self.paused { "Continue" } else { "Pause" }).clicked() {
-                        self.paused = !self.paused;
-                    }
-                    ui.horizontal(|ui| {
-                        ui.monospace("Slow factor:");
-                        ui.add(egui::DragValue::new(&mut self.slow_factor).clamp_range(1..=1000).speed(0.5));
+                    Grid::new("VRAM-registers-2").striped(true).show(ui, |ui| {
+                        ui.monospace("LY");
+                        ui.monospace(format!("{:08b}", bus.ly()));
+                        ui.end_row();
+                        ui.monospace("LYC");
+                        ui.monospace(format!("{:08b}", bus.lyc()));
+                        ui.end_row();
                     });
-                    ui.with_layout(Layout::right_to_left(Align::Max), |ui| {
-                        ui.monospace(self.dbg.pc().to_string());
-                        ui.label("PC: ");
-                        ui.separator();
+                    ui.separator();
+                });
+                ui.horizontal(|ui| {
+                    Grid::new("VRAM-registers-3").striped(true).show(ui, |ui| {
+                        ui.monospace("SCX");
+                        ui.monospace(format!("{:08b}", bus.scx()));
+                        ui.end_row();
+                        ui.monospace("SCY");
+                        ui.monospace(format!("{:08b}", bus.scy()));
+                        ui.end_row();
                     });
                 });
-                let breakpoints_string = self.dbg.list_breakpoints();
-                if breakpoints_string.is_empty() {
-                    ui.centered_and_justified(|ui| ui.label("No breakpoints (WIP)"));
-                } else {
-                    ui.monospace(breakpoints_string);
-                }
             });
     }
 
+    fn vram_viewer(&mut self, ui: &mut Ui) {
+        for tile_i in 0..fpt::ppu::tile::NUM_TILES {
+            let tile = self.get_tile(tile_i);
+            for y in 0..TILE_SIZE {
+                let yy =
+                    y + (tile_i / TV_COLS + 1) * TV_BORDER_SIZE + (tile_i / TV_COLS) * TILE_SIZE;
+                for x in 0..TILE_SIZE {
+                    let pixel = tile.get_pixel(y, x);
+                    let xx = x
+                        + (tile_i % TV_COLS + 1) * TV_BORDER_SIZE
+                        + (tile_i % TV_COLS) * TILE_SIZE;
+                    self.tiles[(xx, yy)] = PALETTE[pixel as usize];
+                }
+            }
+        }
+        for b in 0..TV_NUM_HBORDERS {
+            for y in 0..TV_BORDER_SIZE {
+                for x in 0..TV_X_SIZE {
+                    self.tiles[(x, y + b * (TILE_SIZE + TV_BORDER_SIZE))] = GREY;
+                }
+            }
+        }
+        for b in 0..TV_NUM_VBORDERS {
+            for x in 0..TV_BORDER_SIZE {
+                for y in 0..TV_Y_SIZE {
+                    self.tiles[(x + b * (TILE_SIZE + TV_BORDER_SIZE), y)] = GREY;
+                }
+            }
+        }
+        let texture: &mut TextureHandle = self.tiles_texture.get_or_insert_with(|| {
+            ui.ctx()
+                .load_texture("tile_viewer", self.tiles.clone(), TextureOptions::NEAREST)
+        });
+        texture.set(self.tiles.clone(), TextureOptions::NEAREST);
+        ui.vertical(|ui| {
+            ui.label("Tile data");
+            ui.image((texture.id(), TV_TEXTURE_SCALE * texture.size_vec2()));
+        });
+
+        let lcdc = self.gb.bus().lcdc();
+        let bg_map_area = match bitwise::test_bit8::<3>(lcdc) {
+            false => 0x9800..0x9C00,
+            true => 0x9C00..0xA000,
+        };
+        let bg_map_iter = bg_map_area.map(|addr| self.gb.bus().read(addr));
+
+        for (i, tile_i) in bg_map_iter.enumerate() {
+            let tile = self.get_tile(tile_i as usize);
+            for y in 0..TILE_SIZE {
+                let yy = y + (i / BMV_TILES_PER) * TILE_SIZE + BMV_BORDER_SIZE;
+                for x in 0..TILE_SIZE {
+                    let pixel = tile.get_pixel(y, x);
+                    let xx = x + (i % BMV_TILES_PER) * TILE_SIZE + BMV_BORDER_SIZE;
+                    self.bg_map[(xx, yy)] = PALETTE[pixel as usize];
+                }
+            }
+        }
+        // clear edges of bg_map viewer
+        for x in 0..BMV_X_SIZE {
+            self.bg_map[(x, 0)] = Color32::TRANSPARENT;
+            self.bg_map[(x, BMV_Y_SIZE - 1)] = Color32::TRANSPARENT;
+        }
+        for y in 0..BMV_Y_SIZE {
+            self.bg_map[(0, y)] = Color32::TRANSPARENT;
+            self.bg_map[(BMV_X_SIZE - 1, y)] = Color32::TRANSPARENT;
+        }
+        let top = self.gb.bus().scy() as usize;
+        let left = self.gb.bus().scx() as usize;
+        let bottom = ((self.gb.bus().scy() as u16 + 143u16) % 256u16) as usize;
+        let right = ((self.gb.bus().scx() as u16 + 159u16) % 256u16) as usize;
+        let btop = top;
+        let bleft = left;
+        let bbottom = bottom + 2 * BMV_BORDER_SIZE;
+        let bright = right + 2 * BMV_BORDER_SIZE;
+        for x in bleft..(bright + 1) {
+            self.bg_map[(x, btop)] = GREY;
+            self.bg_map[(x, bbottom)] = GREY;
+        }
+        for y in btop..(bbottom + 1) {
+            self.bg_map[(bleft, y)] = GREY;
+            self.bg_map[(bright, y)] = GREY;
+        }
+        let texture: &mut TextureHandle = self.bg_map_texture.get_or_insert_with(|| {
+            ui.ctx().load_texture(
+                "bg_map_viewer",
+                self.bg_map.clone(),
+                TextureOptions::NEAREST,
+            )
+        });
+        texture.set(self.bg_map.clone(), TextureOptions::NEAREST);
+        ui.vertical(|ui| {
+            ui.label("BG Map");
+            ui.image((texture.id(), BMV_TEXTURE_SCALE * texture.size_vec2()));
+        });
+    }
+
     fn central_panel(&mut self, ctx: &Context, ui: &mut Ui) {
-        // Emulator + screen
-        // let frame_start = now();
-        // let gb_frame_count_before = self.gb_frame_count;
         if !self.paused {
             self.emulator(ui);
         }
         // TODO repeated work in 1st repaint
         // TODO: should be in new?
-        let texture: &mut egui::TextureHandle = self.texture.get_or_insert_with(|| {
+        let texture: &mut TextureHandle = self.texture.get_or_insert_with(|| {
             ui.ctx()
                 .load_texture("my-image", self.image.clone(), TextureOptions::NEAREST)
         });
@@ -482,15 +562,14 @@ impl FPT {
 impl eframe::App for FPT {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
         self.top_panel(ctx);
-        egui::SidePanel::right("right_panel")
+        SidePanel::right("right_panel")
             .resizable(true)
-            .default_width(350.0)
             .show(ctx, |ui| {
-                self.debug_info(ui);
-                self.debug_panel(ui);
+                // self.timing_info(ui);
+                self.debug_panel(ctx, ui);
             });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        CentralPanel::default().show(ctx, |ui| {
             self.central_panel(ctx, ui);
         });
     }
@@ -502,8 +581,8 @@ fn main() -> eframe::Result<()> {
     env_logger::init();
 
     let native_options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder {
-            inner_size: Some(egui::Vec2::new(950.0, 700.0)),
+        viewport: ViewportBuilder {
+            inner_size: Some(Vec2::new(950.0, 700.0)),
             ..Default::default()
         },
         ..Default::default()
