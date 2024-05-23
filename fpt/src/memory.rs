@@ -296,17 +296,17 @@ impl Bus {
         self.memory_mut().mem[range.start..range.end].to_vec()
     }
 
-    pub fn with_slice<T>(&self, range: MemoryRange, consumer: impl FnOnce(&[u8]) -> T) -> T {
-        consumer(&self.memory().mem[range])
+    pub fn with_slice<T>(&self, range: MemoryRange, reader: impl FnOnce(&[u8]) -> T) -> T {
+        reader(&self.memory().mem[range])
     }
 
-    /// Runs closure `consumer` with access to a fixed-size slice of `N` bytes.
+    /// Runs closure `reader` with access to a fixed-size slice of `N` bytes.
     pub fn with_span<const N: usize, T>(
         &self,
         start: Address,
-        consumer: impl FnOnce(&[u8; N]) -> T,
+        reader: impl FnOnce(&[u8; N]) -> T,
     ) -> T {
-        consumer(self.memory().array_ref(start))
+        reader(self.memory().array_ref(start))
     }
 
     pub fn each_byte(&self) -> std::iter::Enumerate<std::array::IntoIter<u8, 65536>> {
@@ -362,7 +362,7 @@ impl Bus {
         self._write(map::LYC, value)
     }
 
-    pub fn vram(&self) -> Vec<u8> {
-        self.memory_mut().mem[map::VRAM].to_vec()
+    pub fn with_vram<R>(&self, reader: impl FnOnce(&[u8]) -> R) -> R {
+        reader(&self.memory().mem[map::VRAM])
     }
 }
