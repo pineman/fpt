@@ -589,13 +589,14 @@ impl LR35902 {
     /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
     /// Returns a instruction if we actually mutated CPU state, since we only
     /// execute the instruction itself on its last t-cycle
-    pub fn t_cycle(&mut self) -> Option<Instruction> {
-        let instruction = self.decode();
+    pub fn t_cycle(&mut self) {
+        let inst = self.decode();
         self.set_inst_cycle_count(self.inst_cycle_count() + 1);
         // Only actually mutate CPU state on the last t-cycle of the instruction
-        if self.inst_cycle_count() < instruction.cycles {
-            return None;
+        if self.inst_cycle_count() < inst.cycles {
+            return;
         }
+        self.update_code(inst);
         if self.imenc {
             self.set_interrupt_master_enable(true);
             self.imenc = false;
@@ -603,19 +604,36 @@ impl LR35902 {
         if self.prefix_cb {
             self.prefix_cb = false;
         }
-        self.execute(instruction);
+        self.execute(inst);
         if !self.branch_taken() {
-            self.set_pc(self.pc() + instruction.size as u16);
+            self.set_pc(self.pc() + inst.size as u16);
         }
-        let cycles = if instruction.kind == InstructionKind::Jump && !self.branch_taken() {
-            instruction.cycles_not_taken
+        let cycles = if inst.kind == InstructionKind::Jump && !self.branch_taken() {
+            inst.cycles_not_taken
         } else {
-            instruction.cycles
+            inst.cycles
         };
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
         self.set_branch_taken(false);
         self.set_inst_cycle_count(0);
-        Some(instruction)
+    }
+
+    fn update_code(&mut self, inst: Instruction) {
+        if self.mem.memory().code()[self.pc() as usize].is_some() {
+            return;
+        }
+        let result: Vec<String> = (1..inst.size)
+            .map(|i| format!("{:#02X}", self.mem8(self.pc() + i as u16)))
+            .collect();
+        let str = format!(
+            "{:#06X}: {} ({:#02X}{}{})",
+            self.pc(),
+            inst.mnemonic,
+            inst.opcode,
+            if result.is_empty() { "" } else { " " },
+            result.join(" ")
+        );
+        self.mem.memory_mut().set_code(self.pc() as usize, str);
     }
 
     /// Run one complete instruction - NOT a machine cycle (4 t-cycles)
