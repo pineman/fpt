@@ -84,7 +84,6 @@ pub struct FPT {
     debug_console_cmd: String,
     debug_console_last_cmd: String,
     debug_console_was_focused: bool,
-    code: Vec<(u16, String)>,
 
     image: ColorImage,
     texture: Option<TextureHandle>,
@@ -112,7 +111,6 @@ impl Default for FPT {
             debug_console_cmd: String::new(),
             debug_console_last_cmd: String::new(),
             debug_console_was_focused: false,
-            code: Vec::new(),
 
             image: ColorImage::new([WIDTH, HEIGHT], Color32::TRANSPARENT),
             texture: None,
@@ -166,8 +164,7 @@ impl FPT {
         let mut cycles_ran = 0;
         while cycles_ran < cycles_want {
             // TODO: care for double speed mode
-            let pc = self.gb.cpu().pc();
-            let ran_inst = self.gb.cpu_mut().t_cycle();
+            self.gb.cpu_mut().t_cycle();
             self.gb.ppu_mut().step(1);
             self.cycles_since_last_frame += 1;
             if self.cycles_since_last_frame == self.gb.cycles_in_one_frame() {
@@ -176,32 +173,10 @@ impl FPT {
                 self.cycles_since_last_frame = 0;
             }
             cycles_ran += 1;
-            if let Some(inst) = ran_inst {
-                // TODO: only need to do this formatting work if the instruction actually isn't in the code vec
-                let result: Vec<String> = (1..inst.size)
-                    .map(|i| format!("{:#02X}", self.gb.cpu().mem8(pc + i as u16)))
-                    .collect();
-                let str = format!(
-                    "{:#06X}: {} ({:#02X}{}{})",
-                    pc,
-                    inst.mnemonic,
-                    inst.opcode,
-                    if result.is_empty() { "" } else { " " },
-                    result.join(" ")
-                );
-                // TODO: since this is ran much more often than the rendering code,
-                //  it'd probably be best to have an O(1) insert here and then sort before rendering
-                match self.code.binary_search_by_key(&pc, |&(pc, _)| pc) {
-                    Ok(pos) => {
-                        if str != self.code[pos].1 {
-                            self.code[pos].1 = str
-                        }
-                    }
-                    Err(pos) => self.code.insert(pos, (pc, str)),
-                }
-                // TODO: check breakpoints
-                // TODO: this breaks *after* the instruction has been executed
-            }
+            // if let Some(inst) = ran_inst {
+            //     // TODO: check breakpoints
+            //     // TODO: this breaks *after* the instruction has been executed
+            // }
         }
         self.accum_time -= cycles_ran as f64 * T_CYCLE * self.slow_factor;
         if let Some(frame) = frame {
@@ -339,13 +314,15 @@ impl FPT {
         });
         // TODO: scroll into line of current pc (need to find index)
         ui.collapsing("Code", |ui| {
+            let mem = self.gb.bus().memory();
+            let code_flat: Vec<&String> = mem.code().iter().flatten().collect();
             ScrollArea::vertical().show_rows(
                 ui,
                 ui.text_style_height(&egui::TextStyle::Body),
-                self.code.len(),
+                code_flat.len(),
                 |ui, row_range| {
                     for row in row_range {
-                        ui.label(RichText::new(self.code[row].1.clone()).monospace());
+                        ui.label(RichText::new(code_flat[row].clone()).monospace());
                     }
                 },
             );
