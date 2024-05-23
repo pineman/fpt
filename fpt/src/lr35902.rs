@@ -596,7 +596,7 @@ impl LR35902 {
         if self.inst_cycle_count() < inst.cycles {
             return;
         }
-        self.update_code(inst);
+        self.update_code_listing(inst);
         if self.imenc {
             self.set_interrupt_master_enable(true);
             self.imenc = false;
@@ -618,8 +618,8 @@ impl LR35902 {
         self.set_inst_cycle_count(0);
     }
 
-    fn update_code(&mut self, inst: Instruction) {
-        if self.mem.memory().code()[self.pc() as usize].is_some() {
+    fn update_code_listing(&mut self, inst: Instruction) {
+        if self.mem.memory().code_listing()[self.pc() as usize].is_some() {
             return;
         }
         let result: Vec<String> = (1..inst.size)
@@ -633,7 +633,7 @@ impl LR35902 {
             if result.is_empty() { "" } else { " " },
             result.join(" ")
         );
-        self.mem.memory_mut().set_code(self.pc() as usize, str);
+        self.mem.memory_mut().set_code_listing_at(self.pc(), str);
     }
 
     /// Run one complete instruction - NOT a machine cycle (4 t-cycles)
