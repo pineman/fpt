@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -euo pipefail
 REPO=$(git rev-parse --show-toplevel)
 cp "$REPO/bin/pre-commit" "$(git rev-parse --git-path hooks)/pre-commit"
 chmod +x "$(git rev-parse --git-path hooks)/pre-commit"
