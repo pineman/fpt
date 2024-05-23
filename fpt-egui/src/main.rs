@@ -313,9 +313,10 @@ impl FPT {
             });
         });
         // TODO: scroll into line of current pc (need to find index)
+        // TODO: differentiate current pc
         ui.collapsing("Code", |ui| {
             let mem = self.gb.bus().memory();
-            let code_flat: Vec<&String> = mem.code().iter().flatten().collect();
+            let code_flat: Vec<&String> = mem.code_listing().iter().flatten().collect();
             ScrollArea::vertical().show_rows(
                 ui,
                 ui.text_style_height(&egui::TextStyle::Body),
