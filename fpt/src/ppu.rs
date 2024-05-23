@@ -77,7 +77,7 @@ impl Ppu {
 
     fn oam_scan(&mut self) {
         if self.dots_this_frame % 456 == (80 - 1) {
-            self.tilemap = VRamContents::load(&self.bus.vram());
+            self.tilemap = self.bus.with_vram(VRamContents::load);
             self.set_mode(Mode::PixelTransfer);
         }
     }
