@@ -263,8 +263,8 @@ impl FPT {
                 ui.radio_value(&mut self.slow_factor, 0.1f64, "0.1");
                 ui.radio_value(&mut self.slow_factor, 1f64, "1");
                 ui.radio_value(&mut self.slow_factor, 10f64, "10");
-                ui.radio_value(&mut self.slow_factor, 1000f64, "1000");
-                ui.radio_value(&mut self.slow_factor, 1e6, "1_000_000");
+                ui.radio_value(&mut self.slow_factor, 100_000f64, "100_000");
+                ui.radio_value(&mut self.slow_factor, 1_000_000f64, "1_000_000");
             });
         });
         ui.horizontal_wrapped(|ui| {
