@@ -204,6 +204,7 @@ pub struct Memory {
     mem: [u8; 65536],
     cartridge: Vec<u8>,
     bootrom: &'static [u8; 256],
+    code_listing: [Option<String>; 0xffff + 1],
 }
 
 impl PartialEq for Memory {
@@ -220,10 +221,12 @@ impl Default for Memory {
 
 impl Memory {
     pub fn new() -> Self {
+        const ARRAY_REPEAT_VALUE: Option<String> = None;
         Self {
             mem: [0; 65536],
             cartridge: Vec::new(),
             bootrom: include_bytes!("../dmg0.bin"),
+            code_listing: [ARRAY_REPEAT_VALUE; 0xffff + 1],
         }
     }
 
@@ -237,6 +240,14 @@ impl Memory {
 
     pub fn slice_mut(&mut self, range: MemoryRange) -> &mut [u8] {
         &mut self.mem[range]
+    }
+
+    pub fn code_listing(&self) -> &[Option<String>; 0xffff + 1] {
+        &self.code_listing
+    }
+
+    pub fn set_code_listing_at(&mut self, pc: u16, v: String) {
+        self.code_listing[pc as usize] = Some(v);
     }
 }
 
@@ -260,11 +271,15 @@ impl Bus {
     pub fn load_bootrom(&mut self) {
         let bootrom = self.memory().bootrom;
         self.clone_from_slice(map::BOOTROM, bootrom);
+        self.memory_mut().code_listing[map::BOOTROM].fill(None)
     }
 
     pub fn unload_bootrom(&mut self) {
-        let cartridge = self.memory_mut().cartridge[0x0000..0x0100].to_vec();
+        let cartridge = self.memory_mut().cartridge[map::BOOTROM].to_vec();
         self.clone_from_slice(map::BOOTROM, &cartridge);
+        for i in map::BOOTROM {
+            self.memory_mut().code_listing[i] = None;
+        }
     }
 
     pub fn load_cartridge(&mut self, cartridge: &[u8]) {
