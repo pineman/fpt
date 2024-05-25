@@ -271,9 +271,7 @@ impl Bus {
     pub fn load_bootrom(&mut self) {
         let bootrom = self.memory().bootrom;
         self.clone_from_slice(map::BOOTROM, bootrom);
-        for i in map::BOOTROM {
-            self.memory_mut().code_listing[i] = None;
-        }
+        self.memory_mut().code_listing[map::BOOTROM].fill(None)
     }
 
     pub fn unload_bootrom(&mut self) {
