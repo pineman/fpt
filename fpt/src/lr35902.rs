@@ -260,6 +260,10 @@ impl LR35902 {
         self.inst_cycle_count = inst_cycle_count;
     }
 
+    pub fn prefix_cb(&self) -> bool {
+        self.prefix_cb
+    }
+
     // Memory
     pub fn mem8(&self, index: u16) -> u8 {
         self.mem.read(index)
