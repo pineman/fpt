@@ -1,0 +1,15 @@
+[package]
+name = "fpt-cli"
+version = "0.1.0"
+edition = "2021"
+default-run = "main"
+
+[dependencies]
+clap = { version = "4.4.6", features = ["derive"] }
+fpt = { path = "../fpt" }
+rustyline = "13.0.0"
+hlua = { version = "0.4.1" }
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
