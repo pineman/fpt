@@ -201,10 +201,10 @@ pub mod map {
 
 #[derive(Clone)]
 pub struct Memory {
-    mem: [u8; 65536],
+    mem: Vec<u8>,
     cartridge: Vec<u8>,
     bootrom: &'static [u8; 256],
-    code_listing: [Option<String>; 0xffff + 1],
+    code_listing: Vec<Option<String>>,
 }
 
 impl PartialEq for Memory {
@@ -223,10 +223,10 @@ impl Memory {
     pub fn new() -> Self {
         const ARRAY_REPEAT_VALUE: Option<String> = None;
         Self {
-            mem: [0; 65536],
+            mem: vec![0; 65536],
             cartridge: Vec::new(),
             bootrom: include_bytes!("../dmg0.bin"),
-            code_listing: [ARRAY_REPEAT_VALUE; 0xffff + 1],
+            code_listing: vec![ARRAY_REPEAT_VALUE; 0xffff + 1],
         }
     }
 
@@ -242,7 +242,7 @@ impl Memory {
         &mut self.mem[range]
     }
 
-    pub fn code_listing(&self) -> &[Option<String>; 0xffff + 1] {
+    pub fn code_listing(&self) -> &[Option<String>] {
         &self.code_listing
     }
 
@@ -322,10 +322,6 @@ impl Bus {
         reader: impl FnOnce(&[u8; N]) -> T,
     ) -> T {
         reader(self.memory().array_ref(start))
-    }
-
-    pub fn each_byte(&self) -> std::iter::Enumerate<std::array::IntoIter<u8, 65536>> {
-        self.memory_mut().mem.into_iter().enumerate()
     }
 
     // registers
