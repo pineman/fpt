@@ -1726,7 +1726,7 @@ impl LR35902 {
             }
             0xE9 => {
                 // JP (HL)
-                self.jump(self.get_d16(0));
+                self.jump(self.hl());
             }
             0xEA => {
                 // LD (a16),A
