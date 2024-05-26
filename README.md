@@ -25,7 +25,7 @@ RUSTFLAGS='--cfg=web_sys_unstable_apis' trunk serve
 
 - [the best table - gbdev](https://gbdev.io/gb-opcodes/optables/)
 - [pastraiser.com — Gameboy CPU (LR35902) instruction set](https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html)
-- [RGBDS docs — gbz80(7) — CPU opcode reference](https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/)
+- [RGBDS docs — gbz80(7) — CPU opcode reference](https://rgbds.gbdev.io/docs/v0.7.0/gbz80.7)
 - [Dinu, Christian — Decoding Z80 Opcodes](http://z80.info/decoding.htm)
 
 ### Manuals
