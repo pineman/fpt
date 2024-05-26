@@ -225,11 +225,11 @@ impl LR35902 {
         self.clock_cycles = clock_cycles;
     }
 
-    pub fn branch_taken(&self) -> bool {
+    pub fn mutated_pc(&self) -> bool {
         self.branch_taken
     }
 
-    pub fn set_branch_taken(&mut self, branch_taken: bool) {
+    pub fn set_mutated_pc(&mut self, branch_taken: bool) {
         self.branch_taken = branch_taken;
     }
 
@@ -523,7 +523,7 @@ impl LR35902 {
 
     fn jump(&mut self, address: u16) {
         self.set_pc(address);
-        self.set_branch_taken(true);
+        self.set_mutated_pc(true);
     }
 
     fn call(&mut self, address: u16) {
@@ -605,16 +605,17 @@ impl LR35902 {
             self.prefix_cb = false;
         }
         self.execute(inst);
-        if !self.branch_taken() {
+        // TODO: should `self.execute` return `mutated_pc`?
+        if !self.mutated_pc() {
             self.set_pc(self.pc() + inst.size as u16);
         }
-        let cycles = if inst.kind == InstructionKind::Jump && !self.branch_taken() {
+        let cycles = if inst.kind == InstructionKind::Jump && !self.mutated_pc() {
             inst.cycles_not_taken
         } else {
             inst.cycles
         };
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
-        self.set_branch_taken(false);
+        self.set_mutated_pc(false);
         self.set_inst_cycle_count(0);
     }
 
