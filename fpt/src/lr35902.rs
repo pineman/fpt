@@ -2,7 +2,7 @@ use std::fmt;
 
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
-use super::memory::Bus;
+use super::memory::{Address, Bus};
 use crate::{bitwise as bw, memory};
 
 pub mod instructions;
@@ -243,7 +243,7 @@ impl LR35902 {
 
     // Memory
     pub fn mem8(&self, index: u16) -> u8 {
-        self.mem.read(index)
+        self.mem.memory()[index as Address]
     }
 
     pub fn mem16(&self, index: u16) -> u16 {

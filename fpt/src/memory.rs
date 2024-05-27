@@ -1,5 +1,5 @@
 use std::cell::{Ref, RefCell, RefMut};
-use std::ops::Range;
+use std::ops::{Deref, DerefMut, Range};
 use std::rc::Rc;
 
 pub type Address = usize;
@@ -201,16 +201,10 @@ pub mod map {
 
 #[derive(Clone)]
 pub struct Memory {
-    mem: [u8; 65536],
+    address_space: [u8; 65536],
     cartridge: Vec<u8>,
     bootrom: &'static [u8; 256],
     code_listing: [Option<String>; 0xffff + 1],
-}
-
-impl PartialEq for Memory {
-    fn eq(&self, other: &Self) -> bool {
-        self.slice(map::WRAM) == other.slice(map::WRAM)
-    }
 }
 
 impl Default for Memory {
@@ -219,11 +213,53 @@ impl Default for Memory {
     }
 }
 
+/// Makes Memory act like the underlying `address_space` slice when calling
+/// methods and indexing and slicing with `[]`, making the following equivalent:
+///
+///   - `mem1[map::WRAM] == mem2[map::WRAM]`
+///   - `mem1.address_space[map::WRAM] == mem2.address_space[map::WRAM]`
+///
+/// This should make most of the helper methods in `Memory` and `Bus` redundant.
+///
+/// This also exploses `address_space` outside this module, so anyone with a
+/// reference to `Memory` can do whatever slice operations they want on
+/// `address_space`. For example, here's `LR35902::mem8` directly reading a byte
+/// from `address_space`:
+///
+///     pub fn mem8(&self, index: u16) -> u8 {
+///         self.mem.memory()[index as Address]
+///     }
+impl Deref for Memory {
+    type Target = [u8; 65536];
+
+    fn deref(&self) -> &Self::Target {
+        return &self.address_space;
+    }
+}
+
+/// In combination with implementing `Deref`, this further allows the following:
+///
+///   - `mem.fill(0)`
+///   - `mem[map::BOOTROM].clone_from_slice(mem.bootrom)`
+impl DerefMut for Memory {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        return &mut self.address_space;
+    }
+}
+
+/// The memories' whole address space is compared bit by bit
+/// TODO or maybe this is too much?
+impl PartialEq for Memory {
+    fn eq(&self, other: &Self) -> bool {
+        self.address_space[..] == other.address_space[..]
+    }
+}
+
 impl Memory {
     pub fn new() -> Self {
         const ARRAY_REPEAT_VALUE: Option<String> = None;
         Self {
-            mem: [0; 65536],
+            address_space: [0; 65536],
             cartridge: Vec::new(),
             bootrom: include_bytes!("../dmg0.bin"),
             code_listing: [ARRAY_REPEAT_VALUE; 0xffff + 1],
@@ -231,15 +267,7 @@ impl Memory {
     }
 
     pub fn array_ref<const N: usize>(&self, from: Address) -> &[u8; N] {
-        self.mem[from..from + N].try_into().unwrap() // guaranteed to have size N
-    }
-
-    pub fn slice(&self, range: MemoryRange) -> &[u8] {
-        &self.mem[range]
-    }
-
-    pub fn slice_mut(&mut self, range: MemoryRange) -> &mut [u8] {
-        &mut self.mem[range]
+        self.address_space[from..from + N].try_into().unwrap() // guaranteed to have size N
     }
 
     pub fn code_listing(&self) -> &[Option<String>; 0xffff + 1] {
@@ -251,15 +279,20 @@ impl Memory {
     }
 }
 
+/// A thin wrapper around Memory that allows it to be shared by the CPU, the PPU, etc.
 #[derive(Clone, PartialEq)]
 pub struct Bus(Rc<RefCell<Memory>>);
 
+/// Constructors
 impl Bus {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Bus(Rc::new(RefCell::new(Memory::new())))
     }
+}
 
+/// Accessors
+impl Bus {
     pub fn memory(&self) -> Ref<Memory> {
         self.0.borrow()
     }
@@ -268,51 +301,55 @@ impl Bus {
         self.0.borrow_mut()
     }
 
+    /// Immutably borrow the inner `Memory` in a scoped way.
+    pub fn borrow<R>(&self, borrower: impl FnOnce(&Memory) -> R) -> R {
+        borrower(&self.0.borrow()) // reborrow
+    }
+
+    /// Mutably borrow the inner `Memory` in a scoped way.
+    pub fn borrow_mut<R>(&self, borrower: impl FnOnce(&mut Memory) -> R) -> R {
+        borrower(&mut self.0.borrow_mut()) // reborrow
+    }
+
+    /// Do something with the VRAM
+    pub fn with_vram<R>(&self, reader: impl FnOnce(&[u8]) -> R) -> R {
+        self.borrow(|mem| reader(&mem.address_space[map::VRAM]))
+    }
+}
+
+/// Operations
+impl Bus {
     pub fn load_bootrom(&mut self) {
-        let bootrom = self.memory().bootrom;
-        self.clone_from_slice(map::BOOTROM, bootrom);
-        self.memory_mut().code_listing[map::BOOTROM].fill(None)
+        let mem = &mut *self.0.borrow_mut();
+        mem.address_space[map::BOOTROM].clone_from_slice(mem.bootrom);
+        mem.code_listing[map::BOOTROM].fill(None);
     }
 
     pub fn unload_bootrom(&mut self) {
-        let cartridge = self.memory_mut().cartridge[map::BOOTROM].to_vec();
-        self.clone_from_slice(map::BOOTROM, &cartridge);
-        for i in map::BOOTROM {
-            self.memory_mut().code_listing[i] = None;
-        }
+        let mem = &mut *self.0.borrow_mut();
+        mem.address_space[map::BOOTROM].clone_from_slice(&mem.cartridge[map::BOOTROM]);
     }
 
     pub fn load_cartridge(&mut self, cartridge: &[u8]) {
-        self.memory_mut().cartridge = cartridge.to_vec();
-        self.clone_from_slice(0x0100..0x8000, &cartridge[0x0100..0x8000]);
+        const CARTRIDGE_AREA: MemoryRange = 0x0100..0x8000;
+        let mem = &mut *self.0.borrow_mut();
+        mem.address_space[CARTRIDGE_AREA].clone_from_slice(&cartridge[CARTRIDGE_AREA]);
     }
 
     pub fn read(&self, address: GBAddress) -> u8 {
-        self.memory_mut().mem[address as Address]
+        self.memory_mut().address_space[address as Address]
     }
 
     pub fn write(&mut self, address: GBAddress, value: u8) {
-        self.memory_mut().mem[address as Address] = value;
-    }
-
-    fn _read(&self, address: Address) -> u8 {
-        self.memory_mut().mem[address]
-    }
-
-    fn _write(&mut self, address: Address, value: u8) {
-        self.memory_mut().mem[address] = value;
-    }
-
-    pub fn clone_from_slice(&mut self, range: MemoryRange, slice: &[u8]) {
-        self.memory_mut().mem[range.start..range.end].clone_from_slice(slice);
+        self.memory_mut().address_space[address as Address] = value;
     }
 
     pub fn copy_range(&self, range: MemoryRange) -> Vec<u8> {
-        self.memory_mut().mem[range.start..range.end].to_vec()
+        self.memory_mut().address_space[range.start..range.end].to_vec()
     }
 
     pub fn with_slice<T>(&self, range: MemoryRange, reader: impl FnOnce(&[u8]) -> T) -> T {
-        reader(&self.memory().mem[range])
+        reader(&self.memory().address_space[range])
     }
 
     /// Runs closure `reader` with access to a fixed-size slice of `N` bytes.
@@ -325,10 +362,20 @@ impl Bus {
     }
 
     pub fn each_byte(&self) -> std::iter::Enumerate<std::array::IntoIter<u8, 65536>> {
-        self.memory_mut().mem.into_iter().enumerate()
+        self.memory_mut().address_space.into_iter().enumerate()
+    }
+}
+
+/// Register accessors
+impl Bus {
+    fn _read(&self, address: Address) -> u8 {
+        self.memory_mut().address_space[address]
     }
 
-    // registers
+    fn _write(&mut self, address: Address, value: u8) {
+        self.memory_mut().address_space[address] = value;
+    }
+
     pub fn lcdc(&self) -> u8 {
         self._read(map::LCDC)
     }
@@ -375,9 +422,5 @@ impl Bus {
 
     pub fn set_lyc(&mut self, value: u8) {
         self._write(map::LYC, value)
-    }
-
-    pub fn with_vram<R>(&self, reader: impl FnOnce(&[u8]) -> R) -> R {
-        reader(&self.memory().mem[map::VRAM])
     }
 }

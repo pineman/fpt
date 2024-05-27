@@ -143,13 +143,12 @@ mod tests {
     #[test]
     fn test_one_tile_to_vram() {
         let gb: Gameboy = Gameboy::new();
-        gb.bus
-            .memory_mut()
-            .slice_mut(VRAM.start..VRAM.start + 16)
-            .clone_from_slice(&THE_TILE[..]);
 
-        // Parse the VRAM with our structs
-        let tm: VRamContents = VRamContents::load(gb.bus.memory_mut().slice(VRAM));
+        // Initialize VRAM with THE_TILE, then parse it with our structs
+        let tm: VRamContents = gb.bus.borrow_mut(|mem| {
+            mem[VRAM.start..VRAM.start + 16].clone_from_slice(&THE_TILE[..]);
+            VRamContents::load(&mem[VRAM])
+        });
 
         assert_eq!(
             tm.tile_data[tm.tile_map0[0] as usize],
@@ -160,10 +159,7 @@ mod tests {
     #[test]
     fn test_photograph_ppu_frame_rendering_progress() {
         let mut gb: Gameboy = Gameboy::new();
-        gb.bus
-            .memory_mut()
-            .slice_mut(VRAM.start..VRAM.start + 16)
-            .clone_from_slice(&THE_TILE[..]);
+        gb.bus.memory_mut()[VRAM.start..VRAM.start + 16].clone_from_slice(&THE_TILE[..]);
 
         std::fs::create_dir_all("screenshots").unwrap();
         for ly in 0..154 {
