@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Instruction {
     pub opcode: u16,
@@ -6,6 +8,12 @@ pub struct Instruction {
     pub cycles: u8,
     pub cycles_not_taken: u8,
     pub kind: InstructionKind,
+}
+
+impl fmt::Display for Instruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.mnemonic)
+    }
 }
 
 impl Default for Instruction {
@@ -1806,7 +1814,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     Instruction {
         opcode: 0xDD,
         mnemonic: "NI",
-        size: 0,
+        size: 1,
         cycles: 0,
         cycles_not_taken: 0,
         kind: InstructionKind::NI,

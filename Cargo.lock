@@ -752,6 +752,7 @@ dependencies = [
 name = "fpt-egui"
 version = "0.1.0"
 dependencies = [
+ "clap",
  "eframe",
  "egui",
  "env_logger",
