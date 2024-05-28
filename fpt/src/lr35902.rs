@@ -587,8 +587,6 @@ impl LR35902 {
     }
 
     /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
-    /// Returns a instruction if we actually mutated CPU state, since we only
-    /// execute the instruction itself on its last t-cycle
     pub fn t_cycle(&mut self) {
         let inst = self.decode();
         self.set_inst_cycle_count(self.inst_cycle_count() + 1);
