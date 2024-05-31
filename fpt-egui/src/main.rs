@@ -214,23 +214,25 @@ impl FPT {
 
     #[allow(dead_code)]
     fn timing_info(&self, ui: &mut Ui) {
-        Grid::new("my_grid").striped(true).show(ui, |ui| {
-            macro_rules! stat {
-                ($label:literal : $fmt:literal, $value:expr) => {
-                    ui.colored_label(Color32::LIGHT_GRAY, $label);
-                    ui.monospace(format!($fmt, $value));
-                    ui.code(stringify!($value));
-                    ui.end_row();
-                };
-            }
-            let time = ui.input(|i| i.time);
-            let delta_time = ui.input(|i| i.unstable_dt) as f64;
-            stat!("time"        : "{:>9.3}" , time);
-            stat!("dt"          : "{:>9.3}" , delta_time);
-            stat!("accum. time" : "{:>9.3}" , self.accum_time);
-            stat!("Ideal count" : "{:>9.3}" , time / SIXTY_FPS_FRAMETIME);
-            stat!("Frame count" : "{:>5}"   , self.gb_frame_count);
-            stat!("UI updates"  : "{:>5}"   , self.egui_frame_count);
+        ui.collapsing("Timing", |ui| {
+            Grid::new("my_grid").striped(true).show(ui, |ui| {
+                macro_rules! stat {
+                    ($label:literal : $fmt:literal, $value:expr) => {
+                        ui.colored_label(Color32::LIGHT_GRAY, $label);
+                        ui.monospace(format!($fmt, $value));
+                        ui.code(stringify!($value));
+                        ui.end_row();
+                    };
+                }
+                let time = ui.input(|i| i.time);
+                let delta_time = ui.input(|i| i.unstable_dt) as f64;
+                stat!("time"        : "{:>9.3}" , time);
+                stat!("dt"          : "{:>9.3}" , delta_time);
+                stat!("accum. time" : "{:>9.3}" , self.accum_time);
+                stat!("Ideal count" : "{:>9.3}" , time / SIXTY_FPS_FRAMETIME);
+                stat!("Frame count" : "{:>5}"   , self.gb_frame_count);
+                stat!("UI updates"  : "{:>5}"   , self.egui_frame_count);
+            });
         });
     }
 
@@ -262,9 +264,9 @@ impl FPT {
                 ui.monospace("Slow factor:");
                 ui.radio_value(&mut self.slow_factor, 0.1f64, "0.1");
                 ui.radio_value(&mut self.slow_factor, 1f64, "1");
-                ui.radio_value(&mut self.slow_factor, 10f64, "10");
-                ui.radio_value(&mut self.slow_factor, 100_000f64, "100_000");
-                ui.radio_value(&mut self.slow_factor, 1_000_000f64, "1_000_000");
+                ui.radio_value(&mut self.slow_factor, 60f64, "60");
+                ui.radio_value(&mut self.slow_factor, 1e5f64, "1e5");
+                ui.radio_value(&mut self.slow_factor, 1e6f64, "1e6");
             });
         });
         ui.horizontal_wrapped(|ui| {
@@ -543,7 +545,7 @@ impl eframe::App for FPT {
         SidePanel::right("right_panel")
             .resizable(true)
             .show(ctx, |ui| {
-                // self.timing_info(ui);
+                self.timing_info(ui);
                 self.debug_panel(ctx, ui);
             });
 
