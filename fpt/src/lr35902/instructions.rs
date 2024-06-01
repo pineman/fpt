@@ -1814,7 +1814,7 @@ pub static INSTRUCTIONS: [Instruction; 512] = [
     Instruction {
         opcode: 0xDD,
         mnemonic: "NI",
-        size: 0,
+        size: 1,
         cycles: 0,
         cycles_not_taken: 0,
         kind: InstructionKind::NI,

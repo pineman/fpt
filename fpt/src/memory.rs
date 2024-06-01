@@ -225,7 +225,7 @@ impl Memory {
         Self {
             mem: vec![0; 65536],
             cartridge: Vec::new(),
-            bootrom: include_bytes!("../dmg0.bin"),
+            bootrom: include_bytes!("../dmg.bin"),
             code_listing: vec![ARRAY_REPEAT_VALUE; 0xffff + 1],
         }
     }
@@ -286,7 +286,8 @@ impl Bus {
 
     pub fn load_cartridge(&mut self, cartridge: &[u8]) {
         self.memory_mut().cartridge = cartridge.to_vec();
-        self.clone_from_slice(0x0100..0x8000, &cartridge[0x0100..0x8000]);
+        let l = cartridge.len();
+        self.clone_from_slice(0x0100..l, &cartridge[0x0100..l]);
     }
 
     pub fn read(&self, address: GBAddress) -> u8 {

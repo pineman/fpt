@@ -61,7 +61,7 @@ impl LR35902 {
             de: 0,
             hl: 0,
             sp: 0,
-            pc: 0,
+            pc: 0x100,
             ime: false,
             imenc: false,
             prefix_cb: false,
@@ -701,6 +701,7 @@ impl LR35902 {
 
     /// Run one complete instruction - NOT a machine cycle (4 t-cycles)
     pub fn instruction(&mut self) -> u8 {
+        //println!("address: {}", self.pc());
         let instruction = self.decode();
         for _ in 0..instruction.cycles {
             self.t_cycle();
@@ -709,12 +710,20 @@ impl LR35902 {
     }
 
     fn execute(&mut self, instruction: Instruction) {
+<<<<<<< HEAD
         if self.imenc {
             self.set_interrupt_master_enable(true);
             self.imenc = false;
         }
         if self.prefix_cb {
             self.prefix_cb = false;
+=======
+        println!("{}", self.pc());
+        println!("{}", instruction);
+
+        if self.pc() == 0xFE {
+            std::process::exit(1);
+>>>>>>> ed449ea (wip)
         }
         match instruction.opcode {
             0x00 => {
@@ -1028,6 +1037,8 @@ impl LR35902 {
             }
             0x40 => {
                 // LD B,B
+                println!("ld b,b");
+                std::process::exit(1);
                 self.set_b(self.b());
             }
             0x41 => {

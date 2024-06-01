@@ -3,6 +3,8 @@
 
 use std::time::Duration;
 
+use clap::Parser;
+
 use eframe::Frame;
 use egui::{
     menu, CentralPanel, Color32, ColorImage, Context, Grid, Key, RichText, ScrollArea, SidePanel,
@@ -124,15 +126,14 @@ impl Default for FPT {
 
 impl FPT {
     /// Called once before the first frame.
-    pub fn new(_cc: &eframe::CreationContext) -> Self {
+    pub fn new(_cc: &eframe::CreationContext, rom_path: &str) -> Self {
         let mut app = FPT::default();
         #[cfg(not(target_arch = "wasm32"))]
         if std::env::var("CI").is_err() {
-            const ROM_PATH: &str = "roms/Tetris_World_Rev_1.gb";
-            if let Ok(rom) = std::fs::read(ROM_PATH) {
+            if let Ok(rom) = std::fs::read(rom_path) {
                 app.gb.load_rom(&rom);
             } else {
-                panic!("Unable to open {}", ROM_PATH);
+                panic!("Unable to open {}", rom_path);
             }
         }
         app
@@ -162,6 +163,7 @@ impl FPT {
         let mut cycles_ran = 0;
         while cycles_ran < cycles_want && !self.gb.cpu().paused() {
             // TODO: care for double speed mode
+            // why do this? Shouldn't instruction() be called on the gameboy instead?
             self.gb.cpu_mut().t_cycle();
             self.gb.ppu_mut().step(1);
             self.cycles_since_last_frame += 1;
@@ -582,8 +584,17 @@ impl eframe::App for FPT {
     }
 }
 
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    /// rom
+    rom: Option<String>,
+}
+
+
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
+    let cli = Cli::parse();
     // Log to stderr (if you run with `RUST_LOG=debug`).
     env_logger::init();
 
@@ -594,7 +605,7 @@ fn main() -> eframe::Result<()> {
         },
         ..Default::default()
     };
-    eframe::run_native("FPT", native_options, Box::new(|cc| Box::new(FPT::new(cc))))
+    eframe::run_native("FPT", native_options, Box::new(|cc| Box::new(FPT::new(cc, &cli.rom.unwrap_or("roms/Tetris_World_Rev_1.gb".to_string())))))
 }
 
 #[cfg(target_arch = "wasm32")]
