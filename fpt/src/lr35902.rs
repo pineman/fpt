@@ -244,12 +244,6 @@ impl LR35902 {
 
     // Memory
     pub fn mem8(&self, index: u16) -> u8 {
-        if index == 0xff80 || index == 0xff81 {
-            return 0x00;
-        }
-        if index == 0xff85 {
-            return 0xff;
-        }
         self.mem.read(index)
     }
 
