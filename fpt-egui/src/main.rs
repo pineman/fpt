@@ -272,6 +272,7 @@ impl FPT {
                 ui.radio_value(&mut self.slow_factor, 0.1f64, "0.1");
                 ui.radio_value(&mut self.slow_factor, 1f64, "1");
                 ui.radio_value(&mut self.slow_factor, 60f64, "60");
+                ui.radio_value(&mut self.slow_factor, 1000f64, "1000");
                 ui.radio_value(&mut self.slow_factor, 1e5f64, "1e5");
                 ui.radio_value(&mut self.slow_factor, 1e6f64, "1e6");
             });
