@@ -25,7 +25,18 @@ pub struct LR35902 {
     mem: Bus,
     // Debugging
     paused: bool,
-    breakpoints: Vec<u16>,
+    breakpoints: Vec<Breakpoint>,
+    watchpoints: Vec<Watchpoint>,
+}
+
+#[derive(Clone, PartialEq)]
+pub struct Breakpoint {
+    pub pc: u16,
+    active: bool,
+}
+#[derive(Clone, PartialEq)]
+pub struct Watchpoint {
+    pub addr: u16,
 }
 
 impl Default for LR35902 {
@@ -59,6 +70,7 @@ impl LR35902 {
             // Debugging
             paused: false,
             breakpoints: vec![],
+            watchpoints: vec![],
         }
     }
 
@@ -255,16 +267,8 @@ impl LR35902 {
     }
 
     pub fn set_mem8(&mut self, index: u16, value: u8) {
-        self.register_write_triggers(index, value);
         self.mem.write(index, value);
-    }
-
-    pub fn set_mem16(&mut self, index: u16, value: u16) {
-        self.set_mem8(index + 1, bw::get_byte16::<1>(value));
-        self.set_mem8(index, bw::get_byte16::<0>(value));
-    }
-
-    fn register_write_triggers(&mut self, index: u16, value: u8) {
+        // Write triggers (TODO: better solution)
         if index == memory::map::BANK as u16 && value != 0 {
             self.mem.unload_bootrom();
         }
@@ -275,6 +279,14 @@ impl LR35902 {
         {
             panic!("WARNING: changing lcdc.7 when ppu is not in vblank");
         }
+        if self.match_watchpoint(index) {
+            self.paused = true;
+        }
+    }
+
+    pub fn set_mem16(&mut self, index: u16, value: u16) {
+        self.set_mem8(index + 1, bw::get_byte16::<1>(value));
+        self.set_mem8(index, bw::get_byte16::<0>(value));
     }
 
     // Decoding
@@ -624,12 +636,22 @@ impl LR35902 {
         self.mem.memory_mut().set_code_listing_at(self.pc(), str);
     }
 
-    pub fn add_breakpoint(&mut self, breakpoint: u16) {
+    pub fn add_breakpoint(&mut self, pc: u16) {
+        let breakpoint = Breakpoint { pc, active: false };
         self.breakpoints.push(breakpoint);
     }
 
-    pub fn match_breakpoint(&self, pc: u16) -> bool {
-        self.breakpoints.iter().any(|&b| b == pc)
+    fn match_breakpoint(&mut self, pc: u16) -> Option<&mut Breakpoint> {
+        self.breakpoints.iter_mut().find(|b| b.pc == pc)
+    }
+
+    pub fn add_watchpoint(&mut self, addr: u16) {
+        let watchpoint = Watchpoint { addr };
+        self.watchpoints.push(watchpoint);
+    }
+
+    fn match_watchpoint(&mut self, address: u16) -> bool {
+        self.watchpoints.iter().any(|w| w.addr == address)
     }
 
     // Run instructions
@@ -642,7 +664,15 @@ impl LR35902 {
             return;
         }
         self.update_code_listing(inst);
-        let before_pc = self.pc();
+        if let Some(&mut ref mut b) = self.match_breakpoint(self.pc()) {
+            if b.active {
+                b.active = false;
+            } else {
+                b.active = true;
+                self.paused = true;
+                return;
+            }
+        }
         self.execute(inst);
         if !self.mutated_pc() {
             self.set_pc(self.pc() + inst.size as u16);
@@ -655,10 +685,6 @@ impl LR35902 {
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
         self.set_mutated_pc(false);
         self.set_inst_cycle_count(0);
-        // TODO: try to break *before*
-        if self.match_breakpoint(before_pc) {
-            self.paused = true;
-        }
     }
 
     /// Run one complete instruction - NOT a machine cycle (4 t-cycles)

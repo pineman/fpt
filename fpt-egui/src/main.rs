@@ -392,6 +392,16 @@ impl FPT {
                     } else {
                         self.dc.push(String::from("b fe80"));
                     }
+                } else if self.dc_cmd.starts_with('w') {
+                    let addr = self.dc_cmd.split(' ').last();
+                    if let Some(addr) = addr {
+                        match u16::from_str_radix(addr, 16) {
+                            Ok(addr) => self.gb.cpu_mut().add_watchpoint(addr),
+                            Err(_) => self.dc.push(String::from("w fe80")),
+                        }
+                    } else {
+                        self.dc.push(String::from("w fe80"));
+                    }
                 }
                 self.dc_last_cmd.clone_from(&self.dc_cmd);
                 self.dc_cmd = String::new();
