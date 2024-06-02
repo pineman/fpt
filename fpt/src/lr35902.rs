@@ -18,11 +18,14 @@ pub struct LR35902 {
     pc: u16,
     ime: bool,
     imenc: bool,
-    mem: Bus,
     prefix_cb: bool,
     clock_cycles: u64,
     inst_cycle_count: u8,
     branch_taken: bool,
+    mem: Bus,
+    // Debugging
+    paused: bool,
+    breakpoints: Vec<u16>,
 }
 
 impl Default for LR35902 {
@@ -39,7 +42,7 @@ impl fmt::Debug for LR35902 {
 
 impl LR35902 {
     pub fn new(memory: Bus) -> Self {
-        let mut cpu = Self {
+        Self {
             af: 0,
             bc: 0,
             de: 0,
@@ -48,15 +51,15 @@ impl LR35902 {
             pc: 0,
             ime: false,
             imenc: false,
-            mem: memory,
             prefix_cb: false,
             clock_cycles: 0,
             inst_cycle_count: 0,
             branch_taken: false,
-        };
-        // TODO: should be done elsewhere, separation of concerns yada-yada?
-        cpu.mem.load_bootrom();
-        cpu
+            mem: memory,
+            // Debugging
+            paused: false,
+            breakpoints: vec![],
+        }
     }
 
     // Registers
@@ -197,7 +200,7 @@ impl LR35902 {
         self.af = bw::set_bit16::<4>(self.af, value);
     }
 
-    // other getters/setters
+    // Internal state
     pub fn pc(&self) -> u16 {
         self.pc
     }
@@ -297,6 +300,31 @@ impl LR35902 {
 
     fn set_hl_ind(&mut self, value: u8) {
         self.set_mem8(self.hl(), value);
+    }
+
+    fn decode(&self) -> Instruction {
+        let mut opcode = self.mem8(self.pc()) as u16;
+        if self.prefix_cb {
+            opcode += 0x100;
+        }
+        INSTRUCTIONS[opcode as usize]
+    }
+
+    pub fn decode_ahead(&self, n: usize) -> Vec<(u16, Instruction)> {
+        let mut ret = Vec::<(u16, Instruction)>::with_capacity(n + 1);
+        ret.push((self.pc(), self.decode()));
+        // TODO: decode can return "PREFIX CB" - not good for the disasm
+        //  if ret[0].mnemonic == "PREFIX CB" {}
+        for i in 1..(n + 1) {
+            let last_inst = ret[i - 1];
+            let next_pc = last_inst.0 + last_inst.1.size as u16;
+            let mut next_inst_opcode_index = self.mem8(next_pc) as usize;
+            if last_inst.1.mnemonic == "PREFIX CB" {
+                next_inst_opcode_index += 0x100;
+            }
+            ret.push((next_pc, INSTRUCTIONS[next_inst_opcode_index]));
+        }
+        ret
     }
 
     // Instruction logic
@@ -569,60 +597,13 @@ impl LR35902 {
         self.set_h_flag(true);
     }
 
-    fn decode(&self) -> Instruction {
-        let mut opcode = self.mem8(self.pc()) as u16;
-        if self.prefix_cb {
-            opcode += 0x100;
-        }
-        INSTRUCTIONS[opcode as usize]
+    // Debugging
+    pub fn paused(&self) -> bool {
+        self.paused
     }
 
-    pub fn decode_ahead(&self, n: usize) -> Vec<(u16, Instruction)> {
-        let mut ret = Vec::<(u16, Instruction)>::with_capacity(n + 1);
-        ret.push((self.pc(), self.decode()));
-        // TODO: decode can return "PREFIX CB" - not good for the disasm
-        //  if ret[0].mnemonic == "PREFIX CB" {}
-        for i in 1..(n + 1) {
-            let last_inst = ret[i - 1];
-            let next_pc = last_inst.0 + last_inst.1.size as u16;
-            let mut next_inst_opcode_index = self.mem8(next_pc) as usize;
-            if last_inst.1.mnemonic == "PREFIX CB" {
-                next_inst_opcode_index += 0x100;
-            }
-            ret.push((next_pc, INSTRUCTIONS[next_inst_opcode_index]));
-        }
-        ret
-    }
-
-    /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
-    pub fn t_cycle(&mut self) {
-        let inst = self.decode();
-        self.set_inst_cycle_count(self.inst_cycle_count() + 1);
-        // Only actually mutate CPU state on the last t-cycle of the instruction
-        if self.inst_cycle_count() < inst.cycles {
-            return;
-        }
-        self.update_code_listing(inst);
-        if self.imenc {
-            self.set_interrupt_master_enable(true);
-            self.imenc = false;
-        }
-        if self.prefix_cb {
-            self.prefix_cb = false;
-        }
-        self.execute(inst);
-        // TODO: should `self.execute` return `mutated_pc`?
-        if !self.mutated_pc() {
-            self.set_pc(self.pc() + inst.size as u16);
-        }
-        let cycles = if inst.kind == InstructionKind::Jump && !self.mutated_pc() {
-            inst.cycles_not_taken
-        } else {
-            inst.cycles
-        };
-        self.set_clock_cycles(self.clock_cycles() + cycles as u64);
-        self.set_mutated_pc(false);
-        self.set_inst_cycle_count(0);
+    pub fn set_paused(&mut self, paused: bool) {
+        self.paused = paused;
     }
 
     fn update_code_listing(&mut self, inst: Instruction) {
@@ -643,6 +624,34 @@ impl LR35902 {
         self.mem.memory_mut().set_code_listing_at(self.pc(), str);
     }
 
+    // fn add_breakpoint(&mut self, breakpoint: u16) {
+    //     self.breakpoints.push(breakpoint);
+    // }
+
+    // Run instructions
+    /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
+    pub fn t_cycle(&mut self) {
+        let inst = self.decode();
+        self.set_inst_cycle_count(self.inst_cycle_count() + 1);
+        // Only actually mutate CPU state on the last t-cycle of the instruction
+        if self.inst_cycle_count() < inst.cycles {
+            return;
+        }
+        self.update_code_listing(inst);
+        self.execute(inst);
+        if !self.mutated_pc() {
+            self.set_pc(self.pc() + inst.size as u16);
+        }
+        let cycles = if inst.kind == InstructionKind::Jump && !self.mutated_pc() {
+            inst.cycles_not_taken
+        } else {
+            inst.cycles
+        };
+        self.set_clock_cycles(self.clock_cycles() + cycles as u64);
+        self.set_mutated_pc(false);
+        self.set_inst_cycle_count(0);
+    }
+
     /// Run one complete instruction - NOT a machine cycle (4 t-cycles)
     pub fn instruction(&mut self) -> u8 {
         let instruction = self.decode();
@@ -653,6 +662,13 @@ impl LR35902 {
     }
 
     fn execute(&mut self, instruction: Instruction) {
+        if self.imenc {
+            self.set_interrupt_master_enable(true);
+            self.imenc = false;
+        }
+        if self.prefix_cb {
+            self.prefix_cb = false;
+        }
         match instruction.opcode {
             0x00 => {
                 // NOP

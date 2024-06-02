@@ -77,7 +77,6 @@ pub struct FPT {
     egui_frame_count: u64,
     gb_frame_count: u64,
 
-    paused: bool,
     slow_factor: f64,
 
     debug_console: Vec<String>,
@@ -104,7 +103,6 @@ impl Default for FPT {
             egui_frame_count: 0,
             gb_frame_count: 0,
 
-            paused: false,
             slow_factor: 1.0,
 
             debug_console: vec![],
@@ -261,11 +259,12 @@ impl FPT {
             ui.horizontal(|ui| self.vram_registers(ui));
         });
         ui.horizontal(|ui| {
+            let paused = self.gb.cpu().paused();
             if ui
-                .button(if self.paused { "Continue" } else { "Pause" })
+                .button(if paused { "Continue" } else { "Pause" })
                 .clicked()
             {
-                self.paused = !self.paused;
+                self.gb.cpu_mut().set_paused(!paused);
             }
             ui.horizontal(|ui| {
                 ui.monospace("Slow factor:");
@@ -530,7 +529,7 @@ impl FPT {
     }
 
     fn central_panel(&mut self, ctx: &Context, ui: &mut Ui) {
-        if !self.paused {
+        if !self.gb.cpu().paused() {
             self.emulator(ui);
         }
         // TODO repeated work in 1st repaint
