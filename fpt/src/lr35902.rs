@@ -3,6 +3,7 @@ use std::fmt;
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use super::memory::Bus;
+use crate::ppu::Mode;
 use crate::{bw, memory};
 
 pub mod instructions;
@@ -263,6 +264,13 @@ impl LR35902 {
     fn register_write_triggers(&mut self, index: u16, value: u8) {
         if index == memory::map::BANK as u16 && value != 0 {
             self.mem.unload_bootrom();
+        }
+        if index == memory::map::LCDC as u16
+            && bw::test_bit8::<7>(self.mem.lcdc())
+            && !bw::test_bit8::<7>(value)
+            && self.mem.stat() & 0b00000011 != Mode::VBlank as u8
+        {
+            panic!("WARNING: changing lcdc.7 when ppu is not in vblank");
         }
     }
 
