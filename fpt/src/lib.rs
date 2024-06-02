@@ -7,7 +7,7 @@ use lr35902::LR35902;
 use memory::Bus;
 use ppu::{Frame, Ppu, DOTS_IN_ONE_FRAME};
 
-pub mod bitwise;
+pub mod bw;
 pub mod lr35902;
 pub mod memory;
 pub mod ppu;

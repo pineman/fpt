@@ -3,7 +3,7 @@ use std::fmt;
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use super::memory::Bus;
-use crate::{bitwise as bw, memory};
+use crate::{bw, memory};
 
 pub mod instructions;
 

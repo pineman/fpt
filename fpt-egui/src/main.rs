@@ -9,7 +9,7 @@ use egui::{
     TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2, ViewportBuilder, ViewportCommand,
 };
 use fpt::ppu::tile::Tile;
-use fpt::{bitwise, Gameboy};
+use fpt::{bw, Gameboy};
 use log::info;
 
 // TODO: the gameboy doesn't run at exactly 60fps
@@ -238,7 +238,7 @@ impl FPT {
 
     fn get_tile(&self, tile_i: usize) -> Tile {
         let bus = self.gb.bus();
-        let lcdc4 = bitwise::test_bit8::<4>(bus.lcdc());
+        let lcdc4 = bw::test_bit8::<4>(bus.lcdc());
         let tile_start = if lcdc4 {
             // Unsigned addressing from $8000:
             // tiles 0-127 are in block 0, and tiles 128-255 are in block 1
@@ -281,7 +281,7 @@ impl FPT {
                 ($ui:expr, $high_label:literal : $high_value:expr, $low_label:literal : $low_value:expr) => {
                     $ui.colored_label(Color32::LIGHT_BLUE, $high_label);
                     $ui.monospace(format!("{:08b}", $high_value));
-                    $ui.code(format!("{:04X}", bitwise::word16($high_value, $low_value)));
+                    $ui.code(format!("{:04X}", bw::word16($high_value, $low_value)));
                     $ui.monospace(format!("{:08b}", $low_value));
                     $ui.colored_label(Color32::LIGHT_BLUE, $low_label);
                 }
@@ -472,7 +472,7 @@ impl FPT {
         });
 
         let lcdc = self.gb.bus().lcdc();
-        let bg_map_area = match bitwise::test_bit8::<3>(lcdc) {
+        let bg_map_area = match bw::test_bit8::<3>(lcdc) {
             false => 0x9800..0x9C00,
             true => 0x9C00..0xA000,
         };
