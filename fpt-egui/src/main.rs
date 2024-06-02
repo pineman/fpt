@@ -406,6 +406,9 @@ impl FPT {
                 self.dc_last_cmd.clone_from(&self.dc_cmd);
                 self.dc_cmd = String::new();
             }
+            if let Some(e) = self.gb.cpu_mut().dbg_events.pop_front() {
+                self.dc.push(e);
+            }
         });
     }
 

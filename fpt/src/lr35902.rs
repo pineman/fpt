@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::fmt;
 
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
@@ -27,6 +28,7 @@ pub struct LR35902 {
     paused: bool,
     breakpoints: Vec<Breakpoint>,
     watchpoints: Vec<Watchpoint>,
+    pub dbg_events: VecDeque<String>,
 }
 
 #[derive(Clone, PartialEq)]
@@ -71,6 +73,7 @@ impl LR35902 {
             paused: false,
             breakpoints: vec![],
             watchpoints: vec![],
+            dbg_events: VecDeque::new(),
         }
     }
 
@@ -281,6 +284,8 @@ impl LR35902 {
         }
         if self.match_watchpoint(index) {
             self.paused = true;
+            self.dbg_events
+                .push_back(format!("Hit watchpoint at {:#06X}", index));
         }
     }
 
@@ -669,6 +674,9 @@ impl LR35902 {
                 b.active = false;
             } else {
                 b.active = true;
+                let pc = b.pc;
+                self.dbg_events
+                    .push_back(format!("Hit breakpoint at {:#06X}", pc));
                 self.paused = true;
                 return;
             }
