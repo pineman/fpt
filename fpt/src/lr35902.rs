@@ -624,9 +624,13 @@ impl LR35902 {
         self.mem.memory_mut().set_code_listing_at(self.pc(), str);
     }
 
-    // fn add_breakpoint(&mut self, breakpoint: u16) {
-    //     self.breakpoints.push(breakpoint);
-    // }
+    pub fn add_breakpoint(&mut self, breakpoint: u16) {
+        self.breakpoints.push(breakpoint);
+    }
+
+    pub fn match_breakpoint(&self, pc: u16) -> bool {
+        self.breakpoints.iter().any(|&b| b == pc)
+    }
 
     // Run instructions
     /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
@@ -638,6 +642,7 @@ impl LR35902 {
             return;
         }
         self.update_code_listing(inst);
+        let before_pc = self.pc();
         self.execute(inst);
         if !self.mutated_pc() {
             self.set_pc(self.pc() + inst.size as u16);
@@ -650,6 +655,10 @@ impl LR35902 {
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
         self.set_mutated_pc(false);
         self.set_inst_cycle_count(0);
+        // TODO: try to break *before*
+        if self.match_breakpoint(before_pc) {
+            self.paused = true;
+        }
     }
 
     /// Run one complete instruction - NOT a machine cycle (4 t-cycles)

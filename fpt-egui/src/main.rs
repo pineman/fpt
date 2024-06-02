@@ -78,11 +78,11 @@ pub struct FPT {
     gb_frame_count: u64,
 
     slow_factor: f64,
-
-    debug_console: Vec<String>,
-    debug_console_cmd: String,
-    debug_console_last_cmd: String,
-    debug_console_was_focused: bool,
+    // Debug Console (DC)
+    dc: Vec<String>,
+    dc_cmd: String,
+    dc_last_cmd: String,
+    dc_was_focused: bool,
 
     image: ColorImage,
     texture: Option<TextureHandle>,
@@ -105,10 +105,10 @@ impl Default for FPT {
 
             slow_factor: 1.0,
 
-            debug_console: vec![],
-            debug_console_cmd: String::new(),
-            debug_console_last_cmd: String::new(),
-            debug_console_was_focused: false,
+            dc: vec![],
+            dc_cmd: String::new(),
+            dc_last_cmd: String::new(),
+            dc_was_focused: false,
 
             image: ColorImage::new([WIDTH, HEIGHT], Color32::TRANSPARENT),
             texture: None,
@@ -160,7 +160,7 @@ impl FPT {
 
         let cycles_want = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
         let mut cycles_ran = 0;
-        while cycles_ran < cycles_want {
+        while cycles_ran < cycles_want && !self.gb.cpu().paused() {
             // TODO: care for double speed mode
             self.gb.cpu_mut().t_cycle();
             self.gb.ppu_mut().step(1);
@@ -346,34 +346,32 @@ impl FPT {
                 .show_rows(
                     ui,
                     ui.text_style_height(&egui::TextStyle::Body),
-                    self.debug_console.len(),
+                    self.dc.len(),
                     |ui, row_range| {
                         for row in row_range {
-                            ui.label(RichText::new(self.debug_console[row].clone()).monospace());
+                            ui.label(RichText::new(self.dc[row].clone()).monospace());
                         }
                     },
                 );
-            let edit = egui::TextEdit::multiline(&mut self.debug_console_cmd)
+            let edit = egui::TextEdit::multiline(&mut self.dc_cmd)
                 .desired_rows(1)
                 .font(egui::TextStyle::Monospace)
                 .desired_width(f32::INFINITY);
             let response = ui.add(edit);
-            if self.debug_console_was_focused {
+            if self.dc_was_focused {
                 response.request_focus();
-                self.debug_console_was_focused = false;
+                self.dc_was_focused = false;
             }
             if response.has_focus() && ctx.input(|i| i.key_pressed(Key::Enter)) {
-                self.debug_console_was_focused = true;
-                self.debug_console_cmd = self.debug_console_cmd.trim().to_string();
-                if self.debug_console_cmd.is_empty() {
-                    self.debug_console_cmd
-                        .clone_from(&self.debug_console_last_cmd);
+                self.dc_was_focused = true;
+                self.dc_cmd = self.dc_cmd.trim().to_string();
+                if self.dc_cmd.is_empty() {
+                    self.dc_cmd.clone_from(&self.dc_last_cmd);
                 }
-                self.debug_console
-                    .push(format!("> {}", self.debug_console_cmd));
-                if self.debug_console_cmd == "d" {
+                self.dc.push(format!("> {}", self.dc_cmd));
+                if self.dc_cmd == "d" {
                     self.gb.cpu().decode_ahead(5).iter().for_each(|(pc, inst)| {
-                        let args = self
+                        let inst_args = self
                             .gb
                             .bus()
                             .copy_range((*pc as usize)..((pc + inst.size as u16) as usize))
@@ -381,13 +379,22 @@ impl FPT {
                             .fold(String::new(), |acc, &b| acc + &format!("{:#02X} ", b))
                             .trim()
                             .to_string();
-                        self.debug_console
-                            .push(format!("{:#06X}: {} ({})", pc, inst.mnemonic, args));
+                        self.dc
+                            .push(format!("{:#06X}: {} ({})", pc, inst.mnemonic, inst_args));
                     });
+                } else if self.dc_cmd.starts_with('b') {
+                    let pc = self.dc_cmd.split(' ').last();
+                    if let Some(pc) = pc {
+                        match u16::from_str_radix(pc, 16) {
+                            Ok(pc) => self.gb.cpu_mut().add_breakpoint(pc),
+                            Err(_) => self.dc.push(String::from("b fe80")),
+                        }
+                    } else {
+                        self.dc.push(String::from("b fe80"));
+                    }
                 }
-                self.debug_console_last_cmd
-                    .clone_from(&self.debug_console_cmd);
-                self.debug_console_cmd = String::new();
+                self.dc_last_cmd.clone_from(&self.dc_cmd);
+                self.dc_cmd = String::new();
             }
         });
     }
