@@ -1,3 +1,4 @@
+/// Helpers for bitwise (bw) operations
 pub fn get_byte16<const INDEX: u8>(word: u16) -> u8 {
     ((word >> (8 * INDEX)) & 0xFF) as u8
 }
