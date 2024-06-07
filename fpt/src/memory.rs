@@ -257,7 +257,9 @@ pub struct Bus(Rc<RefCell<Memory>>);
 impl Bus {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        Bus(Rc::new(RefCell::new(Memory::new())))
+        let mut bus = Bus(Rc::new(RefCell::new(Memory::new())));
+        bus.load_bootrom();
+        bus
     }
 
     pub fn memory(&self) -> Ref<Memory> {

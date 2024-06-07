@@ -9,7 +9,7 @@ use egui::{
     TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2, ViewportBuilder, ViewportCommand,
 };
 use fpt::ppu::tile::Tile;
-use fpt::{bitwise, Gameboy};
+use fpt::{bw, Gameboy};
 use log::info;
 
 // TODO: the gameboy doesn't run at exactly 60fps
@@ -77,13 +77,12 @@ pub struct FPT {
     egui_frame_count: u64,
     gb_frame_count: u64,
 
-    paused: bool,
     slow_factor: f64,
-
-    debug_console: Vec<String>,
-    debug_console_cmd: String,
-    debug_console_last_cmd: String,
-    debug_console_was_focused: bool,
+    // Debug Console (DC)
+    dc: Vec<String>,
+    dc_cmd: String,
+    dc_last_cmd: String,
+    dc_was_focused: bool,
 
     image: ColorImage,
     texture: Option<TextureHandle>,
@@ -104,13 +103,12 @@ impl Default for FPT {
             egui_frame_count: 0,
             gb_frame_count: 0,
 
-            paused: false,
             slow_factor: 1.0,
 
-            debug_console: vec![],
-            debug_console_cmd: String::new(),
-            debug_console_last_cmd: String::new(),
-            debug_console_was_focused: false,
+            dc: vec![],
+            dc_cmd: String::new(),
+            dc_last_cmd: String::new(),
+            dc_was_focused: false,
 
             image: ColorImage::new([WIDTH, HEIGHT], Color32::TRANSPARENT),
             texture: None,
@@ -162,7 +160,7 @@ impl FPT {
 
         let cycles_want = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
         let mut cycles_ran = 0;
-        while cycles_ran < cycles_want {
+        while cycles_ran < cycles_want && !self.gb.cpu().paused() {
             // TODO: care for double speed mode
             self.gb.cpu_mut().t_cycle();
             self.gb.ppu_mut().step(1);
@@ -238,14 +236,21 @@ impl FPT {
 
     fn get_tile(&self, tile_i: usize) -> Tile {
         let bus = self.gb.bus();
-        let lcdc4 = bitwise::test_bit8::<4>(bus.lcdc());
-        let tile_address = 16 * tile_i
-            + if lcdc4 || tile_i > 127 {
-                0x8000
+        let lcdc4 = bw::test_bit8::<4>(bus.lcdc());
+        let tile_start = if lcdc4 {
+            // Unsigned addressing from $8000:
+            // tiles 0-127 are in block 0, and tiles 128-255 are in block 1
+            0x8000 + 16 * tile_i
+        } else {
+            // Signed addressing from $9000:
+            // tiles 0-127 are in block 2, and tiles 128-255 (i.e. -128 to -1) are in block 1
+            if tile_i < 128 {
+                0x9000 + 16 * tile_i
             } else {
-                0x8800
-            };
-        bus.with_span(tile_address, Tile::load)
+                0x8800 + 16 * (tile_i - 128)
+            }
+        };
+        bus.with_span(tile_start, Tile::load)
     }
 
     fn debug_panel(&mut self, ctx: &Context, ui: &mut Ui) {
@@ -254,17 +259,19 @@ impl FPT {
             ui.horizontal(|ui| self.vram_registers(ui));
         });
         ui.horizontal(|ui| {
+            let paused = self.gb.cpu().paused();
             if ui
-                .button(if self.paused { "Continue" } else { "Pause" })
+                .button(if paused { "Continue" } else { "Pause" })
                 .clicked()
             {
-                self.paused = !self.paused;
+                self.gb.cpu_mut().set_paused(!paused);
             }
             ui.horizontal(|ui| {
                 ui.monospace("Slow factor:");
                 ui.radio_value(&mut self.slow_factor, 0.1f64, "0.1");
                 ui.radio_value(&mut self.slow_factor, 1f64, "1");
                 ui.radio_value(&mut self.slow_factor, 60f64, "60");
+                ui.radio_value(&mut self.slow_factor, 1000f64, "1000");
                 ui.radio_value(&mut self.slow_factor, 1e5f64, "1e5");
                 ui.radio_value(&mut self.slow_factor, 1e6f64, "1e6");
             });
@@ -274,7 +281,7 @@ impl FPT {
                 ($ui:expr, $high_label:literal : $high_value:expr, $low_label:literal : $low_value:expr) => {
                     $ui.colored_label(Color32::LIGHT_BLUE, $high_label);
                     $ui.monospace(format!("{:08b}", $high_value));
-                    $ui.code(format!("{:04X}", bitwise::word16($high_value, $low_value)));
+                    $ui.code(format!("{:04X}", bw::word16($high_value, $low_value)));
                     $ui.monospace(format!("{:08b}", $low_value));
                     $ui.colored_label(Color32::LIGHT_BLUE, $low_label);
                 }
@@ -339,34 +346,32 @@ impl FPT {
                 .show_rows(
                     ui,
                     ui.text_style_height(&egui::TextStyle::Body),
-                    self.debug_console.len(),
+                    self.dc.len(),
                     |ui, row_range| {
                         for row in row_range {
-                            ui.label(RichText::new(self.debug_console[row].clone()).monospace());
+                            ui.label(RichText::new(self.dc[row].clone()).monospace());
                         }
                     },
                 );
-            let edit = egui::TextEdit::multiline(&mut self.debug_console_cmd)
+            let edit = egui::TextEdit::multiline(&mut self.dc_cmd)
                 .desired_rows(1)
                 .font(egui::TextStyle::Monospace)
                 .desired_width(f32::INFINITY);
             let response = ui.add(edit);
-            if self.debug_console_was_focused {
+            if self.dc_was_focused {
                 response.request_focus();
-                self.debug_console_was_focused = false;
+                self.dc_was_focused = false;
             }
             if response.has_focus() && ctx.input(|i| i.key_pressed(Key::Enter)) {
-                self.debug_console_was_focused = true;
-                self.debug_console_cmd = self.debug_console_cmd.trim().to_string();
-                if self.debug_console_cmd.is_empty() {
-                    self.debug_console_cmd
-                        .clone_from(&self.debug_console_last_cmd);
+                self.dc_was_focused = true;
+                self.dc_cmd = self.dc_cmd.trim().to_string();
+                if self.dc_cmd.is_empty() {
+                    self.dc_cmd.clone_from(&self.dc_last_cmd);
                 }
-                self.debug_console
-                    .push(format!("> {}", self.debug_console_cmd));
-                if self.debug_console_cmd == "d" {
+                self.dc.push(format!("> {}", self.dc_cmd));
+                if self.dc_cmd == "d" {
                     self.gb.cpu().decode_ahead(5).iter().for_each(|(pc, inst)| {
-                        let args = self
+                        let inst_args = self
                             .gb
                             .bus()
                             .copy_range((*pc as usize)..((pc + inst.size as u16) as usize))
@@ -374,13 +379,35 @@ impl FPT {
                             .fold(String::new(), |acc, &b| acc + &format!("{:#02X} ", b))
                             .trim()
                             .to_string();
-                        self.debug_console
-                            .push(format!("{:#06X}: {} ({})", pc, inst.mnemonic, args));
+                        self.dc
+                            .push(format!("{:#06X}: {} ({})", pc, inst.mnemonic, inst_args));
                     });
+                } else if self.dc_cmd.starts_with('b') {
+                    let pc = self.dc_cmd.split(' ').last();
+                    if let Some(pc) = pc {
+                        match u16::from_str_radix(pc, 16) {
+                            Ok(pc) => self.gb.cpu_mut().add_breakpoint(pc),
+                            Err(_) => self.dc.push(String::from("b fe80")),
+                        }
+                    } else {
+                        self.dc.push(String::from("b fe80"));
+                    }
+                } else if self.dc_cmd.starts_with('w') {
+                    let addr = self.dc_cmd.split(' ').last();
+                    if let Some(addr) = addr {
+                        match u16::from_str_radix(addr, 16) {
+                            Ok(addr) => self.gb.cpu_mut().add_watchpoint(addr),
+                            Err(_) => self.dc.push(String::from("w fe80")),
+                        }
+                    } else {
+                        self.dc.push(String::from("w fe80"));
+                    }
                 }
-                self.debug_console_last_cmd
-                    .clone_from(&self.debug_console_cmd);
-                self.debug_console_cmd = String::new();
+                self.dc_last_cmd.clone_from(&self.dc_cmd);
+                self.dc_cmd = String::new();
+            }
+            if let Some(e) = self.gb.cpu_mut().dbg_events.pop_front() {
+                self.dc.push(e);
             }
         });
     }
@@ -465,7 +492,7 @@ impl FPT {
         });
 
         let lcdc = self.gb.bus().lcdc();
-        let bg_map_area = match bitwise::test_bit8::<3>(lcdc) {
+        let bg_map_area = match bw::test_bit8::<3>(lcdc) {
             false => 0x9800..0x9C00,
             true => 0x9C00..0xA000,
         };
@@ -522,7 +549,7 @@ impl FPT {
     }
 
     fn central_panel(&mut self, ctx: &Context, ui: &mut Ui) {
-        if !self.paused {
+        if !self.gb.cpu().paused() {
             self.emulator(ui);
         }
         // TODO repeated work in 1st repaint
