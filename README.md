@@ -12,7 +12,7 @@ WASM:
 rustup target add wasm32-unknown-unknown
 cargo install trunk
 cd fpt-egui
-RUSTFLAGS='--cfg=web_sys_unstable_apis' trunk serve
+RUSTFLAGS='--cfg=web_sys_unstable_apis' trunk serve --release
 ```
 
 ## Testing
