@@ -1,9 +1,10 @@
-use std::collections::VecDeque;
 use std::fmt;
 
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use super::memory::Bus;
+use crate::debug_interface::{DebugCmd, DebugInterface};
+use crate::debugger::Debugger;
 use crate::ppu::Mode;
 use crate::{bw, memory};
 
@@ -24,21 +25,12 @@ pub struct LR35902 {
     inst_cycle_count: u8,
     branch_taken: bool,
     bus: Bus,
+    debugger: Debugger,
     // Debugging
-    paused: bool,
-    breakpoints: Vec<Breakpoint>,
-    watchpoints: Vec<Watchpoint>,
-    pub dbg_events: VecDeque<String>,
-}
-
-#[derive(Clone, PartialEq)]
-pub struct Breakpoint {
-    pub pc: u16,
-    active: bool,
-}
-#[derive(Clone, PartialEq)]
-pub struct Watchpoint {
-    pub addr: u16,
+    //paused: bool,
+    //breakpoints: Vec<Breakpoint>,
+    //watchpoints: Vec<Watchpoint>,
+    //pub dbg_events: VecDeque<String>,
 }
 
 impl Default for LR35902 {
@@ -53,14 +45,20 @@ impl fmt::Debug for LR35902 {
     }
 }
 
+impl DebugInterface for LR35902 {
+    fn receive_command(&mut self, cmd: &DebugCmd) {
+        self.debugger.receive_command(cmd);
+    }
+}
+
 impl LR35902 {
     pub fn new(memory: Bus) -> Self {
         Self {
-            af: 0,
-            bc: 0,
-            de: 0,
-            hl: 0,
-            sp: 0,
+            af: 0x0100,
+            bc: 0xff13,
+            de: 0x00c1,
+            hl: 0x8403,
+            sp: 0xfffe,
             pc: 0x100,
             ime: false,
             ime_next_inst: false,
@@ -70,10 +68,11 @@ impl LR35902 {
             branch_taken: false,
             bus: memory,
             // Debugging
-            paused: false,
-            breakpoints: vec![],
-            watchpoints: vec![],
-            dbg_events: VecDeque::new(),
+            debugger: Debugger::new(),
+            //paused: false,
+            //breakpoints: vec![],
+            //watchpoints: vec![],
+            //dbg_events: VecDeque::new(),
         }
     }
 
@@ -286,11 +285,11 @@ impl LR35902 {
         {
             panic!("tried to change lcdc.7 when ppu is not in vblank!");
         }
-        if self.match_watchpoint(index) {
-            self.paused = true;
-            self.dbg_events
-                .push_back(format!("Hit watchpoint at {:#06X}", index));
-        }
+        //if self.match_watchpoint(index) {
+        //    self.paused = true;
+        //    self.dbg_events
+        //        .push_back(format!("Hit watchpoint at {:#06X}", index));
+        //}
     }
 
     pub fn set_mem16(&mut self, index: u16, value: u16) {
@@ -323,7 +322,7 @@ impl LR35902 {
         self.set_mem8(self.hl(), value);
     }
 
-    fn decode(&self) -> Instruction {
+    pub fn decode(&self) -> Instruction {
         let mut opcode = self.mem8(self.pc()) as u16;
         if self.prefix_cb {
             opcode += 0x100;
@@ -619,49 +618,45 @@ impl LR35902 {
     }
 
     // Debugging
-    pub fn paused(&self) -> bool {
-        self.paused
-    }
+    //pub fn paused(&self) -> bool {
+    //    self.paused
+    //}
 
-    pub fn set_paused(&mut self, paused: bool) {
-        self.paused = paused;
-    }
+    //pub fn set_paused(&mut self, paused: bool) {
+    //    self.paused = paused;
+    //}
 
-    fn update_code_listing(&mut self, inst: Instruction) {
-        if self.bus.memory().code_listing()[self.pc() as usize].is_some() {
-            return;
-        }
-        let result: Vec<String> = (1..inst.size)
-            .map(|i| format!("{:#02X}", self.mem8(self.pc() + i as u16)))
-            .collect();
-        let str = format!(
-            "{:#06X}: {} ({:#02X}{}{})",
-            self.pc(),
-            inst.mnemonic,
-            inst.opcode,
-            if result.is_empty() { "" } else { " " },
-            result.join(" ")
-        );
-        self.bus.memory_mut().set_code_listing_at(self.pc(), str);
-    }
+    //fn update_code_listing(&mut self, inst: Instruction) {
+    //    if self.bus.memory().code_listing()[self.pc() as usize].is_some() {
+    //        return;
+    //    }
+    //    let result: Vec<String> = (1..inst.size)
+    //        .map(|i| format!("{:#02X}", self.mem8(self.pc() + i as u16)))
+    //        .collect();
+    //    let str = format!(
+    //        "{:#06X}: {} ({:#02X}{}{})",
+    //        self.pc(),
+    //        inst.mnemonic,
+    //        inst.opcode,
+    //        if result.is_empty() { "" } else { " " },
+    //        result.join(" ")
+    //    );
+    //    self.bus.memory_mut().set_code_listing_at(self.pc(), str);
+    //}
 
-    pub fn add_breakpoint(&mut self, pc: u16) {
-        let breakpoint = Breakpoint { pc, active: false };
-        self.breakpoints.push(breakpoint);
-    }
+    //pub fn add_breakpoint(&mut self, pc: u16) {
+    //    let breakpoint = Breakpoint { pc, active: false };
+    //    self.breakpoints.push(breakpoint);
+    //}
 
-    fn match_breakpoint(&mut self, pc: u16) -> Option<&mut Breakpoint> {
-        self.breakpoints.iter_mut().find(|b| b.pc == pc)
-    }
+    //pub fn add_watchpoint(&mut self, addr: u16) {
+    //    let watchpoint = Watchpoint { addr };
+    //    self.watchpoints.push(watchpoint);
+    //}
 
-    pub fn add_watchpoint(&mut self, addr: u16) {
-        let watchpoint = Watchpoint { addr };
-        self.watchpoints.push(watchpoint);
-    }
-
-    fn match_watchpoint(&mut self, address: u16) -> bool {
-        self.watchpoints.iter().any(|w| w.addr == address)
-    }
+    //fn match_watchpoint(&mut self, address: u16) -> bool {
+    //    self.watchpoints.iter().any(|w| w.addr == address)
+    //}
 
     // Run instructions
     /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
@@ -672,16 +667,16 @@ impl LR35902 {
         if self.inst_cycle_count() < inst.cycles {
             return;
         }
-        self.update_code_listing(inst);
-        if let Some(&mut ref mut b) = self.match_breakpoint(self.pc()) {
+        //self.update_code_listing(inst);
+        if let Some(&mut ref mut b) = self.debugger.match_breakpoint(self.pc()) {
             if b.active {
                 b.active = false;
             } else {
                 b.active = true;
                 let pc = b.pc;
-                self.dbg_events
-                    .push_back(format!("Hit breakpoint at {:#06X}", pc));
-                self.paused = true;
+                //self.dbg_events
+                //.push_back(format!("Hit breakpoint at {:#06X}", pc));
+                self.debugger.paused = true;
                 return;
             }
         }
