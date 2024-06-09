@@ -8,6 +8,8 @@ use memory::{Bus, Buttons};
 use ppu::{Frame, Ppu, DOTS_IN_ONE_FRAME};
 
 pub mod bw;
+pub mod debug_interface;
+pub mod debugger;
 pub mod lr35902;
 pub mod memory;
 pub mod ppu;
