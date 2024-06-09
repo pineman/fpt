@@ -4,7 +4,6 @@
 use std::time::Duration;
 
 use clap::Parser;
-
 use eframe::Frame;
 use egui::{
     menu, CentralPanel, Color32, ColorImage, Context, Grid, Key, RichText, ScrollArea, SidePanel,
@@ -591,7 +590,6 @@ struct Cli {
     rom: Option<String>,
 }
 
-
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
     let cli = Cli::parse();
@@ -605,7 +603,16 @@ fn main() -> eframe::Result<()> {
         },
         ..Default::default()
     };
-    eframe::run_native("FPT", native_options, Box::new(|cc| Box::new(FPT::new(cc, &cli.rom.unwrap_or("roms/Tetris_World_Rev_1.gb".to_string())))))
+    eframe::run_native(
+        "FPT",
+        native_options,
+        Box::new(|cc| {
+            Box::new(FPT::new(
+                cc,
+                &cli.rom.unwrap_or("roms/Tetris_World_Rev_1.gb".to_string()),
+            ))
+        }),
+    )
 }
 
 #[cfg(target_arch = "wasm32")]
