@@ -3,7 +3,7 @@
 
 use std::time::Duration;
 
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use eframe::Frame;
 use egui::{
     menu, CentralPanel, Color32, ColorImage, Context, Grid, Key, RichText, ScrollArea, SidePanel,
@@ -125,7 +125,11 @@ impl Default for FPT {
 
 impl FPT {
     /// Called once before the first frame.
-    pub fn new(_cc: &eframe::CreationContext, rom_path: &str) -> Self {
+    pub fn new(
+        _cc: &eframe::CreationContext,
+        fake_bootrom: Option<BootromToFake>,
+        rom_path: &str,
+    ) -> Self {
         let mut app = FPT::default();
         #[cfg(not(target_arch = "wasm32"))]
         if std::env::var("CI").is_err() {
@@ -134,6 +138,13 @@ impl FPT {
             } else {
                 panic!("Unable to open {}", rom_path);
             }
+        }
+        // XXX duplicated logic from fpt-cli main.rs
+        match fake_bootrom {
+            Some(BootromToFake::DMG0) => {
+                app.gb.simulate_dmg0_bootrom_handoff_state();
+            }
+            None => {}
         }
         app
     }
@@ -586,10 +597,21 @@ impl eframe::App for FPT {
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    /// rom
+    /// Apply known CPU and hardware register values of a well-known bootrom when it
+    /// hands off the execution to the cartridge's code. This skips emulating a bootrom.
+    #[arg(short, long)]
+    fake_bootrom: Option<BootromToFake>,
+    /// ROM path
     rom: Option<String>,
 }
 
+// XXX duplicated struct from fpt-cli's main.rs
+#[derive(ValueEnum, Debug, Clone, PartialEq)]
+enum BootromToFake {
+    DMG0,
+}
+
+/// Desktop entry point
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
     let cli = Cli::parse();
@@ -609,6 +631,7 @@ fn main() -> eframe::Result<()> {
         Box::new(|cc| {
             Box::new(FPT::new(
                 cc,
+                cli.fake_bootrom,
                 &cli.rom.unwrap_or("roms/Tetris_World_Rev_1.gb".to_string()),
             ))
         }),
