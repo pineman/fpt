@@ -1,14 +1,5 @@
-use crate::debug_interface::DebugCmd;
+use crate::debug_interface::{DebugCmd, DebugEvent, Breakpoint, Watchpoint};
 
-#[derive(Clone, PartialEq)]
-pub struct Breakpoint {
-    pub pc: u16,
-    pub active: bool,
-}
-#[derive(Clone, PartialEq)]
-pub struct Watchpoint {
-    pub addr: u16,
-}
 
 #[derive(Clone, PartialEq)]
 pub struct Debugger {
@@ -20,31 +11,44 @@ pub struct Debugger {
 impl Debugger {
     pub fn new() -> Self {
         Self {
-            breakpoints: Vec::new(),
+            breakpoints: vec![Breakpoint::new(0, true)],
             watchpoints: Vec::new(),
             paused: false,
         }
     }
 
-    pub fn receive_command(&mut self, cmd: &DebugCmd) {
+    pub fn receive_command(&mut self, cmd: &DebugCmd) -> Option<DebugEvent>{
         match cmd {
             DebugCmd::Pause => {
                 self.paused = true;
+                None
             }
             DebugCmd::Continue => {
                 self.paused = false;
+                None
             }
             DebugCmd::Breakpoint(pc) => {
                 self.breakpoints.push(Breakpoint {
                     pc: *pc,
                     active: true,
                 });
+                Some(DebugEvent::RegisterBreakpoint(*pc))
             }
             DebugCmd::Watchpoint(addr) => {
                 self.watchpoints.push(Watchpoint {
                     addr: *addr
                 });
+                Some(DebugEvent::RegisterWatchpoint(*addr))
             },
+            DebugCmd::ListBreakpoints => {
+                Some(DebugEvent::ListBreakpoints(self.breakpoints.clone()))
+            },
+            DebugCmd::ListWatchpoints => {
+                Some(DebugEvent::ListWatchpoints(self.watchpoints.clone()))
+            },
+            DebugCmd::Load(_) => {
+                None
+            }
         }
     }
 

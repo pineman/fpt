@@ -3,7 +3,7 @@ use std::fmt;
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
 
 use super::memory::Bus;
-use crate::debug_interface::{DebugCmd, DebugInterface};
+use crate::debug_interface::{DebugCmd, DebugEvent, DebugInterface};
 use crate::debugger::Debugger;
 use crate::ppu::Mode;
 use crate::{bw, memory};
@@ -46,8 +46,8 @@ impl fmt::Debug for LR35902 {
 }
 
 impl DebugInterface for LR35902 {
-    fn receive_command(&mut self, cmd: &DebugCmd) {
-        self.debugger.receive_command(cmd);
+    fn receive_command(&mut self, cmd: &DebugCmd) -> Option<DebugEvent> {
+        self.debugger.receive_command(cmd)
     }
 }
 
