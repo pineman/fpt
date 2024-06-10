@@ -1,5 +1,6 @@
 use std::cell::{Ref, RefCell, RefMut};
 use std::ops::{Deref, DerefMut, Range};
+use std::ptr;
 use std::rc::Rc;
 
 pub type Address = usize;
@@ -224,10 +225,10 @@ impl Default for Memory {
 /// This also exploses `address_space` outside this module, so anyone with a
 /// reference to `Memory` can do whatever slice operations they want on
 /// `address_space`. For example, here's `LR35902::mem8` directly reading a byte
-/// from `address_space`:
+/// from `address_space` (adapted to doctest):
 ///
-///     pub fn mem8(&self, index: u16) -> u8 {
-///         self.mem.memory()[index as Address]
+///     pub fn mem8(self_mem: &fpt::memory::Bus, index: u16) -> u8 {
+///         self_mem.memory()[index as fpt::memory::Address]
 ///     }
 impl Deref for Memory {
     type Target = [u8; 65536];
@@ -256,14 +257,37 @@ impl PartialEq for Memory {
 }
 
 impl Memory {
+    const BOOTROM: &'static [u8; 256] = include_bytes!("../dmg0.bin");
+
     pub fn new() -> Self {
         const ARRAY_REPEAT_VALUE: Option<String> = None;
         Self {
             address_space: [0; 65536],
             cartridge: Vec::new(),
-            bootrom: include_bytes!("../dmg0.bin"),
+            bootrom: Self::BOOTROM,
             code_listing: [ARRAY_REPEAT_VALUE; 0xffff + 1],
         }
+    }
+
+    /// Takes a pointer to zero-initialized memory and manually initializes
+    /// `Memory` fields that shouldn't remain zero-initialized.
+    ///
+    /// # Safety
+    ///
+    /// idk. This function was made to be caled from `Bus::unsafely_optmized_new()`.
+    /// And we're only calling `Bus::unsafely_optmized_new()` from tests, right?
+    /// (Clippy is forcing me to write this `# Safety` section, so here you are)
+    pub unsafe fn initialize_from_zero(ptr_to_mem: *mut Memory) {
+        // Writes a properly initialized Vec to ptr_to_mem->cartridge without
+        // dropping a zero-initialized Vec, which would be undefined behaviour
+        let ptr_to_cartridge = ptr::addr_of_mut!((*ptr_to_mem).cartridge);
+        ptr::write(ptr_to_cartridge, Vec::new());
+
+        // Point ptr_to_mem->bootrom (a dangling reference if zero-initialized) to BOOTROM
+        (*ptr_to_mem).bootrom = Self::BOOTROM;
+
+        // It *might* be fine to leave code_listing: [Option<String>; 0xffff + 1] zero-initialized.
+        // None, being the first variant in the Option enum, should have discriminant = 0, I guess.
     }
 
     pub fn array_ref<const N: usize>(&self, from: Address) -> &[u8; N] {
@@ -279,7 +303,7 @@ impl Memory {
     }
 }
 
-/// A thin wrapper around Memory that allows it to be shared by the CPU, the PPU, etc.
+/// An Rc-RefCell wrapper around Memory that allows it to be shared by the CPU, the PPU, etc.
 #[derive(Clone, PartialEq)]
 pub struct Bus(Rc<RefCell<Memory>>);
 
@@ -288,6 +312,17 @@ impl Bus {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Bus(Rc::new(RefCell::new(Memory::new())))
+    }
+
+    pub fn unsafely_optimized_new() -> Self {
+        let rc = Rc::<RefCell<Memory>>::new_zeroed();
+        let rc = unsafe {
+            let ptr_to_zeroed_memory = (*rc.as_ptr()).as_ptr();
+            Memory::initialize_from_zero(ptr_to_zeroed_memory);
+            rc.assume_init()
+        };
+
+        Bus(rc)
     }
 }
 

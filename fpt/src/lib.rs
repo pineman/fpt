@@ -2,6 +2,8 @@
 #![feature(exclusive_range_pattern)]
 #![feature(array_chunks)]
 #![feature(iter_intersperse)]
+#![feature(new_uninit)]
+#![feature(ptr_as_uninit)]
 
 use lr35902::LR35902;
 use memory::Bus;
@@ -22,6 +24,15 @@ impl Gameboy {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         let bus = Bus::new();
+        Self {
+            bus: bus.clone(),
+            cpu: LR35902::new(bus.clone()),
+            ppu: Ppu::new(bus),
+        }
+    }
+
+    pub fn unsafely_optimized_new() -> Self {
+        let bus = Bus::unsafely_optimized_new();
         Self {
             bus: bus.clone(),
             cpu: LR35902::new(bus.clone()),

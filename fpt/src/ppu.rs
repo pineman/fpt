@@ -175,7 +175,7 @@ mod tests {
 
     #[test]
     fn test_ppu_modes() {
-        let mut gb: Gameboy = Gameboy::new();
+        let mut gb: Gameboy = Gameboy::unsafely_optimized_new();
         assert_eq!(gb.ppu.mode, Mode::OamScan);
         gb.ppu.step(80);
         assert_eq!(gb.ppu.mode, Mode::PixelTransfer);

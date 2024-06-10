@@ -1,4 +1,5 @@
 use fpt::lr35902::LR35902;
+use fpt::memory::Bus;
 use rstest::*;
 
 #[derive(Clone)]
@@ -9,7 +10,7 @@ struct LR35902Builder {
 impl LR35902Builder {
     pub fn new() -> Self {
         Self {
-            lr35902: LR35902::default(),
+            lr35902: LR35902::new(Bus::unsafely_optimized_new()),
         }
     }
 

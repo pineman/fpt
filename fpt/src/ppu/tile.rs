@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn test_one_tile_to_vram() {
-        let gb: Gameboy = Gameboy::new();
+        let gb: Gameboy = Gameboy::unsafely_optimized_new();
 
         // Initialize VRAM with THE_TILE, then parse it with our structs
         let tm: VRamContents = gb.bus.borrow_mut(|mem| {
@@ -158,7 +158,7 @@ mod tests {
 
     #[test]
     fn test_photograph_ppu_frame_rendering_progress() {
-        let mut gb: Gameboy = Gameboy::new();
+        let mut gb: Gameboy = Gameboy::unsafely_optimized_new();
         gb.bus.memory_mut()[VRAM.start..VRAM.start + 16].clone_from_slice(&THE_TILE[..]);
 
         std::fs::create_dir_all("screenshots").unwrap();
