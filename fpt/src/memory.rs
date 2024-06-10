@@ -2,6 +2,8 @@ use std::cell::{Ref, RefCell, RefMut};
 use std::ops::Range;
 use std::rc::Rc;
 
+use crate::bw;
+
 pub type Address = usize;
 pub type GBAddress = u16;
 pub type MemoryRange = Range<Address>;
@@ -50,7 +52,7 @@ pub mod map {
     //-------------------------------------------------------------------------
 
     /// Joypad
-    pub const P1: Address = 0xFF00;
+    pub const JOYP: Address = 0xFF00;
     /// Serial transfer data
     pub const SB: Address = 0xFF01;
     /// Serial transfer control
@@ -205,6 +207,19 @@ pub struct Memory {
     cartridge: Vec<u8>,
     bootrom: &'static [u8; 256],
     code_listing: Vec<Option<String>>,
+    pub buttons: Buttons,
+}
+
+#[derive(Clone, Copy, Default, Debug)]
+pub struct Buttons {
+    pub a: bool,
+    pub b: bool,
+    pub start: bool,
+    pub select: bool,
+    pub up: bool,
+    pub right: bool,
+    pub down: bool,
+    pub left: bool,
 }
 
 impl PartialEq for Memory {
@@ -227,6 +242,7 @@ impl Memory {
             cartridge: Vec::new(),
             bootrom: include_bytes!("../dmg0.bin"),
             code_listing: vec![ARRAY_REPEAT_VALUE; 0xffff + 1],
+            buttons: Buttons::default(),
         }
     }
 
@@ -290,7 +306,11 @@ impl Bus {
     }
 
     pub fn read(&self, address: GBAddress) -> u8 {
-        self.memory_mut().mem[address as Address]
+        if address == map::JOYP as u16 {
+            self._joyp()
+        } else {
+            self.memory().mem[address as Address]
+        }
     }
 
     pub fn write(&mut self, address: GBAddress, value: u8) {
@@ -298,7 +318,11 @@ impl Bus {
     }
 
     fn _read(&self, address: Address) -> u8 {
-        self.memory_mut().mem[address]
+        if address == map::JOYP {
+            self._joyp()
+        } else {
+            self.memory().mem[address]
+        }
     }
 
     fn _write(&mut self, address: Address, value: u8) {
@@ -377,5 +401,38 @@ impl Bus {
 
     pub fn with_vram<R>(&self, reader: impl FnOnce(&[u8]) -> R) -> R {
         reader(&self.memory().mem[map::VRAM])
+    }
+
+    fn _joyp(&self) -> u8 {
+        let buttons = self.buttons();
+        let joyp = self.memory().mem[map::JOYP];
+        let sel_buttons = !bw::test_bit8::<5>(joyp);
+        let sel_dpad = !bw::test_bit8::<4>(joyp);
+        let b = if sel_dpad {
+            ((buttons.down as u8) << 3)
+                + ((buttons.up as u8) << 2)
+                + ((buttons.left as u8) << 1)
+                + (buttons.right as u8)
+        } else if sel_buttons {
+            ((buttons.start as u8) << 3)
+                + ((buttons.select as u8) << 2)
+                + ((buttons.b as u8) << 1)
+                + (buttons.a as u8)
+        } else {
+            0
+        };
+        (joyp & 0xf0) + (!b & 0x0f)
+    }
+
+    pub fn joyp(&self) -> u8 {
+        self._joyp()
+    }
+
+    pub fn buttons(&self) -> Buttons {
+        self.memory().buttons
+    }
+
+    pub fn set_buttons(&mut self, buttons: Buttons) {
+        self.memory_mut().buttons = buttons;
     }
 }
