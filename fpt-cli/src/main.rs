@@ -5,6 +5,7 @@ use std::fs;
 
 use clap::{Args, Parser, Subcommand};
 use debugger::DebuggerTextInterface;
+use fpt::debug_interface::DebugCmd;
 use fpt::Gameboy;
 use rustyline::error::ReadlineError;
 use rustyline::{DefaultEditor, Result};
@@ -20,7 +21,7 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    Debug {},
+    Debug(Run),
     Dump(Dump),
     Run(Run),
 }
@@ -38,7 +39,7 @@ struct Run {
 }
 
 fn debug() -> Result<()> {
-    let mut debugger_interface = DebuggerTextInterface::new();
+    let mut gameboy = Gameboy::new();
 
     let mut rl = DefaultEditor::new()?;
     if rl.load_history(".fpt_debug_history").is_err() {
@@ -49,7 +50,16 @@ fn debug() -> Result<()> {
         match readline {
             Ok(line) => {
                 rl.add_history_entry(&line)?;
-                debugger_interface.run(line);
+
+                let debug_cmd = DebugCmd::from_string(&line);
+                if debug_cmd.is_none() {
+                    println!("Error: cannot parse debug command");
+                    continue;
+                }
+                let debug_event = gameboy.debug_cmd(&debug_cmd.unwrap());
+                if let Some(debug_event) = debug_event {
+                    print!("{debug_event}");
+                }
             }
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");
@@ -108,7 +118,7 @@ fn run(args: Run) -> Result<()> {
 fn main() -> Result<()> {
     let args = Cli::parse();
     match args.command {
-        Commands::Debug {} => debug(),
+        Commands::Debug(args) => debug(),
         Commands::Dump(args) => dump(args),
         Commands::Run(args) => run(args),
     }
