@@ -50,7 +50,7 @@ impl DebugInterface for LR35902 {
         self.debugger.receive_command(cmd)
     }
 
-    fn stopped(&self) -> bool {
+    fn paused(&self) -> bool {
         self.debugger.paused
     }
 }
@@ -1028,8 +1028,6 @@ impl LR35902 {
             }
             0x40 => {
                 // LD B,B
-                println!("ld b,b");
-                std::process::exit(1);
                 self.set_b(self.b());
             }
             0x41 => {

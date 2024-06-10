@@ -96,7 +96,7 @@ fn debug(args: Run) -> Result<()> {
 
                 if debug_event == DebugEvent::Continue {
                     loop {
-                        if gameboy.stopped() {
+                        if gameboy.paused() {
                             break;
                         }
                         gameboy.instruction();
