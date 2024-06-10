@@ -29,7 +29,7 @@ impl Debugger {
             DebugCmd::Breakpoint(pc) => {
                 self.breakpoints.push(Breakpoint {
                     pc: *pc,
-                    active: true,
+                    triggered: false,
                 });
                 Some(DebugEvent::RegisterBreakpoint(*pc))
             }
@@ -47,7 +47,22 @@ impl Debugger {
         }
     }
 
-    pub fn match_breakpoint(&mut self, pc: u16) -> Option<&mut Breakpoint> {
-        self.breakpoints.iter_mut().find(|b| b.pc == pc)
+    pub fn match_breakpoint(&mut self, pc: u16) -> bool {
+        let breakpoint = self.breakpoints.iter_mut().find(|b| b.pc == pc);
+        let is_breakpoint = breakpoint.is_some();
+        let mut triggered = false;
+        if breakpoint.is_some() {
+            let breakpoint = breakpoint.unwrap();
+            if breakpoint.triggered {
+                breakpoint.triggered = false;
+            } else {
+                breakpoint.triggered = true;
+                self.paused = true;
+            }
+
+            triggered = breakpoint.triggered;
+        }
+
+        is_breakpoint && !triggered
     }
 }

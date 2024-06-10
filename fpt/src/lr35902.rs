@@ -49,6 +49,10 @@ impl DebugInterface for LR35902 {
     fn receive_command(&mut self, cmd: &DebugCmd) -> Option<DebugEvent> {
         self.debugger.receive_command(cmd)
     }
+
+    fn stopped(&self) -> bool {
+        self.debugger.paused
+    }
 }
 
 impl LR35902 {
@@ -667,19 +671,11 @@ impl LR35902 {
         if self.inst_cycle_count() < inst.cycles {
             return;
         }
-        //self.update_code_listing(inst);
-        if let Some(&mut ref mut b) = self.debugger.match_breakpoint(self.pc()) {
-            if b.active {
-                b.active = false;
-            } else {
-                b.active = true;
-                let pc = b.pc;
-                //self.dbg_events
-                //.push_back(format!("Hit breakpoint at {:#06X}", pc));
-                self.debugger.paused = true;
-                return;
-            }
+
+        if self.debugger.match_breakpoint(self.pc()) {
+            return;
         }
+
         self.execute(inst);
         if !self.mutated_pc() {
             self.set_pc(self.pc() + inst.size as u16);
