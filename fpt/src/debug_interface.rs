@@ -3,15 +3,15 @@ use std::fmt;
 use num_traits::Num;
 use regex::Regex;
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Breakpoint {
     pub pc: u16,
-    pub active: bool,
+    pub triggered: bool,
 }
 
 impl Breakpoint {
-    pub fn new(pc: u16, active: bool) -> Self {
-        Self { pc, active }
+    pub fn new(pc: u16, triggered: bool) -> Self {
+        Self { pc, triggered }
     }
 }
 
@@ -37,7 +37,7 @@ pub enum DebugCmd {
     ListWatchpoints,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum DebugEvent {
     Continue,
     RegisterBreakpoint(u16),
@@ -125,4 +125,5 @@ impl DebugCmd {
 
 pub trait DebugInterface {
     fn receive_command(&mut self, cmd: &DebugCmd) -> Option<DebugEvent>;
+    fn stopped(&self) -> bool;
 }

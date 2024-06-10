@@ -5,7 +5,7 @@ use std::fs;
 
 use clap::{Args, Parser, Subcommand};
 use debugger::DebuggerTextInterface;
-use fpt::debug_interface::DebugCmd;
+use fpt::debug_interface::{DebugCmd, DebugEvent};
 use fpt::Gameboy;
 use rustyline::error::ReadlineError;
 use rustyline::{DefaultEditor, Result};
@@ -38,8 +38,10 @@ struct Run {
     debug: Option<bool>,
 }
 
-fn debug() -> Result<()> {
+fn debug(args: Run) -> Result<()> {
     let mut gameboy = Gameboy::new();
+    let rom = fs::read(args.rom).unwrap();
+    gameboy.load_rom(&rom);
 
     let mut rl = DefaultEditor::new()?;
     if rl.load_history(".fpt_debug_history").is_err() {
@@ -57,8 +59,19 @@ fn debug() -> Result<()> {
                     continue;
                 }
                 let debug_event = gameboy.debug_cmd(&debug_cmd.unwrap());
-                if let Some(debug_event) = debug_event {
-                    print!("{debug_event}");
+                if debug_event.is_none() {
+                    continue;
+                }
+                let debug_event = debug_event.unwrap();
+                print!("{}", debug_event);
+
+                if debug_event == DebugEvent::Continue {
+                    loop {
+                        if gameboy.stopped() {
+                            break;
+                        }
+                        gameboy.instruction();
+                    }
                 }
             }
             Err(ReadlineError::Interrupted) => {
@@ -118,7 +131,7 @@ fn run(args: Run) -> Result<()> {
 fn main() -> Result<()> {
     let args = Cli::parse();
     match args.command {
-        Commands::Debug(args) => debug(),
+        Commands::Debug(args) => debug(args),
         Commands::Dump(args) => dump(args),
         Commands::Run(args) => run(args),
     }
