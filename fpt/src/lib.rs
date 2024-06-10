@@ -3,6 +3,7 @@
 #![feature(array_chunks)]
 #![feature(iter_intersperse)]
 
+use debug_interface::{DebugCmd, DebugEvent, DebugInterface};
 use lr35902::LR35902;
 use memory::{Bus, Buttons};
 use ppu::{Frame, Ppu, DOTS_IN_ONE_FRAME};
@@ -122,13 +123,8 @@ impl Gameboy {
         1
     }
 
-    pub fn advance_frame(&mut self) -> &Frame {
-        for _ in 0..DOTS_IN_ONE_FRAME {
-            // TODO: care for double speed mode (need to run two cpu t_cycles)
-            self.cpu.t_cycle();
-            self.ppu.step(1);
-        }
-        self.ppu.get_frame()
+    pub fn debug_cmd(&mut self, cmd: &DebugCmd) -> Option<DebugEvent> {
+        self.cpu_mut().receive_command(cmd)
     }
 
     pub fn get_frame(&self) -> &Frame {

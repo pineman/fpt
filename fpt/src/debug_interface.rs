@@ -1,5 +1,7 @@
-use regex::Regex;
+use std::fmt;
 
+use num_traits::Num;
+use regex::Regex;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Breakpoint {
@@ -9,10 +11,7 @@ pub struct Breakpoint {
 
 impl Breakpoint {
     pub fn new(pc: u16, active: bool) -> Self {
-        Self {
-            pc,
-            active
-        }
+        Self { pc, active }
     }
 }
 
@@ -23,9 +22,7 @@ pub struct Watchpoint {
 
 impl Watchpoint {
     pub fn new(addr: u16) -> Self {
-        Self {
-            addr,
-        }
+        Self { addr }
     }
 }
 
@@ -40,45 +37,88 @@ pub enum DebugCmd {
     ListWatchpoints,
 }
 
-
 #[derive(Debug)]
 pub enum DebugEvent {
+    Continue,
     RegisterBreakpoint(u16),
     RegisterWatchpoint(u16),
     ListBreakpoints(Vec<Breakpoint>),
     ListWatchpoints(Vec<Watchpoint>),
 }
 
-fn breakpoint_cmd<'a, Args>(mut args: Args) -> DebugCmd 
-where
-    Args: IntoIterator<Item = &'a str>
-{
-    DebugCmd::Breakpoint(args.into_iter().next().unwrap().parse::<u16>().unwrap())
+impl fmt::Display for DebugEvent {
+    // This trait requires `fmt` with this exact signature.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            DebugEvent::Continue => write!(f, "continue\n"),
+            DebugEvent::RegisterBreakpoint(pc) => {
+                write!(f, "Register breakpoint at pc={:#04X}\n", pc)
+            }
+            DebugEvent::RegisterWatchpoint(addr) => {
+                write!(f, "Register watchpoint at address {:#04X}\n", addr)
+            }
+            DebugEvent::ListBreakpoints(breakpoints) => {
+                write!(f, "breakpoints:\n")?;
+                for (i, breakpoint) in breakpoints.into_iter().enumerate() {
+                    write!(f, "\t{i}: {:#06X}\n", breakpoint.pc)?;
+                }
+                Ok(())
+            }
+            DebugEvent::ListWatchpoints(watchpoints) => {
+                write!(f, "watchpoints:\n")?;
+                for (i, watchpoint) in watchpoints.into_iter().enumerate() {
+                    write!(f, "\t{i}: {:#06X}\n", watchpoint.addr)?;
+                }
+                Ok(())
+            }
+        }
+    }
 }
 
-
-fn watchpoint_cmd<'a, Args>(mut args: Args) -> DebugCmd 
+fn breakpoint_cmd<'a, Args>(mut args: Args) -> Option<DebugCmd>
 where
-    Args: IntoIterator<Item = &'a str>
+    Args: IntoIterator<Item = &'a str>,
 {
-    DebugCmd::Watchpoint(args.into_iter().next().unwrap().parse::<u16>().unwrap())
+    Some(DebugCmd::Breakpoint(parse::<u16>(
+        args.into_iter().next()?,
+    )?))
+}
+
+fn watchpoint_cmd<'a, Args>(mut args: Args) -> Option<DebugCmd>
+where
+    Args: IntoIterator<Item = &'a str>,
+{
+    Some(DebugCmd::Watchpoint(parse::<u16>(
+        args.into_iter().next()?,
+    )?))
+}
+
+fn parse<'a, T>(value: &str) -> Option<T>
+where
+    T: Num + std::str::FromStr,
+{
+    let value = value.trim();
+    if value.starts_with("0x") {
+        Some(<T>::from_str_radix(value.strip_prefix("0x").unwrap(), 16).ok()?)
+    } else {
+        Some(value.parse::<T>().ok()?)
+    }
 }
 
 impl DebugCmd {
-    pub fn from_string(cmd: &str) -> DebugCmd {
-
-        let re = Regex::new(r"(?m)^([^:]+):([0-9]+):(.+)$").unwrap();
+    pub fn from_string(cmd: &str) -> Option<DebugCmd> {
+        let re = Regex::new(r#"[^\s"']+|"([^"]*)"|'([^']*)'"#).unwrap();
 
         let tokens = re.find_iter(cmd).map(|m| m.as_str()).collect::<Vec<&str>>();
         let mut args = tokens.iter().skip(1).copied();
         match tokens[0] {
-            "c" | "continue" => DebugCmd::Continue,
+            "c" | "continue" => Some(DebugCmd::Continue),
             "b" | "break" | "breakpoint" => breakpoint_cmd(args),
             "w" | "watch" | "watchpoint" => watchpoint_cmd(args),
-            "lb" | "list_breakpoints" => DebugCmd::ListBreakpoints,
-            "lw" | "list_watchpoints" => DebugCmd::ListWatchpoints,
-            "load"                       => DebugCmd::Load(args.next().unwrap().to_string()),
-            _ => DebugCmd::Continue
+            "lb" | "list_breakpoints" => Some(DebugCmd::ListBreakpoints),
+            "lw" | "list_watchpoints" => Some(DebugCmd::ListWatchpoints),
+            "load" => Some(DebugCmd::Load(args.next().unwrap().to_string())),
+            _ => Some(DebugCmd::Continue),
         }
     }
 }
