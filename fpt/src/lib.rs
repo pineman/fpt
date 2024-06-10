@@ -127,8 +127,8 @@ impl Gameboy {
         self.cpu_mut().receive_command(cmd)
     }
 
-    pub fn stopped(&self) -> bool {
-        self.cpu().stopped()
+    pub fn paused(&self) -> bool {
+        self.cpu().paused()
     }
 
     pub fn get_frame(&self) -> &Frame {

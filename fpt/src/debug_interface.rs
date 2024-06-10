@@ -75,7 +75,7 @@ impl fmt::Display for DebugEvent {
     }
 }
 
-fn breakpoint_cmd<'a, Args>(mut args: Args) -> Option<DebugCmd>
+fn breakpoint_cmd<'a, Args>(args: Args) -> Option<DebugCmd>
 where
     Args: IntoIterator<Item = &'a str>,
 {
@@ -84,7 +84,7 @@ where
     )?))
 }
 
-fn watchpoint_cmd<'a, Args>(mut args: Args) -> Option<DebugCmd>
+fn watchpoint_cmd<'a, Args>(args: Args) -> Option<DebugCmd>
 where
     Args: IntoIterator<Item = &'a str>,
 {
@@ -125,5 +125,5 @@ impl DebugCmd {
 
 pub trait DebugInterface {
     fn receive_command(&mut self, cmd: &DebugCmd) -> Option<DebugEvent>;
-    fn stopped(&self) -> bool;
+    fn paused(&self) -> bool;
 }
