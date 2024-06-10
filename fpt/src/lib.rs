@@ -34,7 +34,7 @@ impl Gameboy {
 
     /// Sets CPU and hardware registers to the values found in the DMG0 column in the tables at
     /// https://gbdev.io/pandocs/Power_Up_Sequence.html#console-state-after-boot-rom-hand-off
-    pub fn skip_bootrom(&mut self) {
+    pub fn simulate_dmg0_bootrom_handoff_state(&mut self) {
         // CPU registers
         self.cpu.set_af(0x0100);
         self.cpu.set_bc(0xff13);

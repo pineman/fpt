@@ -3,7 +3,7 @@
 
 use std::fs;
 
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use debugger::DebuggerTextInterface;
 use fpt::debug_interface::{DebugCmd, DebugEvent};
 use fpt::Gameboy;
@@ -15,8 +15,32 @@ pub mod debugger;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
+    #[command(flatten)]
+    gameboy_config: GameboyConfig,
     #[command(subcommand)]
     command: Commands,
+}
+
+#[derive(Debug, Args)]
+struct GameboyConfig {
+    #[arg(short, long)]
+    fake_bootrom: Option<BootromToFake>,
+}
+
+impl GameboyConfig {
+    /// Build a Gameboy following this configuration. Consumes self.
+    pub fn build_gameboy(self: Self) -> Gameboy {
+        let mut gameboy = Gameboy::new();
+        if let Some(BootromToFake::DMG0) = self.fake_bootrom {
+            gameboy.simulate_dmg0_bootrom_handoff_state();
+        }
+        gameboy
+    }
+}
+
+#[derive(ValueEnum, Debug, Clone, PartialEq)]
+enum BootromToFake {
+    DMG0,
 }
 
 #[derive(Subcommand, Debug)]
@@ -116,9 +140,10 @@ fn dump(args: Dump) -> Result<()> {
     }
 }
 
-fn run(args: Run) -> Result<()> {
-    let mut gameboy = Gameboy::new();
-    let rom = fs::read(args.rom).unwrap();
+fn run(gb_config: GameboyConfig, args: Run) -> Result<()> {
+    let mut gameboy = gb_config.build_gameboy();
+
+    let rom = fs::read(args.rom)?;
     gameboy.load_rom(&rom);
     loop {
         if args.debug.unwrap_or(false) {
@@ -130,9 +155,11 @@ fn run(args: Run) -> Result<()> {
 
 fn main() -> Result<()> {
     let args = Cli::parse();
+    let gb_config = args.gameboy_config;
+
     match args.command {
         Commands::Debug(args) => debug(args),
         Commands::Dump(args) => dump(args),
-        Commands::Run(args) => run(args),
+        Commands::Run(args) => run(gb_config, args),
     }
 }
