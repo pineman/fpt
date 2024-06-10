@@ -735,6 +735,7 @@ dependencies = [
 name = "fpt"
 version = "0.1.0"
 dependencies = [
+ "regex",
  "rstest",
 ]
 
