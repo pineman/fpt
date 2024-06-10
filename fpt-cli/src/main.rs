@@ -21,18 +21,23 @@ struct Cli {
     command: Commands,
 }
 
-#[derive(Debug, Args)]
+#[derive(Clone, Debug, Args)]
 struct GameboyConfig {
+    /// Apply known CPU and hardware register values of a well-known bootrom when it
+    /// hands off the execution to the cartridge's code. This skips emulating a bootrom.
     #[arg(short, long)]
     fake_bootrom: Option<BootromToFake>,
 }
 
 impl GameboyConfig {
-    /// Build a Gameboy following this configuration. Consumes self.
+    /// Build a `Gameboy` following this configuration. Consumes self.
     pub fn build_gameboy(self: Self) -> Gameboy {
         let mut gameboy = Gameboy::new();
-        if let Some(BootromToFake::DMG0) = self.fake_bootrom {
-            gameboy.simulate_dmg0_bootrom_handoff_state();
+        match self.fake_bootrom {
+            Some(BootromToFake::DMG0) => {
+                gameboy.simulate_dmg0_bootrom_handoff_state();
+            }
+            None => {}
         }
         gameboy
     }
