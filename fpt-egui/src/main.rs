@@ -11,7 +11,7 @@ use egui::{
 };
 use fpt::memory::Buttons;
 use fpt::ppu::tile::Tile;
-use fpt::{bw, Gameboy};
+use fpt::{bw, DebugCmd, DebugInterface, Gameboy};
 use log::info;
 
 // TODO: the gameboy doesn't run at exactly 60fps
@@ -72,6 +72,14 @@ fn now() -> f64 {
     APP_START.elapsed().as_secs_f64() * 1000.0
 }
 
+#[derive(Default)]
+struct DebugConsole {
+    console: Vec<String>,
+    command: String,
+    last_command: String,
+    was_focused: bool,
+}
+
 pub struct FPT {
     gb: Gameboy,
     cycles_since_last_frame: u32,
@@ -81,10 +89,7 @@ pub struct FPT {
 
     slow_factor: f64,
     // Debug Console (DC)
-    dc: Vec<String>,
-    dc_cmd: String,
-    dc_last_cmd: String,
-    dc_was_focused: bool,
+    debug_console: DebugConsole,
 
     image: ColorImage,
     texture: Option<TextureHandle>,
@@ -107,10 +112,7 @@ impl Default for FPT {
 
             slow_factor: 1.0,
 
-            dc: vec![],
-            dc_cmd: String::new(),
-            dc_last_cmd: String::new(),
-            dc_was_focused: false,
+            debug_console: DebugConsole::default(),
 
             image: ColorImage::new([WIDTH, HEIGHT], Color32::TRANSPARENT),
             texture: None,
@@ -172,7 +174,7 @@ impl FPT {
         // TODO: should limit to "a frame" taking self.slow_factor into account (so 10 frames at 0.1 or 0.1 frames at 10).
         let cycles_want = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
         let mut cycles_ran = 0;
-        while cycles_ran < cycles_want && !self.gb.cpu().paused() {
+        while cycles_ran < cycles_want && !self.gb.paused() {
             // TODO: care for double speed mode
             // why do this? Shouldn't instruction() be called on the gameboy instead?
             self.gb.cpu_mut().t_cycle();
@@ -264,12 +266,12 @@ impl FPT {
             ui.horizontal(|ui| self.vram_registers(ui));
         });
         ui.horizontal(|ui| {
-            let paused = self.gb.cpu().paused();
+            let paused = self.gb.paused();
             if ui
                 .button(if paused { "Continue" } else { "Pause" })
                 .clicked()
             {
-                self.gb.cpu_mut().set_paused(!paused);
+                self.gb.set_paused(!paused);
             }
             ui.horizontal(|ui| {
                 ui.monospace("Slow factor:");
@@ -351,69 +353,56 @@ impl FPT {
                 .show_rows(
                     ui,
                     ui.text_style_height(&egui::TextStyle::Body),
-                    self.dc.len(),
+                    self.debug_console.console.len(),
                     |ui, row_range| {
                         for row in row_range {
-                            ui.label(RichText::new(self.dc[row].clone()).monospace());
+                            ui.label(
+                                RichText::new(self.debug_console.console[row].clone()).monospace(),
+                            );
                         }
                     },
                 );
-            let edit = egui::TextEdit::multiline(&mut self.dc_cmd)
+            let edit = egui::TextEdit::multiline(&mut self.debug_console.command)
                 .desired_rows(1)
                 .font(egui::TextStyle::Monospace)
                 .desired_width(f32::INFINITY);
             let response = ui.add(edit);
-            if self.dc_was_focused {
+            if self.debug_console.was_focused {
                 response.request_focus();
-                self.dc_was_focused = false;
+                self.debug_console.was_focused = false;
             }
             if response.has_focus() && ctx.input(|i| i.key_pressed(Key::Enter)) {
-                self.dc_was_focused = true;
-                self.dc_cmd = self.dc_cmd.trim().to_string();
-                if self.dc_cmd.is_empty() {
-                    self.dc_cmd.clone_from(&self.dc_last_cmd);
+                self.debug_console.was_focused = true;
+                self.debug_console.command = self.debug_console.command.trim().to_string();
+                if self.debug_console.command.is_empty() {
+                    self.debug_console
+                        .command
+                        .clone_from(&self.debug_console.last_command);
                 }
-                self.dc.push(format!("> {}", self.dc_cmd));
-                if self.dc_cmd == "d" {
-                    self.gb.cpu().decode_ahead(5).iter().for_each(|(pc, inst)| {
-                        let inst_args = self
-                            .gb
-                            .bus()
-                            .copy_range((*pc as usize)..((pc + inst.size as u16) as usize))
-                            .iter()
-                            .fold(String::new(), |acc, &b| acc + &format!("{:#02X} ", b))
-                            .trim()
-                            .to_string();
-                        self.dc
-                            .push(format!("{:#06X}: {} ({})", pc, inst.mnemonic, inst_args));
-                    });
-                } else if self.dc_cmd.starts_with('b') {
-                    let pc = self.dc_cmd.split(' ').last();
-                    if let Some(pc) = pc {
-                        match u16::from_str_radix(pc, 16) {
-                            Ok(pc) => self.gb.cpu_mut().add_breakpoint(pc),
-                            Err(_) => self.dc.push(String::from("b fe80")),
-                        }
-                    } else {
-                        self.dc.push(String::from("b fe80"));
-                    }
-                } else if self.dc_cmd.starts_with('w') {
-                    let addr = self.dc_cmd.split(' ').last();
-                    if let Some(addr) = addr {
-                        match u16::from_str_radix(addr, 16) {
-                            Ok(addr) => self.gb.cpu_mut().add_watchpoint(addr),
-                            Err(_) => self.dc.push(String::from("w fe80")),
-                        }
-                    } else {
-                        self.dc.push(String::from("w fe80"));
-                    }
-                }
-                self.dc_last_cmd.clone_from(&self.dc_cmd);
-                self.dc_cmd = String::new();
+                self.debug_console
+                    .console
+                    .push(format!("> {}", self.debug_console.command));
+
+                let command = DebugCmd::from_string(&self.debug_console.command);
+                let event = match command {
+                    Some(command) => self
+                        .gb
+                        .debug_cmd(&command)
+                        .map(|x| format!("{}", x))
+                        .unwrap_or("Unrecognized command".to_string()),
+                    None => "Cannot parse command".to_string(),
+                };
+                self.debug_console.console.push(event);
+
+                self.debug_console
+                    .last_command
+                    .clone_from(&self.debug_console.command);
+                self.debug_console.command = String::new();
             }
-            if let Some(e) = self.gb.cpu_mut().dbg_events.pop_front() {
-                self.dc.push(e);
-            }
+
+            //if let Some(e) = self.gb.cpu_mut().dbg_events.pop_front() {
+            //    self.dc.push(e);
+            //}
         });
     }
 
