@@ -126,4 +126,5 @@ impl DebugCmd {
 pub trait DebugInterface {
     fn receive_command(&mut self, cmd: &DebugCmd) -> Option<DebugEvent>;
     fn paused(&self) -> bool;
+    fn set_paused(&mut self, paused: bool);
 }

@@ -3,7 +3,8 @@
 #![feature(array_chunks)]
 #![feature(iter_intersperse)]
 
-use debug_interface::{DebugCmd, DebugEvent, DebugInterface};
+use debug_interface::DebugEvent;
+pub use debug_interface::{DebugCmd, DebugInterface};
 use lr35902::LR35902;
 use memory::{Bus, Buttons};
 use ppu::{Frame, Ppu, DOTS_IN_ONE_FRAME};
@@ -129,6 +130,10 @@ impl Gameboy {
 
     pub fn paused(&self) -> bool {
         self.cpu().paused()
+    }
+
+    pub fn set_paused(&mut self, paused: bool) {
+        self.cpu_mut().set_paused(paused)
     }
 
     pub fn get_frame(&self) -> &Frame {

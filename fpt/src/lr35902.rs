@@ -53,6 +53,10 @@ impl DebugInterface for LR35902 {
     fn paused(&self) -> bool {
         self.debugger.paused
     }
+
+    fn set_paused(&mut self, paused: bool) {
+        self.debugger.paused = paused;
+    }
 }
 
 impl LR35902 {
