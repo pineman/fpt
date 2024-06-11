@@ -9,8 +9,6 @@ use fpt::Gameboy;
 use rustyline::error::ReadlineError;
 use rustyline::{DefaultEditor, Result};
 
-pub mod debugger;
-
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
