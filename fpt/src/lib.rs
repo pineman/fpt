@@ -116,12 +116,19 @@ impl Gameboy {
         &mut self.ppu
     }
 
-    pub fn instruction(&mut self) -> u32 {
+    pub fn step(&mut self) -> u32 {
         //let cycles = self.cpu.instruction() as u32;
         self.cpu.t_cycle();
         // TODO: care for double speed mode (need to run half as much dots)
         self.ppu.step(1);
         1
+    }
+
+    pub fn instruction(&mut self) -> u32 {
+        let cycles = self.cpu.instruction() as u32;
+        // TODO: care for double speed mode (need to run half as much dots)
+        self.ppu.step(cycles);
+        cycles 
     }
 
     pub fn debug_cmd(&mut self, cmd: &DebugCmd) -> Option<DebugEvent> {
