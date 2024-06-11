@@ -128,7 +128,7 @@ impl Gameboy {
         let cycles = self.cpu.instruction() as u32;
         // TODO: care for double speed mode (need to run half as much dots)
         self.ppu.step(cycles);
-        cycles 
+        cycles
     }
 
     pub fn debug_cmd(&mut self, cmd: &DebugCmd) -> Option<DebugEvent> {
