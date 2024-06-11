@@ -4,7 +4,6 @@
 use std::fs;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
-use debugger::DebuggerTextInterface;
 use fpt::debug_interface::{DebugCmd, DebugEvent};
 use fpt::Gameboy;
 use rustyline::error::ReadlineError;
