@@ -10,7 +10,7 @@ pub struct Debugger {
 impl Debugger {
     pub fn new() -> Self {
         Self {
-            breakpoints: vec![Breakpoint::new(0, true)],
+            breakpoints: Vec::new(),
             watchpoints: Vec::new(),
             paused: false,
         }
