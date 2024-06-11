@@ -1,4 +1,3 @@
-#![feature(lazy_cell)]
 #![feature(array_chunks)]
 
 use std::time::Duration;
@@ -143,11 +142,8 @@ impl FPT {
             }
         }
         // XXX duplicated logic from fpt-cli main.rs
-        match fake_bootrom {
-            Some(BootromToFake::DMG0) => {
-                app.gb.simulate_dmg0_bootrom_handoff_state();
-            }
-            None => {}
+        if let Some(BootromToFake::DMG0) = fake_bootrom {
+            app.gb.simulate_dmg0_bootrom_handoff_state();
         }
         app
     }

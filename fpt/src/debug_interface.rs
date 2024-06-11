@@ -50,24 +50,24 @@ impl fmt::Display for DebugEvent {
     // This trait requires `fmt` with this exact signature.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            DebugEvent::Continue => write!(f, "continue\n"),
+            DebugEvent::Continue => writeln!(f, "continue"),
             DebugEvent::RegisterBreakpoint(pc) => {
-                write!(f, "Register breakpoint at pc={:#04X}\n", pc)
+                writeln!(f, "Register breakpoint at pc={:#04X}", pc)
             }
             DebugEvent::RegisterWatchpoint(addr) => {
-                write!(f, "Register watchpoint at address {:#04X}\n", addr)
+                writeln!(f, "Register watchpoint at address {:#04X}", addr)
             }
             DebugEvent::ListBreakpoints(breakpoints) => {
-                write!(f, "breakpoints:\n")?;
-                for (i, breakpoint) in breakpoints.into_iter().enumerate() {
-                    write!(f, "\t{i}: {:#06X}\n", breakpoint.pc)?;
+                writeln!(f, "breakpoints:")?;
+                for (i, breakpoint) in breakpoints.iter().enumerate() {
+                    writeln!(f, "\t{i}: {:#06X}", breakpoint.pc)?;
                 }
                 Ok(())
             }
             DebugEvent::ListWatchpoints(watchpoints) => {
-                write!(f, "watchpoints:\n")?;
-                for (i, watchpoint) in watchpoints.into_iter().enumerate() {
-                    write!(f, "\t{i}: {:#06X}\n", watchpoint.addr)?;
+                writeln!(f, "watchpoints:")?;
+                for (i, watchpoint) in watchpoints.iter().enumerate() {
+                    writeln!(f, "\t{i}: {:#06X}", watchpoint.addr)?;
                 }
                 Ok(())
             }
@@ -93,7 +93,7 @@ where
     )?))
 }
 
-fn parse<'a, T>(value: &str) -> Option<T>
+fn parse<T>(value: &str) -> Option<T>
 where
     T: Num + std::str::FromStr,
 {

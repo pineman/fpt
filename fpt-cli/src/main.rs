@@ -28,13 +28,10 @@ struct GameboyConfig {
 
 impl GameboyConfig {
     /// Build a `Gameboy` following this configuration. Consumes self.
-    pub fn build_gameboy(self: Self) -> Gameboy {
+    pub fn build_gameboy(self) -> Gameboy {
         let mut gameboy = Gameboy::new();
-        match self.fake_bootrom {
-            Some(BootromToFake::DMG0) => {
-                gameboy.simulate_dmg0_bootrom_handoff_state();
-            }
-            None => {}
+        if let Some(BootromToFake::DMG0) = self.fake_bootrom {
+            gameboy.simulate_dmg0_bootrom_handoff_state();
         }
         gameboy
     }

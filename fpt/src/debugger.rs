@@ -7,6 +7,12 @@ pub struct Debugger {
     pub paused: bool,
 }
 
+impl Default for Debugger {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Debugger {
     pub fn new() -> Self {
         Self {
