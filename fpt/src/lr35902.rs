@@ -26,11 +26,6 @@ pub struct LR35902 {
     branch_taken: bool,
     bus: Bus,
     debugger: Debugger,
-    // Debugging
-    //paused: bool,
-    //breakpoints: Vec<Breakpoint>,
-    //watchpoints: Vec<Watchpoint>,
-    //pub dbg_events: VecDeque<String>,
 }
 
 impl Default for LR35902 {
@@ -77,10 +72,6 @@ impl LR35902 {
             bus: memory,
             // Debugging
             debugger: Debugger::new(),
-            //paused: false,
-            //breakpoints: vec![],
-            //watchpoints: vec![],
-            //dbg_events: VecDeque::new(),
         }
     }
 
@@ -267,10 +258,6 @@ impl LR35902 {
         self.inst_cycle_count = inst_cycle_count;
     }
 
-    pub fn prefix_cb(&self) -> bool {
-        self.prefix_cb
-    }
-
     // Memory
     pub fn mem8(&self, index: u16) -> u8 {
         self.bus.read(index)
@@ -293,11 +280,6 @@ impl LR35902 {
         {
             panic!("tried to change lcdc.7 when ppu is not in vblank!");
         }
-        //if self.match_watchpoint(index) {
-        //    self.paused = true;
-        //    self.dbg_events
-        //        .push_back(format!("Hit watchpoint at {:#06X}", index));
-        //}
     }
 
     pub fn set_mem16(&mut self, index: u16, value: u16) {
@@ -625,47 +607,6 @@ impl LR35902 {
         self.set_h_flag(true);
     }
 
-    // Debugging
-    //pub fn paused(&self) -> bool {
-    //    self.paused
-    //}
-
-    //pub fn set_paused(&mut self, paused: bool) {
-    //    self.paused = paused;
-    //}
-
-    //fn update_code_listing(&mut self, inst: Instruction) {
-    //    if self.bus.memory().code_listing()[self.pc() as usize].is_some() {
-    //        return;
-    //    }
-    //    let result: Vec<String> = (1..inst.size)
-    //        .map(|i| format!("{:#02X}", self.mem8(self.pc() + i as u16)))
-    //        .collect();
-    //    let str = format!(
-    //        "{:#06X}: {} ({:#02X}{}{})",
-    //        self.pc(),
-    //        inst.mnemonic,
-    //        inst.opcode,
-    //        if result.is_empty() { "" } else { " " },
-    //        result.join(" ")
-    //    );
-    //    self.bus.memory_mut().set_code_listing_at(self.pc(), str);
-    //}
-
-    //pub fn add_breakpoint(&mut self, pc: u16) {
-    //    let breakpoint = Breakpoint { pc, active: false };
-    //    self.breakpoints.push(breakpoint);
-    //}
-
-    //pub fn add_watchpoint(&mut self, addr: u16) {
-    //    let watchpoint = Watchpoint { addr };
-    //    self.watchpoints.push(watchpoint);
-    //}
-
-    //fn match_watchpoint(&mut self, address: u16) -> bool {
-    //    self.watchpoints.iter().any(|w| w.addr == address)
-    //}
-
     // Run instructions
     /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
     pub fn t_cycle(&mut self) {
@@ -696,7 +637,6 @@ impl LR35902 {
 
     /// Run one complete instruction - NOT a machine cycle (4 t-cycles)
     pub fn instruction(&mut self) -> u8 {
-        //println!("address: {}", self.pc());
         let instruction = self.decode();
         for _ in 0..instruction.cycles {
             self.t_cycle();
