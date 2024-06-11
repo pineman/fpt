@@ -1,5 +1,4 @@
 #![feature(bigint_helper_methods)]
-#![feature(exclusive_range_pattern)]
 #![feature(array_chunks)]
 #![feature(iter_intersperse)]
 
