@@ -128,7 +128,7 @@ impl Default for FPT {
 
 impl FPT {
     /// Called once before the first frame.
-    pub fn new(
+    fn new(
         _cc: &eframe::CreationContext,
         fake_bootrom: Option<BootromToFake>,
         rom_path: &str,
