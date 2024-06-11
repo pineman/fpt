@@ -96,7 +96,7 @@ fn debug(args: Run) -> Result<()> {
                         if gameboy.paused() {
                             break;
                         }
-                        gameboy.instruction();
+                        gameboy.step();
                     }
                 }
             }
@@ -151,7 +151,7 @@ fn run(gb_config: GameboyConfig, args: Run) -> Result<()> {
         if args.debug.unwrap_or(false) {
             println!("{:#02X}: {:?}", gameboy.cpu().pc(), gameboy.cpu().decode());
         }
-        gameboy.instruction();
+        gameboy.step();
     }
 }
 
