@@ -4,7 +4,7 @@
 #![feature(iter_intersperse)]
 
 use lr35902::LR35902;
-use memory::Bus;
+use memory::{Bus, Buttons};
 use ppu::{Frame, Ppu, DOTS_IN_ONE_FRAME};
 
 pub mod bw;
@@ -135,5 +135,9 @@ impl Gameboy {
     pub fn cycles_in_one_frame(&self) -> u32 {
         // TODO: care for double speed mode
         DOTS_IN_ONE_FRAME
+    }
+
+    pub fn set_buttons(&mut self, buttons: &Buttons) {
+        self.bus_mut().set_buttons(buttons)
     }
 }
