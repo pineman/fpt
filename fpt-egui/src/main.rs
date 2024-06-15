@@ -553,7 +553,7 @@ impl FPT {
                 left: ctx.input(|i| i.key_down(Key::H)),
                 right: ctx.input(|i| i.key_down(Key::L)),
             };
-            self.gb.bus_mut().set_buttons(buttons);
+            self.gb.set_buttons(&buttons);
             let frame = self.emulator(ui);
             if let Some(frame) = frame {
                 for (i, &gb_pixel) in frame.iter().enumerate() {

@@ -428,7 +428,7 @@ impl Bus {
         self.memory().buttons
     }
 
-    pub fn set_buttons(&mut self, buttons: Buttons) {
-        self.memory_mut().buttons = buttons;
+    pub fn set_buttons(&mut self, buttons: &Buttons) {
+        self.memory_mut().buttons = *buttons;
     }
 }
