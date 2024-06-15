@@ -260,8 +260,8 @@ fn test_instr_0x011_ld_de_d16(#[case] lsb: u8, #[case] msb: u8, #[case] result: 
 }
 
 #[rstest]
-#[case(0xa, "bc", 0xFF00, 0x01)]
-#[case(0x1a, "de", 0xFF00, 0x01)]
+#[case(0xa, "bc", 0x1337, 0x01)]
+#[case(0x1a, "de", 0x1337, 0x01)]
 fn test_instr_ld_register_a_from_pointer(
     #[case] opcode: u8,
     #[case] register: &str,
@@ -336,7 +336,7 @@ fn test_instr_0x022_ld_pointer_hl_increment_from_a(#[case] hl: u16, #[case] hl_i
 #[test]
 fn test_instr_0x2a_ld_register_a_from_hli() {
     // Given
-    let hl = 0xFF00;
+    let hl = 0x1337;
     let builder = LR35902Builder::new()
         .with_mem8(0x0000, 0x2a) // instruction LD (HL-), a
         .with_mem8(hl, 0x01)
@@ -406,7 +406,7 @@ fn test_instr_0x032_ld_hld_a(#[case] hl: u16, #[case] hl_after: u16) {
 #[test]
 fn test_instr_0x3a_ld_register_a_from_hld() {
     // Given
-    let hl = 0xFF00;
+    let hl = 0x1337;
     let builder = LR35902Builder::new()
         .with_mem8(0x0000, 0x3a) // instruction LD (HL-), a
         .with_mem8(hl, 0x01)
@@ -1871,14 +1871,14 @@ fn test_push(#[case] opcode: u8, #[case] register: &str, #[case] value: u16, #[c
 }
 
 #[rstest]
-#[case(0xC1, "bc", 0xFFFF, 0xFF00)]
-#[case(0xC1, "bc", 0x0001, 0xFF00)]
-#[case(0xD1, "de", 0xFFFF, 0xFF00)]
-#[case(0xD1, "de", 0x0001, 0xFF00)]
-#[case(0xE1, "hl", 0xFFFF, 0xFF00)]
-#[case(0xE1, "hl", 0x0001, 0xFF00)]
-#[case(0xF1, "af", 0xFFFF, 0xFF00)]
-#[case(0xF1, "af", 0x0001, 0xFF00)]
+#[case(0xC1, "bc", 0xFFFF, 0x1337)]
+#[case(0xC1, "bc", 0x0001, 0x1337)]
+#[case(0xD1, "de", 0xFFFF, 0x1337)]
+#[case(0xD1, "de", 0x0001, 0x1337)]
+#[case(0xE1, "hl", 0xFFFF, 0x1337)]
+#[case(0xE1, "hl", 0x0001, 0x1337)]
+#[case(0xF1, "af", 0xFFFF, 0x1337)]
+#[case(0xF1, "af", 0x0001, 0x1337)]
 fn test_pop(#[case] opcode: u8, #[case] register: &str, #[case] value: u16, #[case] sp: u16) {
     // Given
     let builder = LR35902Builder::new()

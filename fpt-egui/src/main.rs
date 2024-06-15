@@ -8,6 +8,7 @@ use egui::{
     menu, CentralPanel, Color32, ColorImage, Context, Grid, Key, RichText, ScrollArea, SidePanel,
     TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2, ViewportBuilder, ViewportCommand,
 };
+use fpt::memory::Buttons;
 use fpt::ppu::tile::Tile;
 use fpt::{bw, Gameboy};
 use log::info;
@@ -152,12 +153,12 @@ impl FPT {
         });
     }
 
-    fn emulator(&mut self, ui: &mut Ui) {
+    fn emulator(&mut self, ui: &mut Ui) -> Option<fpt::ppu::Frame> {
         self.egui_frame_count += 1;
         let mut frame: Option<fpt::ppu::Frame> = None;
         let delta_time = ui.input(|i| i.unstable_dt) as f64;
         self.accum_time += delta_time;
-
+        // TODO: should limit to "a frame" taking self.slow_factor into account (so 10 frames at 0.1 or 0.1 frames at 10).
         let cycles_want = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
         let mut cycles_ran = 0;
         while cycles_ran < cycles_want && !self.gb.cpu().paused() {
@@ -171,17 +172,9 @@ impl FPT {
                 self.cycles_since_last_frame = 0;
             }
             cycles_ran += 1;
-            // if let Some(inst) = ran_inst {
-            //     // TODO: check breakpoints
-            //     // TODO: this breaks *after* the instruction has been executed
-            // }
         }
         self.accum_time -= cycles_ran as f64 * T_CYCLE * self.slow_factor;
-        if let Some(frame) = frame {
-            for (i, &gb_pixel) in frame.iter().enumerate() {
-                self.image.pixels[i] = PALETTE[gb_pixel as usize];
-            }
-        }
+        frame
     }
 
     #[allow(dead_code)]
@@ -550,7 +543,23 @@ impl FPT {
 
     fn central_panel(&mut self, ctx: &Context, ui: &mut Ui) {
         if !self.gb.cpu().paused() {
-            self.emulator(ui);
+            let buttons = Buttons {
+                a: ctx.input(|i| i.key_down(Key::A)),
+                b: ctx.input(|i| i.key_down(Key::S)),
+                select: ctx.input(|i| i.key_down(Key::D)),
+                start: ctx.input(|i| i.key_down(Key::F)),
+                up: ctx.input(|i| i.key_down(Key::K)),
+                down: ctx.input(|i| i.key_down(Key::J)),
+                left: ctx.input(|i| i.key_down(Key::H)),
+                right: ctx.input(|i| i.key_down(Key::L)),
+            };
+            self.gb.bus_mut().set_buttons(buttons);
+            let frame = self.emulator(ui);
+            if let Some(frame) = frame {
+                for (i, &gb_pixel) in frame.iter().enumerate() {
+                    self.image.pixels[i] = PALETTE[gb_pixel as usize];
+                }
+            }
         }
         // TODO repeated work in 1st repaint
         // TODO: should be in new?
