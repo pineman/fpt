@@ -307,7 +307,7 @@ impl Bus {
 
     pub fn read(&self, address: GBAddress) -> u8 {
         if address == map::JOYP as u16 {
-            self._joyp()
+            self.joyp()
         } else {
             self.memory().mem[address as Address]
         }
@@ -319,7 +319,7 @@ impl Bus {
 
     fn _read(&self, address: Address) -> u8 {
         if address == map::JOYP {
-            self._joyp()
+            self.joyp()
         } else {
             self.memory().mem[address]
         }
@@ -403,7 +403,7 @@ impl Bus {
         reader(&self.memory().mem[map::VRAM])
     }
 
-    fn _joyp(&self) -> u8 {
+    fn joyp(&self) -> u8 {
         let buttons = self.buttons();
         let joyp = self.memory().mem[map::JOYP];
         let sel_buttons = !bw::test_bit8::<5>(joyp);
@@ -422,10 +422,6 @@ impl Bus {
             0
         };
         (joyp & 0xf0) + (!b & 0x0f)
-    }
-
-    pub fn joyp(&self) -> u8 {
-        self._joyp()
     }
 
     pub fn buttons(&self) -> Buttons {
