@@ -23,7 +23,7 @@ pub struct LR35902 {
     clock_cycles: u64,
     inst_cycle_count: u8,
     branch_taken: bool,
-    mem: Bus,
+    bus: Bus,
     // Debugging
     paused: bool,
     breakpoints: Vec<Breakpoint>,
@@ -68,7 +68,7 @@ impl LR35902 {
             clock_cycles: 0,
             inst_cycle_count: 0,
             branch_taken: false,
-            mem: memory,
+            bus: memory,
             // Debugging
             paused: false,
             breakpoints: vec![],
@@ -262,7 +262,7 @@ impl LR35902 {
 
     // Memory
     pub fn mem8(&self, index: u16) -> u8 {
-        self.mem.read(index)
+        self.bus.read(index)
     }
 
     pub fn mem16(&self, index: u16) -> u16 {
@@ -270,15 +270,15 @@ impl LR35902 {
     }
 
     pub fn set_mem8(&mut self, index: u16, value: u8) {
-        self.mem.write(index, value);
+        self.bus.write(index, value);
         // Write triggers (TODO: better solution)
         if index == memory::map::BANK as u16 && value != 0 {
-            self.mem.unload_bootrom();
+            self.bus.unload_bootrom();
         }
         if index == memory::map::LCDC as u16
-            && bw::test_bit8::<7>(self.mem.lcdc())
+            && bw::test_bit8::<7>(self.bus.lcdc())
             && !bw::test_bit8::<7>(value)
-            && self.mem.stat() & 0b00000011 != Mode::VBlank as u8
+            && self.bus.stat() & 0b00000011 != Mode::VBlank as u8
         {
             panic!("tried to change lcdc.7 when ppu is not in vblank!");
         }
@@ -624,7 +624,7 @@ impl LR35902 {
     }
 
     fn update_code_listing(&mut self, inst: Instruction) {
-        if self.mem.memory().code_listing()[self.pc() as usize].is_some() {
+        if self.bus.memory().code_listing()[self.pc() as usize].is_some() {
             return;
         }
         let result: Vec<String> = (1..inst.size)
@@ -638,7 +638,7 @@ impl LR35902 {
             if result.is_empty() { "" } else { " " },
             result.join(" ")
         );
-        self.mem.memory_mut().set_code_listing_at(self.pc(), str);
+        self.bus.memory_mut().set_code_listing_at(self.pc(), str);
     }
 
     pub fn add_breakpoint(&mut self, pc: u16) {
