@@ -92,6 +92,10 @@ impl Gameboy {
         &self.bus
     }
 
+    pub fn bus_mut(&mut self) -> &mut Bus {
+        &mut self.bus
+    }
+
     pub fn cpu(&self) -> &LR35902 {
         &self.cpu
     }
@@ -103,6 +107,7 @@ impl Gameboy {
     pub fn ppu(&self) -> &Ppu {
         &self.ppu
     }
+
     pub fn ppu_mut(&mut self) -> &mut Ppu {
         &mut self.ppu
     }

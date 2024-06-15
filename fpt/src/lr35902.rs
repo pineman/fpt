@@ -280,7 +280,7 @@ impl LR35902 {
             && !bw::test_bit8::<7>(value)
             && self.mem.stat() & 0b00000011 != Mode::VBlank as u8
         {
-            panic!("WARNING: changing lcdc.7 when ppu is not in vblank");
+            panic!("tried to change lcdc.7 when ppu is not in vblank!");
         }
         if self.match_watchpoint(index) {
             self.paused = true;
