@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter};
 
 use tile::VRamContents;
 
-use crate::memory::Bus;
+use crate::{bw, memory::Bus};
 
 pub mod tile;
 
@@ -111,6 +111,11 @@ impl Ppu {
     }
 
     fn v_blank(&mut self) {
+        if self.dots_this_frame == 144 * 456 {
+            dbg!("set vblank intr", self.bus.ly());
+            self.bus
+                .set_iflag(bw::set_bit8::<0>(self.bus.iflag(), true));
+        }
         if self.dots_this_frame == DOTS_IN_ONE_FRAME - 1 {
             self.set_mode(Mode::OamScan);
         }
@@ -153,8 +158,6 @@ impl Ppu {
                 | ((self.bus.ly() == self.bus.lyc()) as u8) << 2
                 | self.mode as u8,
         );
-
-        // TODO actually draw some actual background, window and sprites
 
         // Advance one "dot"
         self.dots_this_frame = (self.dots_this_frame + 1) % DOTS_IN_ONE_FRAME;
