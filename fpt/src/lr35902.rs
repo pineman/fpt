@@ -18,7 +18,7 @@ pub struct LR35902 {
     sp: u16,
     pc: u16,
     ime: bool,
-    imenc: bool,
+    ime_next_inst: bool,
     prefix_cb: bool,
     clock_cycles: u64,
     inst_cycle_count: u8,
@@ -63,7 +63,7 @@ impl LR35902 {
             sp: 0,
             pc: 0,
             ime: false,
-            imenc: false,
+            ime_next_inst: false,
             prefix_cb: false,
             clock_cycles: 0,
             inst_cycle_count: 0,
@@ -228,12 +228,12 @@ impl LR35902 {
         self.ime
     }
 
-    pub fn set_interrupt_master_enable(&mut self, ime: bool) {
+    pub fn set_ime(&mut self, ime: bool) {
         self.ime = ime;
     }
 
-    pub fn set_interrupt_master_enable_next_instruction(&mut self) {
-        self.imenc = true;
+    pub fn set_ime_next_inst(&mut self) {
+        self.ime_next_inst = true;
     }
 
     pub fn clock_cycles(&self) -> u64 {
@@ -599,7 +599,7 @@ impl LR35902 {
     fn reti(&mut self) {
         // TODO: The interrupt master enable flag is returned to its pre-interrupt status.
         //  BUT: https://gbdev.io/pandocs/Interrupts.htm claims that RETI is EI followed by RET
-        self.set_interrupt_master_enable_next_instruction();
+        self.set_ime_next_inst();
 
         // RET
         let address = self.pop();
@@ -705,9 +705,9 @@ impl LR35902 {
     }
 
     fn execute(&mut self, instruction: Instruction) {
-        if self.imenc {
-            self.set_interrupt_master_enable(true);
-            self.imenc = false;
+        if self.ime_next_inst {
+            self.set_ime(true);
+            self.ime_next_inst = false;
         }
         if self.prefix_cb {
             self.prefix_cb = false;
@@ -1833,7 +1833,7 @@ impl LR35902 {
             }
             0xF3 => {
                 // DI
-                self.set_interrupt_master_enable(false);
+                self.set_ime(false);
             }
             0xF4 => {
                 // Not implemented
@@ -1867,7 +1867,7 @@ impl LR35902 {
             }
             0xFB => {
                 // EI
-                self.set_interrupt_master_enable_next_instruction();
+                self.set_ime_next_inst();
             }
             0xFC => {
                 // Not implemented
