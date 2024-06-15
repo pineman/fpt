@@ -629,6 +629,35 @@ impl LR35902 {
     /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
     pub fn t_cycle(&mut self) {
         let inst = self.decode();
+        if self.inst_cycle_count() == 0 && self.ime {
+            let iflag = self.bus.iflag();
+            let intr = iflag & self.bus.ie();
+            let isv;
+            if bw::test_bit8::<0>(intr) {
+                dbg!("running vblank intr", self.bus.ly());
+                isv = 0x40;
+                self.bus.set_iflag(bw::set_bit8::<0>(iflag, false));
+            } else if bw::test_bit8::<1>(intr) {
+                isv = 0x48;
+                self.bus.set_iflag(bw::set_bit8::<1>(iflag, false));
+            } else if bw::test_bit8::<2>(intr) {
+                isv = 0x50;
+                self.bus.set_iflag(bw::set_bit8::<2>(iflag, false));
+            } else if bw::test_bit8::<3>(intr) {
+                isv = 0x58;
+                self.bus.set_iflag(bw::set_bit8::<3>(iflag, false));
+            } else if bw::test_bit8::<4>(intr) {
+                isv = 0x60;
+                self.bus.set_iflag(bw::set_bit8::<4>(iflag, false));
+            } else {
+                return;
+            }
+            self.set_ime(false);
+            self.push(self.pc());
+            self.set_pc(isv);
+            self.set_clock_cycles(self.clock_cycles() + 5);
+            return;
+        }
         self.set_inst_cycle_count(self.inst_cycle_count() + 1);
         // Only actually mutate CPU state on the last t-cycle of the instruction
         if self.inst_cycle_count() < inst.cycles {
