@@ -607,6 +607,24 @@ impl LR35902 {
         self.set_h_flag(true);
     }
 
+    pub fn update_code_listing(&mut self, inst: Instruction) {
+        if self.bus.memory().code_listing()[self.pc() as usize].is_some() {
+            return;
+        }
+        let result: Vec<String> = (1..inst.size)
+            .map(|i| format!("{:#02X}", self.mem8(self.pc() + i as u16)))
+            .collect();
+        let str = format!(
+            "{:#06X}: {} ({:#02X}{}{})",
+            self.pc(),
+            inst.mnemonic,
+            inst.opcode,
+            if result.is_empty() { "" } else { " " },
+            result.join(" ")
+        );
+        self.bus.memory_mut().set_code_listing_at(self.pc(), str);
+    }
+
     // Run instructions
     /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
     pub fn t_cycle(&mut self) {
@@ -616,11 +634,10 @@ impl LR35902 {
         if self.inst_cycle_count() < inst.cycles {
             return;
         }
-
+        self.update_code_listing(inst);
         if self.debugger.match_breakpoint(self.pc()) {
             return;
         }
-
         self.execute(inst);
         if !self.mutated_pc() {
             self.set_pc(self.pc() + inst.size as u16);
