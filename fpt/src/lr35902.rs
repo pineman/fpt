@@ -634,7 +634,6 @@ impl LR35902 {
             let intr = iflag & self.bus.ie();
             let isv;
             if bw::test_bit8::<0>(intr) {
-                dbg!("running vblank intr", self.bus.ly());
                 isv = 0x40;
                 self.bus.set_iflag(bw::set_bit8::<0>(iflag, false));
             } else if bw::test_bit8::<1>(intr) {
