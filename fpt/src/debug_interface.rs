@@ -118,7 +118,7 @@ impl DebugCmd {
             "lb" | "list_breakpoints" => Some(DebugCmd::ListBreakpoints),
             "lw" | "list_watchpoints" => Some(DebugCmd::ListWatchpoints),
             "load" => Some(DebugCmd::Load(args.next().unwrap().to_string())),
-            _ => Some(DebugCmd::Continue),
+            _ => None,
         }
     }
 }
