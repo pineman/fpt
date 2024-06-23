@@ -653,13 +653,6 @@ impl LR35902 {
             self.prefix_cb = false;
         }
 
-        println!("{}", self.pc());
-        println!("{}", instruction);
-
-        if self.pc() == 0xFE {
-            std::process::exit(1);
-        }
-
         match instruction.opcode {
             0x00 => {
                 // NOP
