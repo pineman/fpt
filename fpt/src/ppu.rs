@@ -112,7 +112,6 @@ impl Ppu {
 
     fn v_blank(&mut self) {
         if self.dots_this_frame == 144 * 456 {
-            dbg!("set vblank intr", self.bus.ly());
             self.bus
                 .set_iflag(bw::set_bit8::<0>(self.bus.iflag(), true));
         }
