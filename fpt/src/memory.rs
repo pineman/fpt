@@ -432,4 +432,16 @@ impl Bus {
     pub fn set_buttons(&mut self, buttons: &Buttons) {
         self.memory_mut().buttons = *buttons;
     }
+
+    pub fn ie(&self) -> u8 {
+        self._read(map::IE)
+    }
+
+    pub fn iflag(&self) -> u8 {
+        self._read(map::IF)
+    }
+
+    pub fn set_iflag(&mut self, value: u8) {
+        self._write(map::IF, value)
+    }
 }

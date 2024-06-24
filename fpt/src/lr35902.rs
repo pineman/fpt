@@ -650,6 +650,34 @@ impl LR35902 {
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
         self.set_mutated_pc(false);
         self.set_inst_cycle_count(0);
+        if self.ime {
+            let iflag = self.bus.iflag();
+            let intr = iflag & self.bus.ie();
+            let isv;
+            if bw::test_bit8::<0>(intr) {
+                isv = 0x40;
+                self.bus.set_iflag(bw::set_bit8::<0>(iflag, false));
+            } else if bw::test_bit8::<1>(intr) {
+                isv = 0x48;
+                self.bus.set_iflag(bw::set_bit8::<1>(iflag, false));
+            } else if bw::test_bit8::<2>(intr) {
+                isv = 0x50;
+                self.bus.set_iflag(bw::set_bit8::<2>(iflag, false));
+            } else if bw::test_bit8::<3>(intr) {
+                isv = 0x58;
+                self.bus.set_iflag(bw::set_bit8::<3>(iflag, false));
+            } else if bw::test_bit8::<4>(intr) {
+                isv = 0x60;
+                self.bus.set_iflag(bw::set_bit8::<4>(iflag, false));
+            } else {
+                return;
+            }
+            // TODO: this is a big lie. we cant just run 5 cycles inside the function supposed to run 1 cycle lmao
+            self.set_ime(false);
+            self.push(self.pc());
+            self.set_pc(isv);
+            self.set_clock_cycles(self.clock_cycles() + 5);
+        }
     }
 
     /// Run one complete instruction - NOT a machine cycle (4 t-cycles)
