@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::fmt;
 
 use num_traits::Num;
@@ -37,13 +38,15 @@ pub enum DebugCmd {
     ListWatchpoints,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum DebugEvent {
     Continue,
     RegisterBreakpoint(u16),
     RegisterWatchpoint(u16),
     ListBreakpoints(Vec<Breakpoint>),
     ListWatchpoints(Vec<Watchpoint>),
+    Breakpoint(u16),
+    Watchpoint(u16, u16),
 }
 
 impl fmt::Display for DebugEvent {
@@ -69,6 +72,18 @@ impl fmt::Display for DebugEvent {
                 for (i, watchpoint) in watchpoints.iter().enumerate() {
                     writeln!(f, "\t{i}: {:#06X}", watchpoint.addr)?;
                 }
+                Ok(())
+            }
+            DebugEvent::Breakpoint(pc) => {
+                writeln!(f, "Hit breakpoint at {:#06X}", pc)?;
+                Ok(())
+            }
+            DebugEvent::Watchpoint(address, value) => {
+                writeln!(
+                    f,
+                    "Hit watchpoint at {:#06X} with value: {:#06X}",
+                    address, value
+                )?;
                 Ok(())
             }
         }
@@ -127,4 +142,5 @@ pub trait DebugInterface {
     fn receive_command(&mut self, cmd: &DebugCmd) -> Option<DebugEvent>;
     fn paused(&self) -> bool;
     fn set_paused(&mut self, paused: bool);
+    fn get_debug_events(&mut self) -> &mut VecDeque<DebugEvent>;
 }

@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::fmt;
 
 use instructions::{Instruction, InstructionKind, INSTRUCTIONS};
@@ -51,6 +52,10 @@ impl DebugInterface for LR35902 {
 
     fn set_paused(&mut self, paused: bool) {
         self.debugger.paused = paused;
+    }
+
+    fn get_debug_events(&mut self) -> &mut VecDeque<DebugEvent> {
+        self.debugger.debug_events()
     }
 }
 
