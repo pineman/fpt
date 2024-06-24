@@ -2,6 +2,8 @@
 #![feature(array_chunks)]
 #![feature(iter_intersperse)]
 
+use std::collections::VecDeque;
+
 use debug_interface::DebugEvent;
 pub use debug_interface::{DebugCmd, DebugInterface};
 use lr35902::LR35902;
@@ -140,6 +142,10 @@ impl Gameboy {
 
     pub fn set_paused(&mut self, paused: bool) {
         self.cpu_mut().set_paused(paused)
+    }
+
+    pub fn get_debug_events(&mut self) -> &mut VecDeque<DebugEvent> {
+        self.cpu.get_debug_events()
     }
 
     pub fn get_frame(&self) -> &Frame {

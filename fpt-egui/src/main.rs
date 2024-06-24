@@ -1,5 +1,6 @@
 #![feature(array_chunks)]
 
+use std::collections::VecDeque;
 use std::time::Duration;
 
 use clap::{Parser, ValueEnum};
@@ -8,6 +9,7 @@ use egui::{
     menu, CentralPanel, Color32, ColorImage, Context, Grid, Key, RichText, ScrollArea, SidePanel,
     TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2, ViewportBuilder, ViewportCommand,
 };
+use fpt::debug_interface::DebugEvent;
 use fpt::memory::Buttons;
 use fpt::ppu::tile::Tile;
 use fpt::{bw, DebugCmd, DebugInterface, Gameboy};
@@ -379,6 +381,15 @@ impl FPT {
                 response.request_focus();
                 self.debug_console.was_focused = false;
             }
+
+            let debug_events: &mut VecDeque<DebugEvent> = self.gb.get_debug_events();
+            while !debug_events.is_empty() {
+                let event = debug_events.pop_front();
+                self.debug_console
+                    .console
+                    .push(format!("{}", event.unwrap()));
+            }
+
             if response.has_focus() && ctx.input(|i| i.key_pressed(Key::Enter)) {
                 self.debug_console.was_focused = true;
                 self.debug_console.command = self.debug_console.command.trim().to_string();

@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use crate::debug_interface::{Breakpoint, DebugCmd, DebugEvent, Watchpoint};
 
 #[derive(Clone, PartialEq)]
@@ -5,6 +7,7 @@ pub struct Debugger {
     breakpoints: Vec<Breakpoint>,
     watchpoints: Vec<Watchpoint>,
     pub paused: bool,
+    dbg_events: VecDeque<DebugEvent>,
 }
 
 impl Default for Debugger {
@@ -19,6 +22,7 @@ impl Debugger {
             breakpoints: Vec::new(),
             watchpoints: Vec::new(),
             paused: false,
+            dbg_events: VecDeque::new(),
         }
     }
 
@@ -55,20 +59,27 @@ impl Debugger {
 
     pub fn match_breakpoint(&mut self, pc: u16) -> bool {
         let breakpoint = self.breakpoints.iter_mut().find(|b| b.pc == pc);
-        let is_breakpoint = breakpoint.is_some();
-        let mut triggered = false;
+
+        let mut pc = 0;
         if breakpoint.is_some() {
             let breakpoint = breakpoint.unwrap();
+            pc = breakpoint.pc;
             if breakpoint.triggered {
                 breakpoint.triggered = false;
             } else {
                 breakpoint.triggered = true;
                 self.paused = true;
             }
-
-            triggered = breakpoint.triggered;
         }
 
-        is_breakpoint && !triggered
+        if self.paused {
+            self.dbg_events.push_back(DebugEvent::Breakpoint(pc));
+        }
+
+        self.paused
+    }
+
+    pub fn debug_events(&mut self) -> &mut VecDeque<DebugEvent> {
+        &mut self.dbg_events
     }
 }
