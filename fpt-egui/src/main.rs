@@ -327,18 +327,30 @@ impl FPT {
         // TODO: scroll into line of current pc (need to find index)
         // TODO: differentiate current pc
         ui.collapsing("Code", |ui| {
-            let mem = self.gb.bus().memory();
-            let code_flat: Vec<&String> = mem.code_listing().iter().flatten().collect();
-            ScrollArea::vertical().show_rows(
-                ui,
-                ui.text_style_height(&egui::TextStyle::Body),
-                code_flat.len(),
-                |ui, row_range| {
-                    for row in row_range {
-                        ui.label(RichText::new(code_flat[row].clone()).monospace());
-                    }
-                },
-            );
+            ui.vertical(|ui| {
+                let mem = self.gb.bus().memory();
+                let code_flat: Vec<&String> = mem.code_listing().iter().flatten().collect();
+                if ui.button("Dump").clicked() {
+                    println!(
+                        "{}",
+                        code_flat
+                            .iter()
+                            .map(|s| s.as_str())
+                            .collect::<Vec<&str>>()
+                            .join("\n")
+                    );
+                }
+                ScrollArea::vertical().show_rows(
+                    ui,
+                    ui.text_style_height(&egui::TextStyle::Body),
+                    code_flat.len(),
+                    |ui, row_range| {
+                        for row in row_range {
+                            ui.label(RichText::new(code_flat[row].clone()).monospace());
+                        }
+                    },
+                );
+            });
         });
         ui.collapsing("Console", |ui| {
             ScrollArea::vertical()
