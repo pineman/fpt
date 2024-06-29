@@ -5,7 +5,6 @@ use std::rc::Rc;
 use crate::bw;
 
 pub type Address = usize;
-pub type GBAddress = u16;
 pub type MemoryRange = Range<Address>;
 
 /// You can access these consts like this:
@@ -306,15 +305,15 @@ impl Bus {
         self.clone_from_slice(0x0100..l, &cartridge[0x0100..l]);
     }
 
-    pub fn read(&self, address: GBAddress) -> u8 {
-        if address == map::JOYP as u16 {
+    pub fn read(&self, address: Address) -> u8 {
+        if address == map::JOYP {
             self.joyp()
         } else {
             self.memory().mem[address as Address]
         }
     }
 
-    pub fn write(&mut self, address: GBAddress, value: u8) {
+    pub fn write(&mut self, address: Address, value: u8) {
         self.memory_mut().mem[address as Address] = value;
     }
 
@@ -327,6 +326,9 @@ impl Bus {
     }
 
     fn _write(&mut self, address: Address, value: u8) {
+        if address == map::TAC {
+            println!("write to TAC: {}", value);
+        }
         self.memory_mut().mem[address] = value;
     }
 
@@ -422,7 +424,8 @@ impl Bus {
         } else {
             0
         };
-        (joyp & 0xf0) + (!b & 0x0f)
+        let j = (joyp & 0xf0) + (!b & 0x0f);
+        j
     }
 
     pub fn buttons(&self) -> Buttons {

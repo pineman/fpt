@@ -175,8 +175,8 @@ impl FPT {
         while cycles_ran < cycles_want && !self.gb.paused() {
             // TODO: care for double speed mode
             // why do this? Shouldn't instruction() be called on the gameboy instead?
-            self.gb.cpu_mut().t_cycle();
-            self.gb.ppu_mut().step(1);
+
+            self.gb.step();
             self.cycles_since_last_frame += 1;
             if self.cycles_since_last_frame == self.gb.cycles_in_one_frame() {
                 frame = Some(*self.gb.get_frame()); // Copies the whole [u8; WIDTH * HEIGHT] into frame
