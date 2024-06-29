@@ -174,8 +174,6 @@ impl FPT {
         let mut cycles_ran = 0;
         while cycles_ran < cycles_want && !self.gb.paused() {
             // TODO: care for double speed mode
-            // why do this? Shouldn't instruction() be called on the gameboy instead?
-
             self.gb.step();
             self.cycles_since_last_frame += 1;
             if self.cycles_since_last_frame == self.gb.cycles_in_one_frame() {
