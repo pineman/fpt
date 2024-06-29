@@ -7,6 +7,7 @@ pub use debug_interface::{DebugCmd, DebugInterface};
 use lr35902::LR35902;
 use memory::{Bus, Buttons};
 use ppu::{Frame, Ppu, DOTS_IN_ONE_FRAME};
+use timer::Timer;
 
 pub mod bw;
 pub mod debug_interface;
@@ -14,11 +15,14 @@ pub mod debugger;
 pub mod lr35902;
 pub mod memory;
 pub mod ppu;
+pub mod timer;
 
 pub struct Gameboy {
+    t_cycle_counter: u8,
     bus: Bus,
     cpu: LR35902,
     ppu: Ppu,
+    timer: Timer,
 }
 
 impl Gameboy {
@@ -26,9 +30,11 @@ impl Gameboy {
     pub fn new() -> Self {
         let bus = Bus::new();
         Self {
+            t_cycle_counter: 0,
             bus: bus.clone(),
             cpu: LR35902::new(bus.clone()),
-            ppu: Ppu::new(bus),
+            ppu: Ppu::new(bus.clone()),
+            timer: Timer::new(bus),
         }
     }
 
@@ -115,11 +121,21 @@ impl Gameboy {
         &mut self.ppu
     }
 
+    pub fn timer_mut(&mut self) -> &mut Timer {
+        &mut self.timer
+    }
+
     pub fn step(&mut self) -> u32 {
         //let cycles = self.cpu.instruction() as u32;
         self.cpu.t_cycle();
         // TODO: care for double speed mode (need to run half as much dots)
         self.ppu.step(1);
+
+        if self.t_cycle_counter == 3 {
+            self.timer.step();
+        }
+
+        self.t_cycle_counter = (self.t_cycle_counter + 1) % 4;
         1
     }
 
@@ -127,6 +143,7 @@ impl Gameboy {
         let cycles = self.cpu.instruction() as u32;
         // TODO: care for double speed mode (need to run half as much dots)
         self.ppu.step(cycles);
+        self.timer.step();
         cycles
     }
 

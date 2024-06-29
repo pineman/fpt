@@ -260,7 +260,7 @@ impl LR35902 {
 
     // Memory
     pub fn mem8(&self, index: u16) -> u8 {
-        self.bus.read(index)
+        self.bus.read(index as usize)
     }
 
     pub fn mem16(&self, index: u16) -> u16 {
@@ -268,7 +268,7 @@ impl LR35902 {
     }
 
     pub fn set_mem8(&mut self, index: u16, value: u8) {
-        self.bus.write(index, value);
+        self.bus.write(index as usize, value);
         // Write triggers (TODO: better solution)
         if index == memory::map::BANK as u16 && value != 0 {
             self.bus.unload_bootrom();
@@ -884,7 +884,25 @@ impl LR35902 {
             }
             0x27 => {
                 // DAA
-                todo!("0x27 DAA")
+                if !self.n_flag() {
+                    if self.c_flag() || self.a() > 0x99 {
+                        self.set_a(self.a() + 0x60);
+                        self.set_c_flag(true);
+                    }
+                    if self.h_flag() || (self.a() & 0x0f) > 0x09 {
+                        self.set_a(self.a() + 0x6);
+                    }
+                } else {
+                    if self.c_flag() {
+                        self.set_a(self.a() - 0x60);
+                    }
+                    if self.h_flag() {
+                        self.set_a(self.a() - 0x6);
+                    }
+                }
+
+                self.set_z_flag(self.a() == 0);
+                self.set_h_flag(false);
             }
             0x28 => {
                 // JR Z,r8
@@ -1228,7 +1246,7 @@ impl LR35902 {
                 // HALT
                 // Take care for halt bug: https://gbdev.io/pandocs/halt.html
                 // https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#HALT
-                todo!("0x76 HALT")
+                //todo!("0x76 HALT")
             }
             0x77 => {
                 // LD (HL),A
