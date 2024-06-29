@@ -424,8 +424,7 @@ impl Bus {
         } else {
             0
         };
-        let j = (joyp & 0xf0) + (!b & 0x0f);
-        j
+        (joyp & 0xf0) + (!b & 0x0f)
     }
 
     pub fn buttons(&self) -> Buttons {
