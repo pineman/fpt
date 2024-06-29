@@ -4,7 +4,6 @@ use crate::memory::map;
 
 pub struct Timer {
     sys: u16, // system timer counter
-    interrupt: bool,
     bus: Bus,
     div: u8,
     tima: u8,
@@ -16,7 +15,6 @@ impl Timer {
     pub fn new(memory: Bus) -> Self {
         Self {
             sys: 0,
-            interrupt: false,
             bus: memory,
             div: 0,
             tima: 0,
@@ -66,10 +64,6 @@ impl Timer {
         self.bus.read(map::TMA)
     }
 
-    fn get_interrupt(&self) -> bool {
-        self.interrupt
-    }
-
     // Call this every M-cycle
     pub fn step(&mut self) {
         let mut div = self.get_div();
@@ -108,15 +102,17 @@ impl Timer {
             tima = tima.overflowing_add(1).0;
         }
 
-        if tima == 0 && enable {
+        let interrupt = if tima == 0 && enable {
             tima = tma;
-            self.interrupt = true;
+            true
         } else {
-            self.interrupt = false;
-        }
+            false
+        };
 
+        self.bus
+            .set_iflag(bw::set_bit8::<2>(self.bus.iflag(), interrupt));
         self.set_div(div);
-        self.set_tima(dbg!(tima));
+        self.set_tima(tima);
         self.set_tac(tac);
         self.set_tma(tma);
     }
@@ -173,7 +169,6 @@ mod tests {
 
         assert_eq!(bus.read(map::DIV), 8);
         assert_eq!(bus.read(map::TIMA), 254);
-
-        assert_eq!(timer.get_interrupt(), true);
+        assert_eq!(bus.read(map::IF), 4);
     }
 }
