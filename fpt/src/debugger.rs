@@ -1,11 +1,12 @@
 use std::collections::VecDeque;
 
-use crate::debug_interface::{Breakpoint, DebugCmd, DebugEvent, Watchpoint};
+use crate::debug_interface::{Breakpoint, DebugCmd, DebugEvent, Instrpoint, Watchpoint};
 
 #[derive(Clone, PartialEq)]
 pub struct Debugger {
     breakpoints: Vec<Breakpoint>,
     watchpoints: Vec<Watchpoint>,
+    instrpoints: Vec<Instrpoint>,
     pub paused: bool,
     dbg_events: VecDeque<DebugEvent>,
 }
@@ -21,6 +22,7 @@ impl Debugger {
         Self {
             breakpoints: Vec::new(),
             watchpoints: Vec::new(),
+            instrpoints: Vec::new(),
             paused: false,
             dbg_events: VecDeque::new(),
         }
@@ -47,6 +49,13 @@ impl Debugger {
                 self.watchpoints.push(Watchpoint { addr: *addr });
                 Some(DebugEvent::RegisterWatchpoint(*addr))
             }
+            DebugCmd::Instrpoint(instruction) => {
+                self.instrpoints.push(Instrpoint {
+                    opcode: *instruction,
+                    triggered: false,
+                });
+                Some(DebugEvent::RegisterInstrpoint(instruction.clone()))
+            }
             DebugCmd::ListBreakpoints => {
                 Some(DebugEvent::ListBreakpoints(self.breakpoints.clone()))
             }
@@ -55,6 +64,29 @@ impl Debugger {
             }
             DebugCmd::Load(_) => None,
         }
+    }
+
+    pub fn match_instrpoint(&mut self, opcode: u16) -> bool {
+        let instrpoint = self.instrpoints.iter_mut().find(|i| i.opcode == opcode);
+        let is_instrpoint = instrpoint.is_some();
+
+        let triggered = false;
+
+        if instrpoint.is_some() {
+            let instrpoint = instrpoint.unwrap();
+            if instrpoint.triggered {
+                instrpoint.triggered = false;
+            } else {
+                instrpoint.triggered = true;
+                self.paused = true;
+            }
+        }
+
+        if self.paused {
+            self.dbg_events.push_back(DebugEvent::Instrpoint(opcode));
+        }
+
+        is_instrpoint && !triggered
     }
 
     pub fn match_breakpoint(&mut self, pc: u16) -> bool {

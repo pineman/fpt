@@ -27,6 +27,8 @@ pub struct LR35902 {
     branch_taken: bool,
     bus: Bus,
     debugger: Debugger,
+    previous_pc: u16,
+    pc_counter: u16,
 }
 
 impl Default for LR35902 {
@@ -77,6 +79,8 @@ impl LR35902 {
             bus: memory,
             // Debugging
             debugger: Debugger::new(),
+            previous_pc: 0,
+            pc_counter: 0,
         }
     }
 
@@ -633,6 +637,21 @@ impl LR35902 {
     // Run instructions
     /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
     pub fn t_cycle(&mut self) {
+        static mut PREVIOUS_PC: u16 = 0;
+        static mut PC_COUNTER: u16 = 0;
+        // test roms get stuck in the same pc when finished
+        unsafe {
+            if PREVIOUS_PC != self.pc() {
+                PREVIOUS_PC = self.pc();
+                PC_COUNTER = 0;
+            } else {
+                PC_COUNTER += 1;
+                if PC_COUNTER == 100 {
+                    std::process::exit(0);
+                }
+            }
+        }
+
         let inst = self.decode();
         self.set_inst_cycle_count(self.inst_cycle_count() + 1);
         // Only actually mutate CPU state on the last t-cycle of the instruction
@@ -641,6 +660,9 @@ impl LR35902 {
         }
         self.update_code_listing(inst);
         if self.debugger.match_breakpoint(self.pc()) {
+            return;
+        }
+        if self.debugger.match_instrpoint(inst.opcode) {
             return;
         }
         self.execute(inst);
