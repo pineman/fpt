@@ -71,13 +71,6 @@ impl Timer {
         let tac = self.get_tac();
         let tma = self.get_tma();
 
-        if (div + 1) % 4 == 0 {
-            println!(
-                "self.div: {}, self.tima: {}, self.tac: {}, self.tma: {}",
-                div, tima, tac, tma
-            );
-        }
-
         self.sys = self.sys.overflowing_add(1).0;
 
         let enable = bw::test_bit8::<2>(tac);
