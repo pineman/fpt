@@ -27,12 +27,25 @@ impl Watchpoint {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct Instrpoint {
+    pub opcode: u16,
+    pub triggered: bool,
+}
+
+impl Instrpoint {
+    pub fn new(opcode: u16, triggered: bool) -> Self {
+        Self { opcode, triggered }
+    }
+}
+
 #[derive(Debug)]
 pub enum DebugCmd {
     Pause,
     Continue,
     Breakpoint(u16),
     Watchpoint(u16),
+    Instrpoint(u16),
     Load(String),
     ListBreakpoints,
     ListWatchpoints,
@@ -43,10 +56,12 @@ pub enum DebugEvent {
     Continue,
     RegisterBreakpoint(u16),
     RegisterWatchpoint(u16),
+    RegisterInstrpoint(u16),
     ListBreakpoints(Vec<Breakpoint>),
     ListWatchpoints(Vec<Watchpoint>),
     Breakpoint(u16),
     Watchpoint(u16, u16),
+    Instrpoint(u16),
 }
 
 impl fmt::Display for DebugEvent {
@@ -59,6 +74,9 @@ impl fmt::Display for DebugEvent {
             }
             DebugEvent::RegisterWatchpoint(addr) => {
                 writeln!(f, "Register watchpoint at address {:#04X}", addr)
+            }
+            DebugEvent::RegisterInstrpoint(opcode) => {
+                writeln!(f, "Register instrpoint with opcode {:#04X}", opcode)
             }
             DebugEvent::ListBreakpoints(breakpoints) => {
                 writeln!(f, "breakpoints:")?;
@@ -84,6 +102,10 @@ impl fmt::Display for DebugEvent {
                     "Hit watchpoint at {:#06X} with value: {:#06X}",
                     address, value
                 )?;
+                Ok(())
+            }
+            DebugEvent::Instrpoint(opcode) => {
+                writeln!(f, "Hit instrpoint at {:#06X}", opcode)?;
                 Ok(())
             }
         }

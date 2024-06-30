@@ -4,8 +4,7 @@
 
 use std::collections::VecDeque;
 
-use debug_interface::DebugEvent;
-pub use debug_interface::{DebugCmd, DebugInterface};
+pub use debug_interface::{DebugCmd, DebugEvent, DebugInterface};
 use lr35902::LR35902;
 use memory::{Bus, Buttons};
 use ppu::{Frame, Ppu, DOTS_IN_ONE_FRAME};
