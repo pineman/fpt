@@ -145,6 +145,7 @@ impl Gameboy {
         let cycles = self.cpu.instruction() as u32;
         // TODO: care for double speed mode (need to run half as much dots)
         self.ppu.step(cycles);
+        // TODO: timer may need more than one step!!
         self.timer.step();
         cycles
     }

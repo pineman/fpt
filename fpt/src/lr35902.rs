@@ -1251,7 +1251,7 @@ impl LR35902 {
                 // HALT
                 // Take care for halt bug: https://gbdev.io/pandocs/halt.html
                 // https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#HALT
-                //todo!("0x76 HALT")
+                todo!("0x76 HALT")
             }
             0x77 => {
                 // LD (HL),A
