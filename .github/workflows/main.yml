@@ -16,6 +16,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'	
+    - name: Install rgbds
+      run: > 
+        wget "https://github.com/gbdev/rgbds/releases/download/v0.8.0/rgbds-0.8.0-linux-x86_64.tar.xz" -P rgbds;
+        cd rgbds;
+        tar -xvf rgbds-0.8.0-linux-x86_64.tar.xz;
+        sudo ./install.sh;
+    - name: Install wla_dx
+      run: >
+        git clone "https://github.com/vhelin/wla-dx.git";
+        cd wla-dx;
+        cmake -G "Unix Makefiles" .;
+        make -j8;
+        sudo make install;
+    - name: Build mooneye-test-suite
+      run: cd third_party/mooneye-test-suite; make;
     - uses: Swatinem/rust-cache@v2
     - name: Version
       run: rustc --version
