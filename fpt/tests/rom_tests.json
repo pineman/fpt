@@ -1,8 +1,71 @@
 {
-  "name": "rom_tests",
-  "tests": [
-    {"id": 0, "path": "../third_party/mooneye-test-suite/build/acceptance/timer/tim00.gb", "termination_address": "0x4ab4"},
-    {"id": 1, "path": "../third_party/mooneye-test-suite/build/acceptance/timer/tim01.gb",
-	    "termination_address": "0x4ab4"}
-  ]
+   "name":"rom_tests",
+   "tests":[
+      {
+         "id":0,
+         "path":"../third_party/mooneye-test-suite/build/acceptance/timer/tim00.gb",
+         "termination_address":"0x4ab4"
+      },
+      {
+         "id":1,
+         "path":"../third_party/mooneye-test-suite/build/acceptance/timer/tim01.gb",
+         "termination_address":"0x4ab4"
+      },
+      {
+         "id":2,
+         "path":"../third_party/mooneye-test-suite/build/acceptance/timer/div_write.gb",
+         "termination_address":"0x4ab4"
+      },
+      {
+         "id":3,
+         "path":"../third_party/mooneye-test-suite/build/acceptance/timer/rapid_toggle.gb",
+         "termination_address":"0x4ab4",
+         "enabled":false
+      },
+      {
+         "id":4,
+         "path":"../third_party/mooneye-test-suite/build/acceptance/timer/tim00_div_trigger.gb",
+         "termination_address":"0x4ab4"
+      },
+      {
+         "id":5,
+         "path":"../third_party/mooneye-test-suite/build/acceptance/timer/tim01_div_trigger.gb",
+         "termination_address":"0x4ab4"
+      },
+      {
+         "id":6,
+         "path":"../third_party/mooneye-test-suite/build/acceptance/timer/tim10_div_trigger.gb",
+         "termination_address":"0x4ab4"
+      },
+      {
+         "id":7,
+         "path":"../third_party/mooneye-test-suite/build/acceptance/timer/tim10.gb",
+         "termination_address":"0x4ab4"
+      },
+      {
+         "id":8,
+         "path":"../third_party/mooneye-test-suite/build/acceptance/timer/tim11_div_trigger.gb",
+         "termination_address":"0x4ab4"
+      },
+      {
+         "id":9,
+         "path":"../third_party/mooneye-test-suite/build/acceptance/timer/tim11.gb",
+         "termination_address":"0x4ab4"
+      },
+      {
+         "id":10,
+         "path":"../third_party/mooneye-test-suite/build/acceptance/timer/tima_reload.gb",
+         "termination_address":"0x4ab4"
+      },
+      {
+         "id":11,
+         "path":"../third_party/mooneye-test-suite/build/acceptance/timer/tima_write_reloading.gb",
+         "termination_address":"0x4ab4"
+      },
+      {
+         "id":12,
+         "path":"../third_party/mooneye-test-suite/build/acceptance/timer/tma_write_reloading.gb",
+         "termination_address":"0x4ab4"
+      }
+   ]
 }
