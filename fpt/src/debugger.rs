@@ -54,7 +54,7 @@ impl Debugger {
                     opcode: *instruction,
                     triggered: false,
                 });
-                Some(DebugEvent::RegisterInstrpoint(instruction.clone()))
+                Some(DebugEvent::RegisterInstrpoint(*instruction))
             }
             DebugCmd::ListBreakpoints => {
                 Some(DebugEvent::ListBreakpoints(self.breakpoints.clone()))
