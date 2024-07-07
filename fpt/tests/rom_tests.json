@@ -1,0 +1,8 @@
+{
+  "name": "rom_tests",
+  "tests": [
+    {"id": 0, "path": "../third_party/mooneye-test-suite/build/acceptance/timer/tim00.gb", "termination_address": "0x4ab4"},
+    {"id": 1, "path": "../third_party/mooneye-test-suite/build/acceptance/timer/tim01.gb",
+	    "termination_address": "0x4ab4"}
+  ]
+}
