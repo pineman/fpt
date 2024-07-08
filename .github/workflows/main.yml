@@ -19,21 +19,12 @@ jobs:
       with:
         submodules: 'true'	
     - uses: Swatinem/rust-cache@v2
-    - name: Install rgbds
-      run: > 
-        wget "https://github.com/gbdev/rgbds/releases/download/v0.8.0/rgbds-0.8.0-linux-x86_64.tar.xz" -P rgbds;
-        cd rgbds;
-        tar -xvf rgbds-0.8.0-linux-x86_64.tar.xz;
-        sudo ./install.sh;
-    - name: Install wla_dx
+    - name: Fetch mooneye-test-suite
       run: >
-        git clone "https://github.com/vhelin/wla-dx.git";
-        cd wla-dx;
-        cmake -G "Unix Makefiles" .;
-        make -j8;
-        sudo make install;
-    - name: Build mooneye-test-suite
-      run: cd third_party/mooneye-test-suite; make;
+        wget https://gekkio.fi/files/mooneye-test-suite/mts-20240127-1204-74ae166/mts-20240127-1204-74ae166.tar.xz;
+        tar -xvf mts-20240127-1204-74ae166.tar.xz;
+        mkdir -p third_party/mooneye-test-suite;
+        mv mts-20240127-1204-74ae166 third_party/mooneye-test-suite/build;
     - name: Version
       run: rustc --version
     - name: Run rustfmt
