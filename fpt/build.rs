@@ -67,15 +67,18 @@ fn run_cmd(cmd: &str) -> String {
         .arg(cmd)
         .output()
         .expect("failed to execute process");
-
+    if !output.status.success() {
+        panic!("Command {} failed with exit code: {}", cmd, output.status);
+    }
     String::from_utf8(output.stdout).expect("Failed to convert output to string")
 }
 
 fn fetch_mooneye_test_roms() {
     println!("cargo:rerun-if-changed=build.rs");
-    run_cmd("wget -P ../target/tmp https://gekkio.fi/files/mooneye-test-suite/mts-20240127-1204-74ae166/mts-20240127-1204-74ae166.tar.xz");
+    run_cmd("curl -L --create-dirs --output-dir ../target/tmp -O https://gekkio.fi/files/mooneye-test-suite/mts-20240127-1204-74ae166/mts-20240127-1204-74ae166.tar.xz");
     run_cmd("mkdir -p ../target/test_roms");
     run_cmd("tar -xvf ../target/tmp/mts-20240127-1204-74ae166.tar.xz -C ../target/test_roms");
+    run_cmd("rm -rf ../target/test_roms/mooneye");
     run_cmd("mv ../target/test_roms/mts-20240127-1204-74ae166 ../target/test_roms/mooneye");
 }
 
