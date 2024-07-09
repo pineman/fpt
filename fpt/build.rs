@@ -65,11 +65,11 @@ fn run_cmd(cmd: &str) -> String {
 }
 
 fn fetch_mooneye_test_roms() {
-    run_cmd("wget https://gekkio.fi/files/mooneye-test-suite/mts-20240127-1204-74ae166/mts-20240127-1204-74ae166.tar.xz");
-    run_cmd("tar -xvf mts-20240127-1204-74ae166.tar.xz");
-    run_cmd("mkdir -p third_party/mooneye-test-suite");
-    run_cmd("mv mts-20240127-1204-74ae166 third_party/mooneye-test-suite/build");
-    run_cmd("tree .");
+    println!("cargo:rerun-if-changed=build.rs");
+    run_cmd("wget -P ../target/tmp https://gekkio.fi/files/mooneye-test-suite/mts-20240127-1204-74ae166/mts-20240127-1204-74ae166.tar.xz");
+    run_cmd("mkdir -p ../target/test_roms");
+    run_cmd("tar -xvf ../target/tmp/mts-20240127-1204-74ae166.tar.xz -C ../target/test_roms");
+    run_cmd("mv ../target/test_roms/mts-20240127-1204-74ae166 ../target/test_roms/mooneye");
 }
 
 fn main() {

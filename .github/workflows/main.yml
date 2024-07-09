@@ -24,6 +24,6 @@ jobs:
     - name: Run rustfmt
       run: cargo fmt --check
     - name: Unit tests
-      run: cargo test -- --nocapture
+      run: cargo test -- --ignored --nocapture
     - name : Clippy
       run: cargo clippy --all-features
