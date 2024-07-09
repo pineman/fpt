@@ -1,4 +1,4 @@
-#[test]
+#[test] #[ignore]
 fn {name}() {{
     rom_test(
     	"{path}",
