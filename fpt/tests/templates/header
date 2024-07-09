@@ -9,7 +9,7 @@ fn check_registers(gb: &Gameboy) -> bool {{
         && gb.cpu().l() == 34;
 }}
 
-fn rom_test(rom_path: &str, termination_address: u16) {{
+fn rom_test(rom_path: &str, termination_address: u16, passing: bool) {{
     let mut gb = Gameboy::new();
     gb.simulate_dmg0_bootrom_handoff_state();
 
@@ -19,6 +19,7 @@ fn rom_test(rom_path: &str, termination_address: u16) {{
     gb.debug_cmd(&DebugCmd::Instrpoint(0x40));
     gb.debug_cmd(&DebugCmd::Breakpoint(termination_address));
 
+    let mut success = true;
     'outer: loop {{
         gb.step();
         let debug_events = gb.get_debug_events();
@@ -29,7 +30,11 @@ fn rom_test(rom_path: &str, termination_address: u16) {{
                         break 'outer;
                     }}
                     DebugEvent::Instrpoint(_) => {{
-                        assert!(check_registers(&gb) == true);
+                        let check = check_registers(&gb);
+                        success &= check;
+                        if passing {{
+                            assert!(check == true);
+                        }}
                         continue 'outer;
                     }}
                     _ => continue 'outer,
@@ -37,4 +42,6 @@ fn rom_test(rom_path: &str, termination_address: u16) {{
             }}
         }}
     }}
+
+    assert!(success == passing);
 }}

@@ -17,10 +17,12 @@ struct Test {
     id: u32,
     path: String,
     termination_address: String,
+    passing: Option<bool>,
     enabled: Option<bool>,
 }
 
 fn generate_rom_tests() {
+    println!("cargo:rerun-if-changed=tests");
     let out_dir = env::var("OUT_DIR").unwrap();
     let destination = Path::new(&out_dir).join("tests.rs");
     let mut test_file = File::create(destination).unwrap();
@@ -45,6 +47,11 @@ fn write_test(test_file: &mut File, directory: &str) {
             name = test_name,
             path = test.path,
             termination_address = test.termination_address,
+            passing = if test.passing.unwrap_or(true) {
+                "true"
+            } else {
+                "false"
+            },
         )
         .unwrap();
     }

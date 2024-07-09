@@ -3,5 +3,6 @@ fn {name}() {{
     rom_test(
     	"{path}",
 	{termination_address},
+    {passing},
     );
 }}
