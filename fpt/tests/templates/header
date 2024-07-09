@@ -26,11 +26,9 @@ fn rom_test(rom_path: &str, termination_address: u16) {{
             loop {{
                 match debug_events.pop_back().unwrap() {{
                     DebugEvent::Breakpoint(_) => {{
-                        println!("breakpoint");
                         break 'outer;
                     }}
                     DebugEvent::Instrpoint(_) => {{
-                        println!("instrpoint");
                         assert!(check_registers(&gb) == true);
                         continue 'outer;
                     }}
