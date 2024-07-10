@@ -19,6 +19,10 @@ RUSTFLAGS='--cfg=web_sys_unstable_apis' trunk serve --release
 
 `cargo test`
 
+Run ignored tests:
+
+`cargo test -- --include-ignored`
+
 ## References
 
 ### Opcodes
