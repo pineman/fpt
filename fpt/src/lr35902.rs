@@ -277,6 +277,7 @@ impl LR35902 {
         self.bus.write(index as usize, value);
         // TODO: watchpoint trigger write
         // Write triggers (TODO: better solution)
+        // TODO: fds do this inside the memmory
         if index == memory::map::BANK as u16 && value != 0 {
             self.bus.unload_bootrom();
         }
@@ -708,6 +709,8 @@ impl LR35902 {
             self.prefix_cb = false;
         }
 
+        let cartridge_type = self.mem8(0x147);
+        println!("cartridge type: {}", cartridge_type);
         match instruction.opcode {
             0x00 => {
                 // NOP
@@ -1256,7 +1259,7 @@ impl LR35902 {
                 // HALT
                 // Take care for halt bug: https://gbdev.io/pandocs/halt.html
                 // https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#HALT
-                todo!("0x76 HALT")
+                //todo!("0x76 HALT")
             }
             0x77 => {
                 // LD (HL),A
