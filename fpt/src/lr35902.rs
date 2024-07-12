@@ -710,7 +710,6 @@ impl LR35902 {
         }
 
         let cartridge_type = self.mem8(0x147);
-        println!("cartridge type: {}", cartridge_type);
         match instruction.opcode {
             0x00 => {
                 // NOP

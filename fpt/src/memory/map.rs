@@ -2,7 +2,6 @@
 /// ```
 /// assert_eq!(fpt::memory::map::ROM_DATA.start, 0x0100);
 /// ```
-
 use super::{Address, MemoryRange};
 
 //-------------------------------------------------------------------------
@@ -19,7 +18,7 @@ pub const ROM_DATA: MemoryRange = 0x0100..0x0150;
 /// From cartridge, usually a fixed bank
 pub const ROM_BANK0: MemoryRange = 0x0000..0x4000;
 /// From cartridge, switchable bank via mapper (if any) pub const USER_PROGRAM: MemoryRange = 0x0000..0x8000;
-pub const ROM_BANK1: MemoryRange = 0x4000..0x8000; 
+pub const ROM_BANK1: MemoryRange = 0x4000..0x8000;
 
 /// Video RAM (8 KB) - In CGB mode, switchable bank 0/1
 pub const VRAM: MemoryRange = 0x8000..0xA000;

@@ -1,11 +1,11 @@
 use std::cell::{Ref, RefCell, RefMut};
+use std::ops::DerefMut;
 use std::ops::Range;
 use std::rc::Rc;
-use std::ops::DerefMut;
 
 use crate::bw;
-use crate::memory::{Cartridge, EmptyCartridge, NoMbcCartridge};
 use crate::memory::map;
+use crate::memory::{create_memory_bank, Cartridge, EmptyCartridge, NoMbcCartridge};
 
 pub type Address = usize;
 pub type MemoryRange = Range<Address>;
@@ -95,7 +95,7 @@ impl Memory {
         self.bootrom_unloaded = true;
     }
 
-    pub fn bootrom_unloaded(& self) -> bool {
+    pub fn bootrom_unloaded(&self) -> bool {
         self.bootrom_unloaded
     }
 }
@@ -135,8 +135,8 @@ impl Bus {
     pub fn load_cartridge(&mut self, cartridge: &[u8]) {
         // TODO: load
         self.memory_mut()
-            .set_cartridge(Rc::new(RefCell::new(NoMbcCartridge::new(cartridge))));
-        
+            .set_cartridge(create_memory_bank(cartridge));
+
         //println!("title: {}", self.memory().cartridge().get_title());
         //println!("code: {}", self.memory().cartridge().get_manufacturer_code());
         //println!("new licensee code: {}", self.memory().cartridge().get_new_licensee_code());
@@ -152,17 +152,12 @@ impl Bus {
     pub fn read(&self, address: Address) -> u8 {
         if map::BOOTROM.contains(&address) && !self.memory().bootrom_unloaded() {
             self.memory().bootrom[address]
-        }
-        else if map::ROM_BANK0.contains(&address) {
+        } else if map::ROM_BANK0.contains(&address)
+            || map::ROM_BANK1.contains(&address)
+            || map::EXT_RAM.contains(&address)
+        {
             self.memory().cartridge().borrow().read(address)
-        }
-        else if map::ROM_BANK1.contains(&address) {
-            self.memory().cartridge().borrow().read(address)
-        }
-        else if map::EXT_RAM.contains(&address) {
-            self.memory().cartridge().borrow().read(address)
-        }
-        else if address == map::JOYP {
+        } else if address == map::JOYP {
             self.joyp()
         } else {
             self.memory().mem[address as Address]
@@ -170,17 +165,15 @@ impl Bus {
     }
 
     pub fn write(&mut self, address: Address, value: u8) {
-        if address <= 0x7fff {
-            panic!(
-                "{}",
-                format!("writing to rom, address: {}, value: {}", address, value)
-            );
-        }
-
-        if map::EXT_RAM.contains(&address) {
-            self.memory_mut().cartridge_mut().borrow_mut().write(address, value);
-        }
-        else {
+        if map::ROM_BANK0.contains(&address)
+            || map::ROM_BANK1.contains(&address)
+            || map::EXT_RAM.contains(&address)
+        {
+            self.memory_mut()
+                .cartridge_mut()
+                .borrow_mut()
+                .write(address, value);
+        } else {
             self.memory_mut().mem[address as Address] = value;
         }
     }

@@ -1,8 +1,8 @@
 mod cartridge;
+pub mod map;
 mod mbc1;
 mod memory;
 mod memory_controller;
-pub mod map;
 
-pub use cartridge::{Cartridge, EmptyCartridge, NoMbcCartridge};
-pub use memory::{Bus, Buttons, Address, MemoryRange};
+pub use cartridge::{create_memory_bank, Cartridge, EmptyCartridge, NoMbcCartridge};
+pub use memory::{Address, Bus, Buttons, MemoryRange};
