@@ -2,8 +2,8 @@
 
 //use crate::memory::memory_controller::MemoryController;
 
-use super::{Address, MemoryRange, Cartridge, map};
-use super::cartridge::{convert_rom_size, convert_ram_size, get_rom_size, get_ram_size};
+use super::cartridge::{convert_ram_size, convert_rom_size, get_ram_size, get_rom_size};
+use super::{map, Address, Cartridge, MemoryRange};
 
 pub struct Mbc1Cartridge {
     memory: Vec<u8>,
@@ -84,6 +84,9 @@ impl Cartridge for Mbc1Cartridge {
     }
 
     fn read_range(&self, memory_range: MemoryRange) -> Vec<u8> {
-        memory_range.into_iter().map(|address| self.read(address)).collect()
+        memory_range
+            .into_iter()
+            .map(|address| self.read(address))
+            .collect()
     }
 }

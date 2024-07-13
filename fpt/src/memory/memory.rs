@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 use crate::bw;
 use crate::memory::map;
-use crate::memory::{create_mbc, create_empty_mbc, Cartridge};
+use crate::memory::{create_empty_mbc, create_mbc, Cartridge};
 
 pub type Address = usize;
 pub type MemoryRange = Range<Address>;
@@ -134,8 +134,7 @@ impl Bus {
 
     pub fn load_cartridge(&mut self, cartridge: &[u8]) {
         // TODO: load
-        self.memory_mut()
-            .set_cartridge(create_mbc(cartridge));
+        self.memory_mut().set_cartridge(create_mbc(cartridge));
 
         //println!("title: {}", self.memory().cartridge().get_title());
         //println!("code: {}", self.memory().cartridge().get_manufacturer_code());

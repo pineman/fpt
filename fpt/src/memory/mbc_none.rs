@@ -1,5 +1,5 @@
-use super::{map, Address, MemoryRange};
 use super::cartridge::Cartridge;
+use super::{map, Address, MemoryRange};
 
 pub struct NoMbcCartridge {
     memory: Vec<u8>,

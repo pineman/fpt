@@ -13,7 +13,7 @@ pub fn get_ram_size(tape: &[u8]) -> u8 {
 }
 
 pub fn get_cartridge_type(tape: &[u8]) -> u8 {
-    tape[map::CARTRIDGE_FLAG]
+    tape[map::CARTRIDGE_TYPE]
 }
 
 pub fn convert_rom_size(rom_size: u8) -> usize {
@@ -68,7 +68,7 @@ pub trait Cartridge {
     }
 
     fn get_cartridge_type(&self) -> u8 {
-        self.read(map::CARTRIDGE_FLAG)
+        self.read(map::CARTRIDGE_TYPE)
     }
 
     fn get_rom_size(&self) -> u8 {
@@ -105,7 +105,3 @@ impl Cartridge for EmptyCartridge {
         Vec::new()
     }
 }
-
-
-
-
