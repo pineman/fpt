@@ -1,11 +1,7 @@
-//write memory bank controller 1
-
-//use crate::memory::memory_controller::MemoryController;
-
 use super::{Address, MemoryRange, Cartridge, map};
 use super::cartridge::{convert_rom_size, convert_ram_size, get_rom_size, get_ram_size};
 
-pub struct Mbc1Cartridge {
+pub struct Mbc3Cartridge {
     memory: Vec<u8>,
     rom_banks: Vec<[u8; 0x4000]>,
     ram_banks: Vec<[u8; 0x2000]>,
@@ -14,8 +10,8 @@ pub struct Mbc1Cartridge {
     ram_bank_number: usize,
 }
 
-impl Mbc1Cartridge {
-    pub fn new(cartridge: &[u8]) -> Mbc1Cartridge {
+impl Mbc3Cartridge {
+    pub fn new(cartridge: &[u8]) -> Mbc3Cartridge {
         let rom_size = dbg!(convert_rom_size(get_rom_size(cartridge)));
         let ram_size = dbg!(convert_ram_size(get_ram_size(cartridge)));
         let mut rom_banks = vec![[0; 0x4000]; dbg!(rom_size as usize)];
@@ -38,7 +34,7 @@ impl Mbc1Cartridge {
             }
         }
 
-        Mbc1Cartridge {
+        Mbc3Cartridge {
             memory: cartridge.to_vec(),
             rom_banks,
             ram_banks,
@@ -49,7 +45,7 @@ impl Mbc1Cartridge {
     }
 }
 
-impl Cartridge for Mbc1Cartridge {
+impl Cartridge for Mbc3Cartridge {
     fn read(&self, address: Address) -> u8 {
         if map::EXT_RAM.contains(&address) && !self.ext_ram_enabled {
             0 // TODO: check that disabled ram reads 0

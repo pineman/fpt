@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 use crate::bw;
 use crate::memory::map;
-use crate::memory::{create_memory_bank, Cartridge, EmptyCartridge, NoMbcCartridge};
+use crate::memory::{create_mbc, create_empty_mbc, Cartridge};
 
 pub type Address = usize;
 pub type MemoryRange = Range<Address>;
@@ -50,7 +50,7 @@ impl Memory {
         const ARRAY_REPEAT_VALUE: Option<String> = None;
         Self {
             mem: vec![0; 65536],
-            cartridge: Rc::new(RefCell::new(EmptyCartridge::new())),
+            cartridge: create_empty_mbc(),
             bootrom: include_bytes!("../../dmg.bin"),
             rom_first256bytes: vec![0; 256],
             code_listing: vec![ARRAY_REPEAT_VALUE; 0xffff + 1],
@@ -135,7 +135,7 @@ impl Bus {
     pub fn load_cartridge(&mut self, cartridge: &[u8]) {
         // TODO: load
         self.memory_mut()
-            .set_cartridge(create_memory_bank(cartridge));
+            .set_cartridge(create_mbc(cartridge));
 
         //println!("title: {}", self.memory().cartridge().get_title());
         //println!("code: {}", self.memory().cartridge().get_manufacturer_code());
