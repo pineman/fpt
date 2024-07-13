@@ -192,13 +192,23 @@ pub const IE: Address = 0xFFFF;
 pub const IF: Address = 0xFF0F;
 
 /// Cartridge sections
-pub const TITLE: MemoryRange = 0x134..0x143;
-pub const MANUFACTURER_CODE: MemoryRange = 0x13F..0x142;
-pub const GGB_FLAG: Address = 0x143;
-pub const NEW_LICENSEE_CODE: MemoryRange = 0x144..0x145;
+/// Game title - upper case ascii - 16 bytes
+pub const TITLE: MemoryRange = 0x134..0x144;
+/// Unknown manufacturer code - 4 bytes
+pub const MANUFACTURER_CODE: MemoryRange = 0x13F..0x143;
+/// Color game boy flag
+pub const CGB_FLAG: Address = 0x143;
+/// Valid when old licensee is 0x33 - 2 bytes
+pub const NEW_LICENSEE_CODE: MemoryRange = 0x144..0x146;
+/// Super game boy flag
 pub const SGB_FLAG: Address = 0x146;
-pub const CARTRIDGE_FLAG: Address = 0x147;
+/// Cartridge type including memory mapper
+pub const CARTRIDGE_TYPE: Address = 0x147;
+/// Number of rom banks = 2^(ROM_SIZE+1)
 pub const ROM_SIZE: Address = 0x148;
+/// Number of ram banks
 pub const RAM_SIZE: Address = 0x149;
+/// Old licensee code
 pub const OLD_LICENSEE_CODE: Address = 0x14b;
+/// Game version
 pub const VERSION_NUMBER: Address = 0x14c;
