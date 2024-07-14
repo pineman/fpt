@@ -70,13 +70,13 @@ impl fmt::Display for DebugEvent {
         match self {
             DebugEvent::Continue => writeln!(f, "continue"),
             DebugEvent::RegisterBreakpoint(pc) => {
-                writeln!(f, "Register breakpoint at pc={:#04X}", pc)
+                writeln!(f, "Registered breakpoint at pc={:#04X}", pc)
             }
             DebugEvent::RegisterWatchpoint(addr) => {
-                writeln!(f, "Register watchpoint at address {:#04X}", addr)
+                writeln!(f, "Registered watchpoint at address {:#04X}", addr)
             }
             DebugEvent::RegisterInstrpoint(opcode) => {
-                writeln!(f, "Register instrpoint with opcode {:#04X}", opcode)
+                writeln!(f, "Registered instrpoint with opcode {:#04X}", opcode)
             }
             DebugEvent::ListBreakpoints(breakpoints) => {
                 writeln!(f, "breakpoints:")?;

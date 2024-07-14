@@ -411,7 +411,9 @@ impl Bus {
         let joyp = self.memory().mem[map::JOYP];
         let sel_buttons = !bw::test_bit8::<5>(joyp);
         let sel_dpad = !bw::test_bit8::<4>(joyp);
-        let b = if sel_dpad {
+        let b = if sel_dpad && sel_buttons {
+            0
+        } else if sel_dpad {
             ((buttons.down as u8) << 3)
                 + ((buttons.up as u8) << 2)
                 + ((buttons.left as u8) << 1)
@@ -424,7 +426,8 @@ impl Bus {
         } else {
             0
         };
-        (joyp & 0xf0) + (!b & 0x0f)
+        // Setting higher 2 bits (which are ignored) to 1 just because SameBoy does it too
+        ((joyp & 0xf0) + (!b & 0x0f)) | 0b1100_0000
     }
 
     pub fn buttons(&self) -> Buttons {

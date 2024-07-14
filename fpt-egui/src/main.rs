@@ -239,20 +239,7 @@ impl FPT {
 
     fn get_tile(&self, tile_i: usize) -> Tile {
         let bus = self.gb.bus();
-        let lcdc4 = bw::test_bit8::<4>(bus.lcdc());
-        let tile_start = if lcdc4 {
-            // Unsigned addressing from $8000:
-            // tiles 0-127 are in block 0, and tiles 128-255 are in block 1
-            0x8000 + 16 * tile_i
-        } else {
-            // Signed addressing from $9000:
-            // tiles 0-127 are in block 2, and tiles 128-255 (i.e. -128 to -1) are in block 1
-            if tile_i < 128 {
-                0x9000 + 16 * tile_i
-            } else {
-                0x8800 + 16 * (tile_i - 128)
-            }
-        };
+        let tile_start = 0x8000 + 16 * tile_i;
         bus.with_span(tile_start, Tile::load)
     }
 
