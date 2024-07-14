@@ -85,19 +85,23 @@ impl Ppu {
     /// Currently only draws the background pixels, not the window or sprites
     #[allow(clippy::format_collect)]
     fn pixel_transfer(&mut self) {
+        let lcdc = self.bus.lcdc();
         if self.dots_this_frame % 456 == (80 + 160) as u32 {
             self.set_mode(Mode::HBlank);
             return;
         }
-        // TODO: LCDC.3
         let x = ((self.dots_this_frame % 456) - 80) as usize; // TODO I'm pretending the PPU never stalls
         let y = self.bus.ly() as usize;
         let xx = ((x as u8 + self.bus.scx()) as u16 % 256u16) as usize;
         let yy = ((self.bus.ly() + self.bus.scy()) as u16 % 256u16) as usize;
-        // TODO: LCDC.4
         let tile_i = xx / 8 + yy / 8 * 32;
-        let tile_data_address = self.tilemap.tile_map0[tile_i];
-        let tile = self.tilemap.tile_data[tile_data_address as usize];
+        let tile_data_address = match bw::test_bit8::<3>(lcdc) {
+            false => self.tilemap.tile_map0[tile_i],
+            true => self.tilemap.tile_map1[tile_i],
+        };
+        let tile = self
+            .tilemap
+            .get_tile(tile_data_address as usize, bw::test_bit8::<4>(lcdc));
         let pixel = tile.get_pixel(yy % 8, xx % 8);
         self.frame[WIDTH * y + x] = pixel;
     }

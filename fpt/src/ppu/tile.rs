@@ -78,6 +78,20 @@ impl VRamContents {
 
         tilemap
     }
+
+    pub fn get_tile(&self, tile_i: usize, lcdc4: bool) -> Tile {
+        if lcdc4 {
+            // Unsigned addressing: tiles 0-255 are in blocks 0 and 1
+            self.tile_data[tile_i]
+        } else {
+            // Signed addressing: tiles 0-127 are in block 2, and tiles 128-255 (i.e. -128 to -1) are in block 1
+            if tile_i < 128 {
+                self.tile_data[tile_i + 256]
+            } else {
+                self.tile_data[tile_i]
+            }
+        }
+    }
 }
 
 /// Writes a Gameboy frame to a PGM file
