@@ -1,6 +1,3 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-
 use crate::memory::map;
 use crate::memory::{Address, MemoryRange};
 
@@ -34,7 +31,7 @@ pub fn convert_rom_size(rom_size: u8) -> usize {
     }
 }
 
-pub fn convert_ram_size(ram_size: u8) -> u16 {
+pub fn convert_ram_size(ram_size: u8) -> usize {
     match ram_size {
         0x00 => 0,
         0x02 => 1,
@@ -101,7 +98,7 @@ impl Cartridge for EmptyCartridge {
     }
     fn write(&mut self, _address: Address, _value: u8) {}
 
-    fn read_range(&self, memory_range: MemoryRange) -> Vec<u8> {
+    fn read_range(&self, _memory_range: MemoryRange) -> Vec<u8> {
         Vec::new()
     }
 }

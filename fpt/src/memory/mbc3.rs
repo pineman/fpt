@@ -12,24 +12,20 @@ pub struct Mbc3Cartridge {
 
 impl Mbc3Cartridge {
     pub fn new(cartridge: &[u8]) -> Mbc3Cartridge {
-        let rom_size = dbg!(convert_rom_size(get_rom_size(cartridge)));
-        let ram_size = dbg!(convert_ram_size(get_ram_size(cartridge)));
-        let mut rom_banks = vec![[0; 0x4000]; dbg!(rom_size as usize)];
-        let mut ram_banks = vec![[0; 0x2000]; dbg!(ram_size as usize)];
+        let rom_size = convert_rom_size(get_rom_size(cartridge));
+        let ram_size = convert_ram_size(get_ram_size(cartridge));
+        let mut rom_banks = vec![[0; 0x4000]; rom_size as usize];
+        let mut ram_banks = vec![[0; 0x2000]; ram_size as usize];
 
         // TODO: wtf is this initialization
         for i in 0..rom_size {
             for j in 0..0x4000 {
-                let i = i as usize;
-                let j = j as usize;
                 rom_banks[i][j] = cartridge[0x4000 * i + j];
             }
         }
 
         for i in 0..ram_size {
             for j in 0..0x2000 {
-                let i = i as usize;
-                let j = j as usize;
                 ram_banks[i][j] = cartridge[0x2000 * i + j];
             }
         }
@@ -50,11 +46,11 @@ impl Cartridge for Mbc3Cartridge {
         if map::EXT_RAM.contains(&address) && !self.ext_ram_enabled {
             0 // TODO: check that disabled ram reads 0
         } else if map::EXT_RAM.contains(&address) && self.ext_ram_enabled {
-            self.ram_banks[self.ram_bank_number as usize][address - map::EXT_RAM.start]
+            self.ram_banks[self.ram_bank_number][address - map::EXT_RAM.start]
         } else if map::ROM_BANK0.contains(&address) {
             self.rom_banks[0][address - map::ROM_BANK0.start]
         } else if map::ROM_BANK1.contains(&address) {
-            self.rom_banks[self.rom_bank_number as usize][address - map::ROM_BANK1.start]
+            self.rom_banks[self.rom_bank_number][address - map::ROM_BANK1.start]
         } else {
             self.memory[address]
         }

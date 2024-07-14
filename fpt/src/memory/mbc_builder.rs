@@ -12,10 +12,8 @@ pub fn create_mbc(cartridge_data: &[u8]) -> Rc<RefCell<dyn Cartridge>> {
 
     match dbg!(cartridge_type) {
         0x00 => Rc::new(RefCell::new(NoMbcCartridge::new(cartridge_data))),
-        0x01 | 0x02 | 0x03 => Rc::new(RefCell::new(Mbc1Cartridge::new(cartridge_data))),
-        0x0F | 0x10 | 0x11 | 0x12 | 0x13 => {
-            Rc::new(RefCell::new(Mbc3Cartridge::new(cartridge_data)))
-        }
+        0x01..0x03 => Rc::new(RefCell::new(Mbc1Cartridge::new(cartridge_data))),
+        0x0F..0x13 => Rc::new(RefCell::new(Mbc3Cartridge::new(cartridge_data))),
         _ => panic!(),
     }
 }

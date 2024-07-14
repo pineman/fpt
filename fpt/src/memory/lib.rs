@@ -1,5 +1,4 @@
 use std::cell::{Ref, RefCell, RefMut};
-use std::ops::DerefMut;
 use std::ops::Range;
 use std::rc::Rc;
 
@@ -126,26 +125,10 @@ impl Bus {
 
     pub fn unload_bootrom(&mut self) {
         self.memory_mut().unload_bootrom();
-        // TODO: unload?
-        //let backup = self.memory_mut().rom_first256bytes.clone();
-        //self.clone_from_slice(map::BOOTROM, &backup);
-        //self.memory_mut().code_listing[map::BOOTROM].fill(None);
     }
 
     pub fn load_cartridge(&mut self, cartridge: &[u8]) {
-        // TODO: load
         self.memory_mut().set_cartridge(create_mbc(cartridge));
-
-        //println!("title: {}", self.memory().cartridge().get_title());
-        //println!("code: {}", self.memory().cartridge().get_manufacturer_code());
-        //println!("new licensee code: {}", self.memory().cartridge().get_new_licensee_code());
-        //println!("cartridge type: {}", self.memory().cartridge().get_cartridge_type());
-        //println!("rom size: {}", self.memory().cartridge().get_rom_size());
-        //println!("ram size: {}", self.memory().cartridge().get_ram_size());
-        //println!("licensee code: {}", self.memory().cartridge().get_old_licensee_code());
-        //println!("version number: {}", self.memory().cartridge().get_version_number());
-
-        //panic!();
     }
 
     pub fn read(&self, address: Address) -> u8 {
@@ -193,9 +176,6 @@ impl Bus {
     }
 
     pub fn clone_from_slice(&mut self, mut range: MemoryRange, slice: &[u8]) {
-        dbg!(slice.len());
-        dbg!(&range);
-
         if range.end > 65535 {
             range.end = 65535;
         }
