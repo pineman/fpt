@@ -1,5 +1,5 @@
 use super::cartridge::Cartridge;
-use super::{map, Address, MemoryRange};
+use super::{Address, MemoryRange};
 
 pub struct NoMbcCartridge {
     memory: Vec<u8>,
@@ -7,9 +7,10 @@ pub struct NoMbcCartridge {
 
 impl NoMbcCartridge {
     pub fn new(cartridge: &[u8]) -> NoMbcCartridge {
-        NoMbcCartridge {
-            memory: cartridge.to_vec(),
-        }
+        let mut cartridge = cartridge.to_vec();
+        let mut padding = vec![0; (0x10000 - cartridge.len()).max(0)];
+        cartridge.append(&mut padding);
+        NoMbcCartridge { memory: cartridge }
     }
 }
 
@@ -18,9 +19,7 @@ impl Cartridge for NoMbcCartridge {
         self.memory[address]
     }
     fn write(&mut self, address: Address, value: u8) {
-        if map::EXT_RAM.contains(&address) {
-            self.memory[address] = value;
-        }
+        self.memory[address] = value;
     }
 
     fn read_range(&self, memory_range: MemoryRange) -> Vec<u8> {

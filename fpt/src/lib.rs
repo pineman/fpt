@@ -1,6 +1,7 @@
 #![feature(bigint_helper_methods)]
 #![feature(array_chunks)]
 #![feature(iter_intersperse)]
+#![feature(extend_one)]
 
 use std::collections::VecDeque;
 

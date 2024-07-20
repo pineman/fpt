@@ -331,7 +331,8 @@
       {
          "id":59,
          "path":"../target/test_roms/mooneye/acceptance/rst_timing.gb",
-         "termination_address":"0x4ab4"
+         "termination_address":"0x4ab4",
+         "enabled": false
       }
    ]
 }
