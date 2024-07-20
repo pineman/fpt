@@ -607,9 +607,7 @@ impl LR35902 {
     }
 
     fn bit<const INDEX: u8>(&mut self, x: u8) {
-        if !bw::test_bit8::<INDEX>(x) {
-            self.set_z_flag(true);
-        }
+        self.set_z_flag(!bw::test_bit8::<INDEX>(x));
         self.set_n_flag(false);
         self.set_h_flag(true);
     }
