@@ -1,6 +1,7 @@
 use std::collections::VecDeque;
 
 use crate::debug_interface::{Breakpoint, DebugCmd, DebugEvent, Instrpoint, Watchpoint};
+use crate::memory::Bus;
 
 #[derive(Clone, PartialEq)]
 pub struct Debugger {
@@ -9,22 +10,18 @@ pub struct Debugger {
     instrpoints: Vec<Instrpoint>,
     pub paused: bool,
     dbg_events: VecDeque<DebugEvent>,
-}
-
-impl Default for Debugger {
-    fn default() -> Self {
-        Self::new()
-    }
+    bus: Bus,
 }
 
 impl Debugger {
-    pub fn new() -> Self {
+    pub fn new(bus: Bus) -> Self {
         Self {
             breakpoints: Vec::new(),
             watchpoints: Vec::new(),
             instrpoints: Vec::new(),
             paused: false,
             dbg_events: VecDeque::new(),
+            bus,
         }
     }
 
@@ -63,6 +60,7 @@ impl Debugger {
                 Some(DebugEvent::ListWatchpoints(self.watchpoints.clone()))
             }
             DebugCmd::Load(_) => None,
+            DebugCmd::Print(addr) => Some(DebugEvent::Print(self.bus.read(*addr as usize))),
         }
     }
 

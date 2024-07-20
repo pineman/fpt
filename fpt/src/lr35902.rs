@@ -60,7 +60,7 @@ impl DebugInterface for LR35902 {
 }
 
 impl LR35902 {
-    pub fn new(memory: Bus) -> Self {
+    pub fn new(bus: Bus) -> Self {
         Self {
             af: 0,
             bc: 0,
@@ -74,9 +74,9 @@ impl LR35902 {
             clock_cycles: 0,
             inst_cycle_count: 0,
             branch_taken: false,
-            bus: memory,
+            bus: bus.clone(),
             // Debugging
-            debugger: Debugger::new(),
+            debugger: Debugger::new(bus.clone()),
         }
     }
 
@@ -265,6 +265,7 @@ impl LR35902 {
 
     // Memory
     pub fn mem8(&self, index: u16) -> u8 {
+        // TODO: watchpoint trigger read
         self.bus.read(index as usize)
     }
 
@@ -274,6 +275,7 @@ impl LR35902 {
 
     pub fn set_mem8(&mut self, index: u16, value: u8) {
         self.bus.write(index as usize, value);
+        // TODO: watchpoint trigger write
         // Write triggers (TODO: better solution)
         if index == memory::map::BANK as u16 && value != 0 {
             self.bus.unload_bootrom();

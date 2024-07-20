@@ -49,6 +49,7 @@ pub enum DebugCmd {
     Load(String),
     ListBreakpoints,
     ListWatchpoints,
+    Print(u16),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -62,6 +63,7 @@ pub enum DebugEvent {
     Breakpoint(u16),
     Watchpoint(u16, u16),
     Instrpoint(u16),
+    Print(u8),
 }
 
 impl fmt::Display for DebugEvent {
@@ -93,20 +95,20 @@ impl fmt::Display for DebugEvent {
                 Ok(())
             }
             DebugEvent::Breakpoint(pc) => {
-                writeln!(f, "Hit breakpoint at {:#06X}", pc)?;
-                Ok(())
+                writeln!(f, "Hit breakpoint at {:#06X}", pc)
             }
             DebugEvent::Watchpoint(address, value) => {
                 writeln!(
                     f,
                     "Hit watchpoint at {:#06X} with value: {:#06X}",
                     address, value
-                )?;
-                Ok(())
+                )
             }
             DebugEvent::Instrpoint(opcode) => {
-                writeln!(f, "Hit instrpoint at {:#06X}", opcode)?;
-                Ok(())
+                writeln!(f, "Hit instrpoint at {:#06X}", opcode)
+            }
+            DebugEvent::Print(value) => {
+                writeln!(f, "{:#04X}", value)
             }
         }
     }
@@ -130,6 +132,13 @@ where
     )?))
 }
 
+fn print_cmd<'a, Args>(args: Args) -> Option<DebugCmd>
+where
+    Args: IntoIterator<Item = &'a str>,
+{
+    Some(DebugCmd::Print(parse::<u16>(args.into_iter().next()?)?))
+}
+
 fn parse<T>(value: &str) -> Option<T>
 where
     T: Num + std::str::FromStr,
@@ -145,7 +154,6 @@ where
 impl DebugCmd {
     pub fn from_string(cmd: &str) -> Option<DebugCmd> {
         let re = Regex::new(r#"[^\s"']+|"([^"]*)"|'([^']*)'"#).unwrap();
-
         let tokens = re.find_iter(cmd).map(|m| m.as_str()).collect::<Vec<&str>>();
         let mut args = tokens.iter().skip(1).copied();
         match tokens[0] {
@@ -155,6 +163,7 @@ impl DebugCmd {
             "lb" | "list_breakpoints" => Some(DebugCmd::ListBreakpoints),
             "lw" | "list_watchpoints" => Some(DebugCmd::ListWatchpoints),
             "load" => Some(DebugCmd::Load(args.next().unwrap().to_string())),
+            "p" | "print" => print_cmd(args),
             _ => None,
         }
     }
