@@ -1,6 +1,7 @@
 #![feature(bigint_helper_methods)]
 #![feature(array_chunks)]
 #![feature(iter_intersperse)]
+#![feature(extend_one)]
 
 use std::collections::VecDeque;
 
@@ -46,7 +47,7 @@ impl Gameboy {
     }
 
     /// Sets CPU and hardware registers to the values found in the DMG0 column in the tables at
-    /// https://gbdev.io/pandocs/Power_Up_Sequence.html#console-state-after-boot-rom-hand-off
+    /// <https://gbdev.io/pandocs/Power_Up_Sequence.html#console-state-after-boot-rom-hand-off>
     pub fn boot_fake(&mut self) {
         // CPU registers
         self.cpu.set_af(0x0100);
