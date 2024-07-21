@@ -1,337 +1,391 @@
 {
-   "name":"rom_tests",
-   "tests":[
-      {
-         "id":0,
-         "path":"../target/test_roms/mooneye/acceptance/timer/tim00.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":1,
-         "path":"../target/test_roms/mooneye/acceptance/timer/tim01.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":2,
-         "path":"../target/test_roms/mooneye/acceptance/timer/div_write.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":3,
-         "path":"../target/test_roms/mooneye/acceptance/timer/rapid_toggle.gb",
-         "termination_address":"0x4ab4",
-         "passing":false
-      },
-      {
-         "id":4,
-         "path":"../target/test_roms/mooneye/acceptance/timer/tim00_div_trigger.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":5,
-         "path":"../target/test_roms/mooneye/acceptance/timer/tim01_div_trigger.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":6,
-         "path":"../target/test_roms/mooneye/acceptance/timer/tim10_div_trigger.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":7,
-         "path":"../target/test_roms/mooneye/acceptance/timer/tim10.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":8,
-         "path":"../target/test_roms/mooneye/acceptance/timer/tim11_div_trigger.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":9,
-         "path":"../target/test_roms/mooneye/acceptance/timer/tim11.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":10,
-         "path":"../target/test_roms/mooneye/acceptance/timer/tima_reload.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":11,
-         "path":"../target/test_roms/mooneye/acceptance/timer/tima_write_reloading.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":12,
-         "path":"../target/test_roms/mooneye/acceptance/timer/tma_write_reloading.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":13,
-         "path":"../target/test_roms/mooneye/acceptance/bits/mem_oam.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":14,
-         "path":"../target/test_roms/mooneye/acceptance/bits/reg_f.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":15,
-         "path":"../target/test_roms/mooneye/acceptance/bits/unused_hwio-GS.gb",
-         "termination_address":"0x4ab4",
-         "passing":false
-      },
-      {
-         "id":16,
-         "path":"../target/test_roms/mooneye/acceptance/instr/daa.gb",
-         "termination_address":"0x4ab4",
-         "passing":false,
-         "enabled":false
-      },
-      {
-         "id":17,
-         "path":"../target/test_roms/mooneye/acceptance/interrupts/ie_push.gb",
-         "termination_address":"0x4ab4",
-         "passing":false,
-         "enabled":false
-      },
-      {
-         "id":18,
-         "path":"../target/test_roms/mooneye/acceptance/add_sp_e_timing.gb",
-         "termination_address":"0x4ab4",
-         "passing":false,
-         "enabled":false
-      },
-      {
-         "id":19,
-         "path":"../target/test_roms/mooneye/acceptance/boot_div2-S.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":20,
-         "path":"../target/test_roms/mooneye/acceptance/boot_div-dmg0.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":21,
-         "path":"../target/test_roms/mooneye/acceptance/boot_div-dmgABCmgb.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":22,
-         "path":"../target/test_roms/mooneye/acceptance/boot_div-S.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":23,
-         "path":"../target/test_roms/mooneye/acceptance/boot_hwio-dmg0.gb",
-         "termination_address":"0x4ab4",
-         "passing": false
-      },
-      {
-         "id":24,
-         "path":"../target/test_roms/mooneye/acceptance/boot_hwio-dmgABCmgb.gb",
-         "termination_address":"0x4ab4",
-         "passing": false
-      },
-      {
-         "id":25,
-         "path":"../target/test_roms/mooneye/acceptance/boot_hwio-S.gb",
-         "termination_address":"0x4ab4",
-         "passing": false
-      },
-      {
-         "id":26,
-         "path":"../target/test_roms/mooneye/acceptance/boot_regs-dmg0.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":27,
-         "path":"../target/test_roms/mooneye/acceptance/boot_regs-dmgABC.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":28,
-         "path":"../target/test_roms/mooneye/acceptance/boot_regs-mgb.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":29,
-         "path":"../target/test_roms/mooneye/acceptance/boot_regs-sgb2.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":30,
-         "path":"../target/test_roms/mooneye/acceptance/boot_regs-sgb.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":31,
-         "path":"../target/test_roms/mooneye/acceptance/call_cc_timing2.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":32,
-         "path":"../target/test_roms/mooneye/acceptance/call_cc_timing.gb",
-         "termination_address":"0x4ab4",
-         "passing": false
-      },
-      {
-         "id":34,
-         "path":"../target/test_roms/mooneye/acceptance/call_timing2.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":35,
-         "path":"../target/test_roms/mooneye/acceptance/call_timing.gb",
-         "termination_address":"0x4ab4",
-         "passing": false
-      },
-      {
-         "id":36,
-         "path":"../target/test_roms/mooneye/acceptance/di_timing-GS.gb",
-         "termination_address":"0x4ab4",
-         "passing": false,
-         "enabled": false
-      },
-      {
-         "id":37,
-         "path":"../target/test_roms/mooneye/acceptance/div_timing.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":38,
-         "path":"../target/test_roms/mooneye/acceptance/ei_sequence.gb",
-         "termination_address":"0x4ab4",
-         "passing": false,
-         "enabled": false
-      },
-      {
-         "id":39,
-         "path":"../target/test_roms/mooneye/acceptance/ei_timing.gb",
-         "termination_address":"0x4ab4",
-         "passing": false,
-         "enabled": false
-      },
-      {
-         "id":40,
-         "path":"../target/test_roms/mooneye/acceptance/halt_ime0_ei.gb",
-         "termination_address":"0x4ab4",
-         "passing": false,
-         "enabled": false
-      },
-      {
-         "id":41,
-         "path":"../target/test_roms/mooneye/acceptance/halt_ime0_nointr_timing.gb",
-         "termination_address":"0x4ab4",
-         "passing": false,
-         "enabled": false
-      },
-      {
-         "id":42,
-         "path":"../target/test_roms/mooneye/acceptance/halt_ime1_timing2-GS.gb",
-         "termination_address":"0x4ab4",
-         "passing": false,
-         "enabled": false
-      },
-      {
-         "id":43,
-         "path":"../target/test_roms/mooneye/acceptance/halt_ime1_timing.gb",
-         "termination_address":"0x4ab4",
-         "passing": false,
-         "enabled": false
-      },
-      {
-         "id":44,
-         "path":"../target/test_roms/mooneye/acceptance/if_ie_registers.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":45,
-         "path":"../target/test_roms/mooneye/acceptance/intr_timing.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":46,
-         "path":"../target/test_roms/mooneye/acceptance/jp_cc_timing.gb",
-         "termination_address":"0x4ab4",
-         "passing": false
-      },
-      {
-         "id":47,
-         "path":"../target/test_roms/mooneye/acceptance/jp_timing.gb",
-         "termination_address":"0x4ab4",
-         "passing": false
-      },
-      {
-         "id":48,
-         "path":"../target/test_roms/mooneye/acceptance/ld_hl_sp_e_timing.gb",
-         "termination_address":"0x4ab4",
-         "passing": false,
-         "enabled": false
-      },
-      {
-         "id":49,
-         "path":"../target/test_roms/mooneye/acceptance/oam_dma_restart.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":50,
-         "path":"../target/test_roms/mooneye/acceptance/oam_dma_start.gb",
-         "termination_address":"0x4ab4",
-         "passing": false,
-         "enabled": false
-      },
-      {
-         "id":51,
-         "path":"../target/test_roms/mooneye/acceptance/oam_dma_timing.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":52,
-         "path":"../target/test_roms/mooneye/acceptance/pop_timing.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":53,
-         "path":"../target/test_roms/mooneye/acceptance/push_timing.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":54,
-         "path":"../target/test_roms/mooneye/acceptance/rapid_di_ei.gb",
-         "termination_address":"0x4ab4",
-         "passing": false,
-         "enabled": false
-      },
-      {
-         "id":55,
-         "path":"../target/test_roms/mooneye/acceptance/ret_cc_timing.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":56,
-         "path":"../target/test_roms/mooneye/acceptance/reti_intr_timing.gb",
-         "termination_address":"0x4ab4",
-         "passing": false,
-         "enabled": false
-      },
-      {
-         "id":57,
-         "path":"../target/test_roms/mooneye/acceptance/reti_timing.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":58,
-         "path":"../target/test_roms/mooneye/acceptance/ret_timing.gb",
-         "termination_address":"0x4ab4"
-      },
-      {
-         "id":59,
-         "path":"../target/test_roms/mooneye/acceptance/rst_timing.gb",
-         "termination_address":"0x4ab4"
-      }
-   ]
+  "name": "rom_tests",
+  "tests": [
+    {
+      "id": 0,
+      "path": "../target/test_roms/mooneye/acceptance/timer/tim00.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 1,
+      "path": "../target/test_roms/mooneye/acceptance/timer/tim01.gb",
+      "termination_address": "0x4ab4"
+    },
+    {
+      "id": 2,
+      "path": "../target/test_roms/mooneye/acceptance/timer/div_write.gb",
+      "termination_address": "0x4ab4"
+    },
+    {
+      "id": 3,
+      "path": "../target/test_roms/mooneye/acceptance/timer/rapid_toggle.gb",
+      "termination_address": "0x4ab4",
+      "passing": false
+    },
+    {
+      "id": 4,
+      "path": "../target/test_roms/mooneye/acceptance/timer/tim00_div_trigger.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 5,
+      "path": "../target/test_roms/mooneye/acceptance/timer/tim01_div_trigger.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 6,
+      "path": "../target/test_roms/mooneye/acceptance/timer/tim10_div_trigger.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 7,
+      "path": "../target/test_roms/mooneye/acceptance/timer/tim10.gb",
+      "termination_address": "0x4ab4"
+    },
+    {
+      "id": 8,
+      "path": "../target/test_roms/mooneye/acceptance/timer/tim11_div_trigger.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 9,
+      "path": "../target/test_roms/mooneye/acceptance/timer/tim11.gb",
+      "termination_address": "0x4ab4"
+    },
+    {
+      "id": 10,
+      "path": "../target/test_roms/mooneye/acceptance/timer/tima_reload.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 11,
+      "path": "../target/test_roms/mooneye/acceptance/timer/tima_write_reloading.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 12,
+      "path": "../target/test_roms/mooneye/acceptance/timer/tma_write_reloading.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 13,
+      "path": "../target/test_roms/mooneye/acceptance/bits/mem_oam.gb",
+      "termination_address": "0x4ab4"
+    },
+    {
+      "id": 14,
+      "path": "../target/test_roms/mooneye/acceptance/bits/reg_f.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 15,
+      "path": "../target/test_roms/mooneye/acceptance/bits/unused_hwio-GS.gb",
+      "termination_address": "0x4ab4",
+      "passing": false
+    },
+    {
+      "id": 16,
+      "path": "../target/test_roms/mooneye/acceptance/instr/daa.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 17,
+      "path": "../target/test_roms/mooneye/acceptance/interrupts/ie_push.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 18,
+      "path": "../target/test_roms/mooneye/acceptance/add_sp_e_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 19,
+      "path": "../target/test_roms/mooneye/acceptance/boot_div2-S.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 20,
+      "path": "../target/test_roms/mooneye/acceptance/boot_div-dmg0.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 21,
+      "path": "../target/test_roms/mooneye/acceptance/boot_div-dmgABCmgb.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 22,
+      "path": "../target/test_roms/mooneye/acceptance/boot_div-S.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 23,
+      "path": "../target/test_roms/mooneye/acceptance/boot_hwio-dmg0.gb",
+      "termination_address": "0x4ab4",
+      "passing": false
+    },
+    {
+      "id": 24,
+      "path": "../target/test_roms/mooneye/acceptance/boot_hwio-dmgABCmgb.gb",
+      "termination_address": "0x4ab4",
+      "passing": false
+    },
+    {
+      "id": 25,
+      "path": "../target/test_roms/mooneye/acceptance/boot_hwio-S.gb",
+      "termination_address": "0x4ab4",
+      "passing": false
+    },
+    {
+      "id": 26,
+      "path": "../target/test_roms/mooneye/acceptance/boot_regs-dmg0.gb",
+      "termination_address": "0x4ab4"
+    },
+    {
+      "id": 27,
+      "path": "../target/test_roms/mooneye/acceptance/boot_regs-dmgABC.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 28,
+      "path": "../target/test_roms/mooneye/acceptance/boot_regs-mgb.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 29,
+      "path": "../target/test_roms/mooneye/acceptance/boot_regs-sgb2.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 30,
+      "path": "../target/test_roms/mooneye/acceptance/boot_regs-sgb.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 31,
+      "path": "../target/test_roms/mooneye/acceptance/call_cc_timing2.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 32,
+      "path": "../target/test_roms/mooneye/acceptance/call_cc_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false
+    },
+    {
+      "id": 34,
+      "path": "../target/test_roms/mooneye/acceptance/call_timing2.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 35,
+      "path": "../target/test_roms/mooneye/acceptance/call_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false
+    },
+    {
+      "id": 36,
+      "path": "../target/test_roms/mooneye/acceptance/di_timing-GS.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 37,
+      "path": "../target/test_roms/mooneye/acceptance/div_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 38,
+      "path": "../target/test_roms/mooneye/acceptance/ei_sequence.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 39,
+      "path": "../target/test_roms/mooneye/acceptance/ei_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 40,
+      "path": "../target/test_roms/mooneye/acceptance/halt_ime0_ei.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 41,
+      "path": "../target/test_roms/mooneye/acceptance/halt_ime0_nointr_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 42,
+      "path": "../target/test_roms/mooneye/acceptance/halt_ime1_timing2-GS.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 43,
+      "path": "../target/test_roms/mooneye/acceptance/halt_ime1_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 44,
+      "path": "../target/test_roms/mooneye/acceptance/if_ie_registers.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 45,
+      "path": "../target/test_roms/mooneye/acceptance/intr_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 46,
+      "path": "../target/test_roms/mooneye/acceptance/jp_cc_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false
+    },
+    {
+      "id": 47,
+      "path": "../target/test_roms/mooneye/acceptance/jp_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false
+    },
+    {
+      "id": 48,
+      "path": "../target/test_roms/mooneye/acceptance/ld_hl_sp_e_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 49,
+      "path": "../target/test_roms/mooneye/acceptance/oam_dma_restart.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 50,
+      "path": "../target/test_roms/mooneye/acceptance/oam_dma_start.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 51,
+      "path": "../target/test_roms/mooneye/acceptance/oam_dma_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 52,
+      "path": "../target/test_roms/mooneye/acceptance/pop_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 53,
+      "path": "../target/test_roms/mooneye/acceptance/push_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 54,
+      "path": "../target/test_roms/mooneye/acceptance/rapid_di_ei.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 55,
+      "path": "../target/test_roms/mooneye/acceptance/ret_cc_timing.gb",
+      "termination_address": "0x4ab4"
+    },
+    {
+      "id": 56,
+      "path": "../target/test_roms/mooneye/acceptance/reti_intr_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    },
+    {
+      "id": 57,
+      "path": "../target/test_roms/mooneye/acceptance/reti_timing.gb",
+      "termination_address": "0x4ab4"
+    },
+    {
+      "id": 58,
+      "path": "../target/test_roms/mooneye/acceptance/ret_timing.gb",
+      "termination_address": "0x4ab4"
+    },
+    {
+      "id": 59,
+      "path": "../target/test_roms/mooneye/acceptance/rst_timing.gb",
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
+    }
+  ]
 }
