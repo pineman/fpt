@@ -1435,7 +1435,9 @@ fn test_rot_reg_addr(
 
 #[rstest]
 #[case::not_zero(0x1, 0b0001, 0b0011)]
+#[case::not_zero(0x1, 0b1001, 0b0011)]
 #[case::zero(0x0, 0b0000, 0b1010)]
+#[case::zero(0x0, 0b1000, 0b1010)]
 // BIT n,REG
 fn test_bit_reg(
     #[values(
