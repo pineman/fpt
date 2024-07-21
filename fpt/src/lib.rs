@@ -48,10 +48,7 @@ impl Gameboy {
         self.cpu.set_de(0x00c1);
         self.cpu.set_hl(0x8403);
         self.cpu.set_sp(0xfffe);
-
-        // Skip executing the bootrom
-        self.cpu.set_pc(0x100);
-        self.bus.unload_bootrom();
+        self.cpu.set_pc(0x100); // This skips executing the bootrom
 
         // HW registers
         self.bus.write(0xFF00, 0xCF); // P1
