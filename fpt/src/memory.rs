@@ -203,8 +203,8 @@ pub mod map {
 #[derive(Clone)]
 pub struct Memory {
     mem: Vec<u8>,
-    cartridge: Vec<u8>,
     bootrom: &'static [u8; 256],
+    rom_first256bytes: Vec<u8>,
     code_listing: Vec<Option<String>>,
     pub buttons: Buttons,
 }
@@ -238,8 +238,8 @@ impl Memory {
         const ARRAY_REPEAT_VALUE: Option<String> = None;
         Self {
             mem: vec![0; 65536],
-            cartridge: Vec::new(),
             bootrom: include_bytes!("../dmg.bin"),
+            rom_first256bytes: vec![0; 256],
             code_listing: vec![ARRAY_REPEAT_VALUE; 0xffff + 1],
             buttons: Buttons::default(),
         }
@@ -272,9 +272,7 @@ pub struct Bus(Rc<RefCell<Memory>>);
 impl Bus {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        let mut bus = Bus(Rc::new(RefCell::new(Memory::new())));
-        bus.load_bootrom();
-        bus
+        Bus(Rc::new(RefCell::new(Memory::new())))
     }
 
     pub fn memory(&self) -> Ref<Memory> {
@@ -286,23 +284,21 @@ impl Bus {
     }
 
     pub fn load_bootrom(&mut self) {
+        self.memory_mut().rom_first256bytes = self.copy_range(0x0000..0x0100);
         let bootrom = self.memory().bootrom;
         self.clone_from_slice(map::BOOTROM, bootrom);
-        self.memory_mut().code_listing[map::BOOTROM].fill(None)
+        self.memory_mut().code_listing[map::BOOTROM].fill(None);
     }
 
     pub fn unload_bootrom(&mut self) {
-        let cartridge = self.memory_mut().cartridge[map::BOOTROM].to_vec();
-        self.clone_from_slice(map::BOOTROM, &cartridge);
-        for i in map::BOOTROM {
-            self.memory_mut().code_listing[i] = None;
-        }
+        let backup = self.memory_mut().rom_first256bytes.clone();
+        self.clone_from_slice(map::BOOTROM, &backup);
+        self.memory_mut().code_listing[map::BOOTROM].fill(None);
     }
 
     pub fn load_cartridge(&mut self, cartridge: &[u8]) {
-        self.memory_mut().cartridge = cartridge.to_vec();
         let l = cartridge.len();
-        self.clone_from_slice(0x0100..l, &cartridge[0x0100..l]);
+        self.clone_from_slice(0x0000..l, &cartridge[0x0000..l]);
     }
 
     pub fn read(&self, address: Address) -> u8 {

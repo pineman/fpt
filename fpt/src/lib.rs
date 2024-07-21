@@ -39,9 +39,15 @@ impl Gameboy {
         }
     }
 
+    pub fn boot_real(&mut self) {
+        self.bus_mut().load_bootrom();
+        // Bootrom will be unloaded when it finishes - one of the last instructions
+        // is writing to the BANK register which will trigger unload_bootrom
+    }
+
     /// Sets CPU and hardware registers to the values found in the DMG0 column in the tables at
     /// https://gbdev.io/pandocs/Power_Up_Sequence.html#console-state-after-boot-rom-hand-off
-    pub fn simulate_dmg0_bootrom_handoff_state(&mut self) {
+    pub fn boot_fake(&mut self) {
         // CPU registers
         self.cpu.set_af(0x0100);
         self.cpu.set_bc(0xff13);

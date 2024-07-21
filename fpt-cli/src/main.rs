@@ -31,7 +31,9 @@ impl GameboyConfig {
     pub fn build_gameboy(self) -> Gameboy {
         let mut gameboy = Gameboy::new();
         if let Some(BootromToFake::DMG0) = self.fake_bootrom {
-            gameboy.simulate_dmg0_bootrom_handoff_state();
+            gameboy.boot_fake();
+        } else {
+            gameboy.boot_real();
         }
         gameboy
     }
