@@ -281,10 +281,7 @@ impl FPT {
             let cpu = self.gb.cpu();
             ui.vertical(|ui| {
                 Grid::new("cpu_registers_a-e").num_columns(4).min_col_width(10.0).striped(true).show(ui, |ui| {
-                    ui.colored_label(Color32::LIGHT_BLUE, "A");
-                    ui.monospace(format!("{:08b}", cpu.a()));
-                    ui.code(format!("{:#04X}", cpu.a()));
-                    ui.end_row();
+                    cpu_register!(ui, "A": cpu.a(), "F": cpu.f()); ui.end_row();
                     cpu_register!(ui, "B": cpu.b(), "C": cpu.c()); ui.end_row();
                     cpu_register!(ui, "D": cpu.d(), "E": cpu.e()); ui.end_row();
                     cpu_register!(ui, "H": cpu.a(), "L": cpu.f()); ui.end_row();
@@ -293,15 +290,14 @@ impl FPT {
             ui.separator();
             ui.vertical(|ui| {
                 Grid::new("flags").num_columns(1).min_col_width(10.0).striped(true).show(ui, |ui| {
-                    ui.colored_label(Color32::LIGHT_BLUE, "Z");
-                    ui.code(if cpu.z_flag() { "1" } else { "0" });
-                    ui.colored_label(Color32::LIGHT_BLUE, "N");
-                    ui.code(if cpu.n_flag() { "1" } else { "0" });
-                    ui.end_row();
-                    ui.colored_label(Color32::LIGHT_BLUE, "H");
-                    ui.code(if cpu.h_flag() { "1" } else { "0" });
                     ui.colored_label(Color32::LIGHT_BLUE, "C");
                     ui.code(if cpu.c_flag() { "1" } else { "0" });
+                    ui.colored_label(Color32::LIGHT_BLUE, "H");
+                    ui.code(if cpu.h_flag() { "1" } else { "0" });
+                    ui.colored_label(Color32::LIGHT_BLUE, "N");
+                    ui.code(if cpu.n_flag() { "1" } else { "0" });
+                    ui.colored_label(Color32::LIGHT_BLUE, "Z");
+                    ui.code(if cpu.z_flag() { "1" } else { "0" });
                 });
                 ui.horizontal(|ui| {
                     ui.colored_label(Color32::LIGHT_BLUE, "SP");
