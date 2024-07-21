@@ -29,13 +29,13 @@ pub const EXT_RAM: MemoryRange = 0xA000..0xC000;
 /// Unit Working RAM (8 KB)
 pub const WRAM: MemoryRange = 0xC000..0xE000;
 
-/// Not usable (Mirror of C000~DDFF (ECHO RAM)) https://gbdev.io/pandocs/Memory_Map.html#echo-ram
+/// Not usable (Mirror of C000~DDFF (ECHO RAM)) <https://gbdev.io/pandocs/Memory_Map.html#echo-ram>
 pub const NOT_USABLE1: MemoryRange = 0xE000..0xFE00;
 
 /// Object Attribute Memory (40 OBJs, 40 x 32 bits)
 pub const OAM: MemoryRange = 0xFE00..0xFEA0;
 
-/// Not usable https://gbdev.io/pandocs/Memory_Map.html#fea0-feff-range
+/// Not usable <https://gbdev.io/pandocs/Memory_Map.html#fea0-feff-range>
 pub const NOT_USABLE2: MemoryRange = 0xFEA0..0xFF00;
 
 //-------------------------------------------------------------------------
