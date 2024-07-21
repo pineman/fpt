@@ -11,13 +11,14 @@ fn check_registers(gb: &Gameboy) -> bool {{
 
 fn rom_test(rom_path: &str, termination_address: u16, passing: bool) {{
     let mut gb = Gameboy::new();
-    gb.simulate_dmg0_bootrom_handoff_state();
 
     let rom = std::fs::read(rom_path).unwrap();
     gb.load_rom(&rom);
 
     gb.debug_cmd(&DebugCmd::Instrpoint(0x40));
     gb.debug_cmd(&DebugCmd::Breakpoint(termination_address));
+
+    gb.boot_fake();
 
     let mut success = true;
     'outer: loop {{

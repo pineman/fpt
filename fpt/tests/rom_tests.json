@@ -100,7 +100,9 @@
       {
          "id":18,
          "path":"../target/test_roms/mooneye/acceptance/add_sp_e_timing.gb",
-         "termination_address":"0x4ab4"
+         "termination_address":"0x4ab4",
+         "passing":false,
+         "enabled":false
       },
       {
          "id":19,

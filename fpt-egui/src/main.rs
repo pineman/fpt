@@ -145,7 +145,9 @@ impl FPT {
         }
         // XXX duplicated logic from fpt-cli main.rs
         if let Some(BootromToFake::DMG0) = fake_bootrom {
-            app.gb.simulate_dmg0_bootrom_handoff_state();
+            app.gb.boot_fake();
+        } else {
+            app.gb.boot_real();
         }
         app
     }
