@@ -124,7 +124,9 @@ impl Bus {
     }
 
     pub fn unload_bootrom(&mut self) {
-        self.memory_mut().unload_bootrom();
+        let backup = self.memory().rom_first256bytes.clone();
+        self.clone_from_slice(map::BOOTROM, &backup);
+        self.memory_mut().code_listing[map::BOOTROM].fill(None);
     }
 
     pub fn load_cartridge(&mut self, cartridge: &[u8]) {

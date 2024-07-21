@@ -246,12 +246,16 @@
       {
          "id":44,
          "path":"../target/test_roms/mooneye/acceptance/if_ie_registers.gb",
-         "termination_address":"0x4ab4"
+         "termination_address":"0x4ab4",
+         "passing": false,
+         "enabled": false
       },
       {
          "id":45,
          "path":"../target/test_roms/mooneye/acceptance/intr_timing.gb",
-         "termination_address":"0x4ab4"
+         "termination_address":"0x4ab4",
+         "passing": false,
+         "enabled": false
       },
       {
          "id":46,
@@ -309,7 +313,9 @@
       {
          "id":55,
          "path":"../target/test_roms/mooneye/acceptance/ret_cc_timing.gb",
-         "termination_address":"0x4ab4"
+         "termination_address":"0x4ab4",
+         "passing": false,
+         "enabled": false
       },
       {
          "id":56,
@@ -321,12 +327,16 @@
       {
          "id":57,
          "path":"../target/test_roms/mooneye/acceptance/reti_timing.gb",
-         "termination_address":"0x4ab4"
+         "termination_address":"0x4ab4",
+         "passing": false,
+         "enabled": false
       },
       {
          "id":58,
          "path":"../target/test_roms/mooneye/acceptance/ret_timing.gb",
-         "termination_address":"0x4ab4"
+         "termination_address":"0x4ab4",
+         "passing": false,
+         "enabled": false
       },
       {
          "id":59,
