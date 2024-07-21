@@ -39,7 +39,7 @@ fn write_test(test_file: &mut File, directory: &str) {
         if test.enabled.is_some() && !test.enabled.unwrap() {
             continue;
         }
-        let test_name = format!("{}_{}", suite.name, test.id);
+        let test_name = format!("{}_{:04}", suite.name, test.id);
 
         write!(
             test_file,
