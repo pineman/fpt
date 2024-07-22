@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use crate::debug_interface::{Breakpoint, DebugCmd, DebugEvent, Instrpoint, Watchpoint};
+use crate::debug_interface::{Breakpoint, DebugCmd, DebugEvent, Instrpoint, Watchpoint, Timepoint};
 use crate::memory::Bus;
 
 #[derive(Clone, PartialEq)]
@@ -8,6 +8,7 @@ pub struct Debugger {
     breakpoints: Vec<Breakpoint>,
     watchpoints: Vec<Watchpoint>,
     instrpoints: Vec<Instrpoint>,
+    timepoints: Vec<Timepoint>,
     pub paused: bool,
     dbg_events: VecDeque<DebugEvent>,
     bus: Bus,
@@ -19,6 +20,7 @@ impl Debugger {
             breakpoints: Vec::new(),
             watchpoints: Vec::new(),
             instrpoints: Vec::new(),
+            timepoints: Vec::new(),
             paused: false,
             dbg_events: VecDeque::new(),
             bus,
@@ -52,6 +54,12 @@ impl Debugger {
                     triggered: false,
                 });
                 Some(DebugEvent::RegisterInstrpoint(*instruction))
+            }
+            DebugCmd::Timepoint(time) => {
+                self.timepoints.push(
+                    Timepoint::new(*time)
+                );
+                Some(DebugEvent::RegisterTimepoint(*time))
             }
             DebugCmd::ListBreakpoints => {
                 Some(DebugEvent::ListBreakpoints(self.breakpoints.clone()))

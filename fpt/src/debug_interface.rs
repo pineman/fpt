@@ -39,6 +39,29 @@ impl Instrpoint {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct Timepoint {
+    time: u32,
+    countdown: u32,
+    pub triggered: bool,
+}
+
+impl Timepoint {
+    pub fn new(time: u32) -> Self {
+        Self { time, countdown: time, triggered: false }
+    }
+
+    pub fn count(&mut self, elapsed: u32) {
+        if self.countdown > elapsed {
+            self.countdown -= elapsed;
+        }
+        else {
+            self.countdown = self.time;
+            self.triggered = true;
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum DebugCmd {
     Pause,
@@ -46,6 +69,8 @@ pub enum DebugCmd {
     Breakpoint(u16),
     Watchpoint(u16),
     Instrpoint(u16),
+    /// Execute for milliseconds then stop
+    Timepoint(u32), 
     Load(String),
     ListBreakpoints,
     ListWatchpoints,
@@ -58,6 +83,7 @@ pub enum DebugEvent {
     RegisterBreakpoint(u16),
     RegisterWatchpoint(u16),
     RegisterInstrpoint(u16),
+    RegisterTimepoint(u32),
     ListBreakpoints(Vec<Breakpoint>),
     ListWatchpoints(Vec<Watchpoint>),
     Breakpoint(u16),
@@ -76,6 +102,9 @@ impl fmt::Display for DebugEvent {
             }
             DebugEvent::RegisterWatchpoint(addr) => {
                 writeln!(f, "Registered watchpoint at address {:#04X}", addr)
+            }
+            DebugEvent::RegisterTimepoint(countdown) => {
+                writeln!(f, "Registered timepoint with countdown {:#04X}", countdown)
             }
             DebugEvent::RegisterInstrpoint(opcode) => {
                 writeln!(f, "Registered instrpoint with opcode {:#04X}", opcode)
@@ -132,6 +161,15 @@ where
     )?))
 }
 
+fn timepoint_cmd<'a, Args>(args: Args) -> Option<DebugCmd>
+where
+    Args: IntoIterator<Item = &'a str>,
+{
+    Some(DebugCmd::Timepoint(parse::<u32>(
+        args.into_iter().next()?,
+    )?))
+}
+
 fn print_cmd<'a, Args>(args: Args) -> Option<DebugCmd>
 where
     Args: IntoIterator<Item = &'a str>,
@@ -160,6 +198,7 @@ impl DebugCmd {
             "c" | "continue" => Some(DebugCmd::Continue),
             "b" | "break" | "breakpoint" => breakpoint_cmd(args),
             "w" | "watch" | "watchpoint" => watchpoint_cmd(args),
+            "t" | "time" | "timepoint" => timepoint_cmd(args),
             "lb" | "list_breakpoints" => Some(DebugCmd::ListBreakpoints),
             "lw" | "list_watchpoints" => Some(DebugCmd::ListWatchpoints),
             "load" => Some(DebugCmd::Load(args.next().unwrap().to_string())),
