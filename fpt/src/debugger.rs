@@ -1,4 +1,5 @@
 use std::collections::VecDeque;
+use std::time::{SystemTime};
 
 use crate::debug_interface::{Breakpoint, DebugCmd, DebugEvent, Instrpoint, Watchpoint, Timepoint};
 use crate::memory::Bus;
@@ -12,6 +13,7 @@ pub struct Debugger {
     pub paused: bool,
     dbg_events: VecDeque<DebugEvent>,
     bus: Bus,
+    last_execution_time: SystemTime,
 }
 
 impl Debugger {
@@ -24,6 +26,7 @@ impl Debugger {
             paused: false,
             dbg_events: VecDeque::new(),
             bus,
+            last_execution_time: SystemTime::now(),
         }
     }
 
@@ -114,6 +117,32 @@ impl Debugger {
             self.dbg_events.push_back(DebugEvent::Breakpoint(pc));
         }
 
+        self.paused
+    }
+
+    pub fn match_timepoint(&mut self) -> bool {
+        let now = SystemTime::now();
+        let delta = now.duration_since(self.last_execution_time).unwrap().as_millis() as u32;
+        
+        let mut countdown = 0;
+        for timepoint in &mut self.timepoints {
+            timepoint.count(delta);
+            if timepoint.triggered {
+                timepoint.triggered = false;
+                timepoint.reset();
+            }
+            else if timepoint.countdown == 0 {
+                countdown = timepoint.countdown;
+                self.paused = true;
+                timepoint.triggered = true;
+            }
+        }
+
+        if self.paused {
+            self.dbg_events.push_back(DebugEvent::Timepoint(countdown));
+        }
+
+        self.last_execution_time = now;
         self.paused
     }
 

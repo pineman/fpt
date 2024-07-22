@@ -42,7 +42,7 @@ impl Instrpoint {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Timepoint {
     time: u32,
-    countdown: u32,
+    pub countdown: u32,
     pub triggered: bool,
 }
 
@@ -56,9 +56,12 @@ impl Timepoint {
             self.countdown -= elapsed;
         }
         else {
-            self.countdown = self.time;
-            self.triggered = true;
+            self.countdown = 0;
         }
+    }
+
+    pub fn reset(&mut self) {
+        self.countdown = self.time;
     }
 }
 
@@ -89,6 +92,7 @@ pub enum DebugEvent {
     Breakpoint(u16),
     Watchpoint(u16, u16),
     Instrpoint(u16),
+    Timepoint(u32),
     Print(u8),
 }
 
@@ -135,6 +139,9 @@ impl fmt::Display for DebugEvent {
             }
             DebugEvent::Instrpoint(opcode) => {
                 writeln!(f, "Hit instrpoint at {:#06X}", opcode)
+            }
+            DebugEvent::Timepoint(countdown) => {
+                writeln!(f, "Hit timepoint at {}", countdown)
             }
             DebugEvent::Print(value) => {
                 writeln!(f, "{:#04X}", value)
