@@ -574,8 +574,8 @@ impl FPT {
     fn load_rom(&mut self, ui: &mut Ui) {
         if let Ok(text) = self.rom_channel.1.try_recv() {
             self.gb.load_rom(&text);
-            if let Some(BootromToFake::DMG0) = bootrom {
-                self..gb.boot_fake();
+            if let Some(BootromToFake::DMG0) = self.bootrom {
+                self.gb.boot_fake();
             } else {
                 self.gb.boot_real();
             }
