@@ -9,6 +9,7 @@ pub struct Timer {
     tima: u8,
     tac: u8,
     tma: u8,
+    m_cycle_count: u64,
 }
 
 impl Timer {
@@ -20,6 +21,7 @@ impl Timer {
             tima: 0,
             tac: 0,
             tma: 0,
+            m_cycle_count: 0,
         }
     }
 
@@ -64,8 +66,20 @@ impl Timer {
         self.bus.read(map::TMA)
     }
 
-    // Call this every M-cycle
-    pub fn step(&mut self) {
+    // Call this every t-cycle with the total count of t-cycles since boot
+    pub fn step(&mut self, t_cycles_count: u64) {
+        let actual_m_cycles = t_cycles_count / 4;
+        let need_m_cycles = actual_m_cycles - self.m_cycle_count;
+        if need_m_cycles == 0 {
+            return;
+        }
+        for _ in 0..need_m_cycles {
+            self._step();
+            self.m_cycle_count += 1;
+        }
+    }
+
+    fn _step(&mut self) {
         let mut div = self.get_div();
         let mut tima = self.get_tima();
         let tac = self.get_tac();
@@ -123,42 +137,42 @@ mod tests {
         bus.write(map::TAC, 0b101);
         bus.write(map::TMA, 0xFE);
 
-        timer.step();
+        timer._step();
 
         assert_eq!(bus.read(map::DIV), 1);
         assert_eq!(bus.read(map::TIMA), 254);
 
-        timer.step();
+        timer._step();
 
         assert_eq!(bus.read(map::DIV), 2);
         assert_eq!(bus.read(map::TIMA), 254);
 
-        timer.step();
+        timer._step();
 
         assert_eq!(bus.read(map::DIV), 3);
         assert_eq!(bus.read(map::TIMA), 254);
 
-        timer.step();
+        timer._step();
 
         assert_eq!(bus.read(map::DIV), 4);
         assert_eq!(bus.read(map::TIMA), 255);
 
-        timer.step();
+        timer._step();
 
         assert_eq!(bus.read(map::DIV), 5);
         assert_eq!(bus.read(map::TIMA), 255);
 
-        timer.step();
+        timer._step();
 
         assert_eq!(bus.read(map::DIV), 6);
         assert_eq!(bus.read(map::TIMA), 255);
 
-        timer.step();
+        timer._step();
 
         assert_eq!(bus.read(map::DIV), 7);
         assert_eq!(bus.read(map::TIMA), 255);
 
-        timer.step();
+        timer._step();
 
         assert_eq!(bus.read(map::DIV), 8);
         assert_eq!(bus.read(map::TIMA), 254);

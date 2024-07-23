@@ -19,7 +19,6 @@ pub mod ppu;
 pub mod timer;
 
 pub struct Gameboy {
-    t_cycle_counter: u8,
     bus: Bus,
     cpu: LR35902,
     ppu: Ppu,
@@ -31,7 +30,6 @@ impl Gameboy {
     pub fn new() -> Self {
         let bus = Bus::new();
         Self {
-            t_cycle_counter: 0,
             bus: bus.clone(),
             cpu: LR35902::new(bus.clone()),
             ppu: Ppu::new(bus.clone()),
@@ -132,26 +130,19 @@ impl Gameboy {
         &mut self.timer
     }
 
-    pub fn step(&mut self) -> u32 {
-        //let cycles = self.cpu.instruction() as u32;
-        self.cpu.t_cycle();
+    pub fn step(&mut self) -> u8 {
+        let cycles = self.cpu.step();
         // TODO: care for double speed mode (need to run half as much dots)
-        self.ppu.step(1);
-
-        if self.t_cycle_counter == 3 {
-            self.timer.step();
-        }
-
-        self.t_cycle_counter = (self.t_cycle_counter + 1) % 4;
-        1
+        self.ppu.step(cycles as u32);
+        self.timer.step(self.cpu.clock_cycles());
+        cycles
     }
 
     pub fn instruction(&mut self) -> u32 {
         let cycles = self.cpu.instruction() as u32;
         // TODO: care for double speed mode (need to run half as much dots)
         self.ppu.step(cycles);
-        // TODO: timer may need more than one step!!
-        self.timer.step();
+        self.timer.step(self.cpu.clock_cycles());
         cycles
     }
 

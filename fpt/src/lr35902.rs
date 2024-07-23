@@ -631,33 +631,44 @@ impl LR35902 {
     }
 
     // Run instructions
-    /// Run one t-cycle - from actual crystal @ 4 or 8 MHz (double speed mode)
-    pub fn t_cycle(&mut self) {
+    /// Returns the number of t-cycles actually ran. Should be 1 t-cycle most of the time,
+    /// but sometimes may be 1 + 5 cycles in case an interrupt was hit, or even 0 on breakpoints.
+    /// This probably points to the fact that we should have a real clock() function
+    /// that runs *one* clock cycle of the whole system. These step functions of
+    /// each subsystem could be like coroutines for easier state tracking.
+    /// But, for now, it's easier to run multiple cycles in each step().
+    pub fn step(&mut self) -> u8 {
         let inst = self.decode();
-        self.set_inst_cycle_count(self.inst_cycle_count() + 1);
+
         // Only actually mutate CPU state on the last t-cycle of the instruction
-        if self.inst_cycle_count() < inst.cycles {
-            return;
+        if self.inst_cycle_count() + 1 < inst.cycles {
+            self.set_inst_cycle_count(self.inst_cycle_count() + 1);
+            return 1;
         }
+
         self.update_code_listing(inst);
         if self.debugger.match_breakpoint(self.pc()) {
-            return;
+            return 0;
         }
         if self.debugger.match_instrpoint(inst.opcode) {
-            return;
+            return 0;
         }
+
         self.execute(inst);
-        if !self.mutated_pc() {
-            self.set_pc(self.pc() + inst.size as u16);
-        }
+
+        self.set_inst_cycle_count(0);
         let cycles = if inst.kind == InstructionKind::Jump && !self.mutated_pc() {
             inst.cycles_not_taken
         } else {
             inst.cycles
         };
         self.set_clock_cycles(self.clock_cycles() + cycles as u64);
+
+        if !self.mutated_pc() {
+            self.set_pc(self.pc() + inst.size as u16);
+        }
         self.set_mutated_pc(false);
-        self.set_inst_cycle_count(0);
+
         if self.ime {
             let iflag = self.bus.iflag();
             let intr = iflag & self.bus.ie();
@@ -678,21 +689,30 @@ impl LR35902 {
                 isv = 0x60;
                 self.bus.set_iflag(bw::set_bit8::<4>(iflag, false));
             } else {
-                return;
+                return cycles;
             }
             // TODO: this is a big lie. we cant just run 5 cycles inside the function supposed to run 1 cycle lmao
             self.set_ime(false);
             self.push(self.pc());
             self.set_pc(isv);
             self.set_clock_cycles(self.clock_cycles() + 5);
+            return cycles + 5;
         }
+
+        if self.debugger.step {
+            self.set_paused(true);
+            self.debugger.step = false;
+        }
+
+        cycles
     }
 
     /// Run one complete instruction - NOT a machine cycle (4 t-cycles)
     pub fn instruction(&mut self) -> u8 {
         let instruction = self.decode();
-        for _ in 0..instruction.cycles {
-            self.t_cycle();
+        let mut cycles_ran = 0;
+        while cycles_ran < instruction.cycles {
+            cycles_ran += self.step();
         }
         instruction.cycles
     }
