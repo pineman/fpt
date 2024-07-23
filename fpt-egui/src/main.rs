@@ -176,13 +176,13 @@ impl FPT {
         let mut cycles_ran = 0;
         while cycles_ran < cycles_want && !self.gb.paused() {
             let cycles = self.gb.step();
-            self.cycles_since_last_frame += cycles;
+            self.cycles_since_last_frame += cycles as u32;
             if self.cycles_since_last_frame >= self.gb.cycles_in_one_frame() {
                 frame = Some(*self.gb.get_frame()); // Copies the whole [u8; WIDTH * HEIGHT] into frame
                 self.gb_frame_count += 1;
                 self.cycles_since_last_frame = 0;
             }
-            cycles_ran += cycles;
+            cycles_ran += cycles as u32;
         }
         self.accum_time -= cycles_ran as f64 * T_CYCLE * self.slow_factor;
         frame
