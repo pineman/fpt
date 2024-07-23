@@ -171,19 +171,18 @@ impl FPT {
         let mut frame: Option<fpt::ppu::Frame> = None;
         let delta_time = ui.input(|i| i.unstable_dt) as f64;
         self.accum_time += delta_time;
-        // TODO: should limit to "a frame" taking self.slow_factor into account (so 10 frames at 0.1 or 0.1 frames at 10).
+        // TODO: should limit to a 60fps frame, taking self.slow_factor into account (so 10 frames at 0.1, or 0.1 frames at 10)
         let cycles_want = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
         let mut cycles_ran = 0;
         while cycles_ran < cycles_want && !self.gb.paused() {
-            // TODO: care for double speed mode
-            self.gb.step();
-            self.cycles_since_last_frame += 1;
-            if self.cycles_since_last_frame == self.gb.cycles_in_one_frame() {
+            let cycles = self.gb.step();
+            self.cycles_since_last_frame += cycles;
+            if self.cycles_since_last_frame >= self.gb.cycles_in_one_frame() {
                 frame = Some(*self.gb.get_frame()); // Copies the whole [u8; WIDTH * HEIGHT] into frame
                 self.gb_frame_count += 1;
                 self.cycles_since_last_frame = 0;
             }
-            cycles_ran += 1;
+            cycles_ran += cycles;
         }
         self.accum_time -= cycles_ran as f64 * T_CYCLE * self.slow_factor;
         frame
@@ -284,7 +283,7 @@ impl FPT {
                     cpu_register!(ui, "A": cpu.a(), "F": cpu.f()); ui.end_row();
                     cpu_register!(ui, "B": cpu.b(), "C": cpu.c()); ui.end_row();
                     cpu_register!(ui, "D": cpu.d(), "E": cpu.e()); ui.end_row();
-                    cpu_register!(ui, "H": cpu.a(), "L": cpu.f()); ui.end_row();
+                    cpu_register!(ui, "H": cpu.h(), "L": cpu.l()); ui.end_row();
                 });
             });
             ui.separator();
@@ -401,10 +400,6 @@ impl FPT {
                     .clone_from(&self.debug_console.command);
                 self.debug_console.command = String::new();
             }
-
-            //if let Some(e) = self.gb.cpu_mut().dbg_events.pop_front() {
-            //    self.dc.push(e);
-            //}
         });
     }
 
@@ -546,6 +541,7 @@ impl FPT {
 
     fn central_panel(&mut self, ctx: &Context, ui: &mut Ui) {
         if !self.gb.cpu().paused() {
+            // TODO: only capture buttons if debug console is not focused
             let buttons = Buttons {
                 a: ctx.input(|i| i.key_down(Key::A)),
                 b: ctx.input(|i| i.key_down(Key::S)),

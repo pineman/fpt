@@ -50,10 +50,12 @@ pub enum DebugCmd {
     ListBreakpoints,
     ListWatchpoints,
     Print(u16),
+    Step,
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum DebugEvent {
+    Pause,
     Continue,
     RegisterBreakpoint(u16),
     RegisterWatchpoint(u16),
@@ -64,6 +66,7 @@ pub enum DebugEvent {
     Watchpoint(u16, u16),
     Instrpoint(u16),
     Print(u8),
+    Step,
 }
 
 impl fmt::Display for DebugEvent {
@@ -110,6 +113,8 @@ impl fmt::Display for DebugEvent {
             DebugEvent::Print(value) => {
                 writeln!(f, "{:#04X}", value)
             }
+            DebugEvent::Pause => writeln!(f, "pause"),
+            DebugEvent::Step => writeln!(f, "step"),
         }
     }
 }
@@ -164,6 +169,8 @@ impl DebugCmd {
             "lw" | "list_watchpoints" => Some(DebugCmd::ListWatchpoints),
             "load" => Some(DebugCmd::Load(args.next().unwrap().to_string())),
             "p" | "print" => print_cmd(args),
+            "s" | "step" => Some(DebugCmd::Step),
+            "pause" => Some(DebugCmd::Pause),
             _ => None,
         }
     }

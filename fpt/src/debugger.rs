@@ -9,6 +9,7 @@ pub struct Debugger {
     watchpoints: Vec<Watchpoint>,
     instrpoints: Vec<Instrpoint>,
     pub paused: bool,
+    pub step: bool,
     dbg_events: VecDeque<DebugEvent>,
     bus: Bus,
 }
@@ -20,6 +21,7 @@ impl Debugger {
             watchpoints: Vec::new(),
             instrpoints: Vec::new(),
             paused: false,
+            step: false,
             dbg_events: VecDeque::new(),
             bus,
         }
@@ -29,7 +31,7 @@ impl Debugger {
         match cmd {
             DebugCmd::Pause => {
                 self.paused = true;
-                None
+                Some(DebugEvent::Pause)
             }
             DebugCmd::Continue => {
                 self.paused = false;
@@ -61,6 +63,11 @@ impl Debugger {
             }
             DebugCmd::Load(_) => None,
             DebugCmd::Print(addr) => Some(DebugEvent::Print(self.bus.read(*addr as usize))),
+            DebugCmd::Step => {
+                self.paused = false;
+                self.step = true;
+                Some(DebugEvent::Step)
+            }
         }
     }
 

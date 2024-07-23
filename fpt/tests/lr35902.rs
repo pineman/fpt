@@ -1929,7 +1929,7 @@ fn test_pop(#[case] opcode: u8, #[case] register: &str, #[case] value: u16, #[ca
         .with_mem8(0xff80, opcode)
         .with_pc(0xff80)
         .with_sp(sp)
-        .with_mem16(sp, dbg!(value));
+        .with_mem16(sp, value);
     let mut sut = builder.clone().build();
 
     // When
