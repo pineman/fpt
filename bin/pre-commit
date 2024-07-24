@@ -2,5 +2,6 @@
 set -euo pipefail
 FILES=$(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g')
 cargo fmt
-cargo clippy --all-features
-echo "$FILES" | xargs git add
+if cargo clippy --all-features --fix --allow-dirty | grep "warning"; then
+  exit 1
+fi
