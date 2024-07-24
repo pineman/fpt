@@ -656,55 +656,62 @@ impl LR35902 {
 
         self.execute(inst);
 
-        self.set_inst_cycle_count(0);
-        let cycles = if inst.kind == InstructionKind::Jump && !self.mutated_pc() {
-            inst.cycles_not_taken
-        } else {
-            inst.cycles
-        };
-        self.set_clock_cycles(self.clock_cycles() + cycles as u64);
-
         if !self.mutated_pc() {
             self.set_pc(self.pc() + inst.size as u16);
         }
         self.set_mutated_pc(false);
 
-        if self.ime {
-            let iflag = self.bus.iflag();
-            let intr = iflag & self.bus.ie();
-            let isv;
-            if bw::test_bit8::<0>(intr) {
-                isv = 0x40;
-                self.bus.set_iflag(bw::set_bit8::<0>(iflag, false));
-            } else if bw::test_bit8::<1>(intr) {
-                isv = 0x48;
-                self.bus.set_iflag(bw::set_bit8::<1>(iflag, false));
-            } else if bw::test_bit8::<2>(intr) {
-                isv = 0x50;
-                self.bus.set_iflag(bw::set_bit8::<2>(iflag, false));
-            } else if bw::test_bit8::<3>(intr) {
-                isv = 0x58;
-                self.bus.set_iflag(bw::set_bit8::<3>(iflag, false));
-            } else if bw::test_bit8::<4>(intr) {
-                isv = 0x60;
-                self.bus.set_iflag(bw::set_bit8::<4>(iflag, false));
-            } else {
-                return cycles;
-            }
-            // TODO: this is a big lie. we cant just run 5 cycles inside the function supposed to run 1 cycle lmao
-            self.set_ime(false);
-            self.push(self.pc());
-            self.set_pc(isv);
-            self.set_clock_cycles(self.clock_cycles() + 5);
-            return cycles + 5;
-        }
+        let inst_cycles = if inst.kind == InstructionKind::Jump && !self.mutated_pc() {
+            inst.cycles_not_taken
+        } else {
+            inst.cycles
+        };
+
+        let intr_preamble_cycles = if self.ime { self.run_interrupts() } else { 0 };
+
+        let total_cycles = inst_cycles + intr_preamble_cycles;
+        self.set_clock_cycles(self.clock_cycles() + total_cycles as u64);
+        self.set_inst_cycle_count(0);
 
         if self.debugger.step {
             self.set_paused(true);
             self.debugger.step = false;
         }
 
-        cycles
+        total_cycles
+    }
+
+    /// To run an interrupt, we first run the interrupt service routine (ISR).
+    /// That on itself takes 5 M-cycles, or 20 T-cycles.
+    fn run_interrupts(&mut self) -> u8 {
+        let iflag = self.bus.iflag();
+        let intr = iflag & self.bus.ie();
+        let isv;
+        let intr_bit = if bw::test_bit8::<0>(intr) {
+            isv = 0x40;
+            0
+        } else if bw::test_bit8::<1>(intr) {
+            isv = 0x48;
+            1
+        } else if bw::test_bit8::<2>(intr) {
+            isv = 0x50;
+            2
+        } else if bw::test_bit8::<3>(intr) {
+            isv = 0x58;
+            3
+        } else if bw::test_bit8::<4>(intr) {
+            isv = 0x60;
+            4
+        } else {
+            // No interrupt is pending
+            return 0;
+        };
+        self.bus.set_iflag(bw::set_bit8_dyn(iflag, intr_bit, false));
+        self.set_ime(false);
+        self.push(self.pc());
+        self.set_pc(isv);
+        // https://gbdev.io/pandocs/Interrupts.html#interrupt-handling
+        20
     }
 
     /// Run one complete instruction - NOT a machine cycle (4 t-cycles)

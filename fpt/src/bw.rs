@@ -22,6 +22,10 @@ pub fn set_bit8<const INDEX: u8>(word: u8, value: bool) -> u8 {
     word & !(1 << INDEX) | (u8::from(value) << INDEX)
 }
 
+pub fn set_bit8_dyn(word: u8, index: u8, value: bool) -> u8 {
+    word & !(1 << index) | (u8::from(value) << index)
+}
+
 pub fn set_bit16<const INDEX: u8>(word: u16, value: bool) -> u16 {
     word & !(1 << INDEX) | (u16::from(value) << INDEX)
 }
