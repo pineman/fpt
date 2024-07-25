@@ -5,13 +5,11 @@ use super::cartridge::{get_cartridge_type, EmptyCartridge};
 use super::mbc_none::NoMbcCartridge;
 use super::Cartridge;
 
-pub fn create_mbc(cartridge_data: &[u8]) -> Rc<RefCell<dyn Cartridge>> {
-    let cartridge_type = get_cartridge_type(cartridge_data);
-
+pub fn create_mbc(cartridge_data: &[u8]) -> Option<Rc<RefCell<dyn Cartridge>>> {
     // https://gbdev.io/pandocs/The_Cartridge_Header.html#0147--cartridge-type
-    match cartridge_type {
-        0x00 => Rc::new(RefCell::new(NoMbcCartridge::new(cartridge_data))), // rom only
-        _ => panic!(),
+    match get_cartridge_type(cartridge_data) {
+        0x00 => Some(Rc::new(RefCell::new(NoMbcCartridge::new(cartridge_data)))), // rom only
+        _ => None,
     }
 }
 
