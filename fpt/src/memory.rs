@@ -310,6 +310,9 @@ impl Bus {
     }
 
     pub fn write(&mut self, address: Address, value: u8) {
+        if address == 0x2000 {
+            return;
+        }
         self.memory_mut().mem[address] = value;
     }
 
