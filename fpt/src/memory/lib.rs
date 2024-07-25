@@ -102,8 +102,9 @@ impl Bus {
         self.memory_mut().bootrom_loaded = false;
     }
 
-    pub fn load_cartridge(&mut self, cartridge: &[u8]) {
-        self.memory_mut().cartridge = create_mbc(cartridge);
+    pub fn load_rom(&mut self, rom: &[u8]) {
+        self.memory_mut().cartridge =
+            create_mbc(rom).expect("Given rom cannot be interpreted as a valid cartridge type");
     }
 
     pub fn read(&self, address: Address) -> u8 {

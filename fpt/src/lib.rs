@@ -99,7 +99,7 @@ impl Gameboy {
     }
 
     pub fn load_rom(&mut self, rom: &[u8]) {
-        self.bus.load_cartridge(rom);
+        self.bus.load_rom(rom);
     }
 
     pub fn bus(&self) -> &Bus {

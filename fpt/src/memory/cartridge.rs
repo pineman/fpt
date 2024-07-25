@@ -1,12 +1,13 @@
 use crate::memory::map;
 use crate::memory::{Address, MemoryRange};
 
-pub fn get_cartridge_type(tape: &[u8]) -> u8 {
-    tape[map::CARTRIDGE_TYPE]
+pub fn get_cartridge_type(cartridge_rom_data: &[u8]) -> u8 {
+    cartridge_rom_data[map::CARTRIDGE_TYPE]
 }
 
 pub trait Cartridge {
     fn read(&self, address: Address) -> u8;
+
     fn write(&mut self, address: Address, value: u8);
 
     fn read_range(&self, memory_range: MemoryRange) -> Vec<u8> {
