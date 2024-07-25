@@ -656,22 +656,20 @@ impl LR35902 {
 
         self.execute(inst);
 
-        if !self.mutated_pc() {
-            self.set_pc(self.pc() + inst.size as u16);
-        }
-        self.set_mutated_pc(false);
-
         let inst_cycles = if inst.kind == InstructionKind::Jump && !self.mutated_pc() {
             inst.cycles_not_taken
         } else {
             inst.cycles
         };
-
         let intr_preamble_cycles = if self.ime { self.run_interrupts() } else { 0 };
-
         let total_cycles = inst_cycles + intr_preamble_cycles;
         self.set_clock_cycles(self.clock_cycles() + total_cycles as u64);
         self.set_inst_cycle_count(0);
+
+        if !self.mutated_pc() {
+            self.set_pc(self.pc() + inst.size as u16);
+        }
+        self.set_mutated_pc(false);
 
         if self.debugger.step {
             self.set_paused(true);
@@ -721,7 +719,7 @@ impl LR35902 {
         while cycles_ran < instruction.cycles {
             cycles_ran += self.step();
         }
-        instruction.cycles
+        cycles_ran
     }
 
     fn execute(&mut self, instruction: Instruction) {

@@ -245,7 +245,7 @@ impl Memory {
         }
     }
 
-    pub fn array_ref<const N: usize>(&self, from: Address) -> &[u8; N] {
+    fn array_ref<const N: usize>(&self, from: Address) -> &[u8; N] {
         self.mem[from..from + N].try_into().unwrap() // guaranteed to have size N
     }
 
@@ -305,26 +305,11 @@ impl Bus {
         if address == map::JOYP {
             self.joyp()
         } else {
-            self.memory().mem[address as Address]
-        }
-    }
-
-    pub fn write(&mut self, address: Address, value: u8) {
-        self.memory_mut().mem[address as Address] = value;
-    }
-
-    fn _read(&self, address: Address) -> u8 {
-        if address == map::JOYP {
-            self.joyp()
-        } else {
             self.memory().mem[address]
         }
     }
 
-    fn _write(&mut self, address: Address, value: u8) {
-        if address == map::TAC {
-            println!("write to TAC: {}", value);
-        }
+    pub fn write(&mut self, address: Address, value: u8) {
         self.memory_mut().mem[address] = value;
     }
 
@@ -351,51 +336,51 @@ impl Bus {
 
     // registers
     pub fn lcdc(&self) -> u8 {
-        self._read(map::LCDC)
+        self.read(map::LCDC)
     }
 
     pub fn set_lcdc(&mut self, value: u8) {
-        self._write(map::LCDC, value);
+        self.write(map::LCDC, value);
     }
 
     pub fn stat(&self) -> u8 {
-        self._read(map::STAT)
+        self.read(map::STAT)
     }
 
     pub fn set_stat(&mut self, value: u8) {
-        self._write(map::STAT, value);
+        self.write(map::STAT, value);
     }
 
     pub fn scy(&self) -> u8 {
-        self._read(map::SCY)
+        self.read(map::SCY)
     }
 
     pub fn set_scy(&mut self, value: u8) {
-        self._write(map::SCY, value);
+        self.write(map::SCY, value);
     }
 
     pub fn scx(&self) -> u8 {
-        self._read(map::SCX)
+        self.read(map::SCX)
     }
 
     pub fn set_scx(&mut self, value: u8) {
-        self._write(map::SCX, value);
+        self.write(map::SCX, value);
     }
 
     pub fn ly(&self) -> u8 {
-        self._read(map::LY)
+        self.read(map::LY)
     }
 
     pub fn set_ly(&mut self, value: u8) {
-        self._write(map::LY, value);
+        self.write(map::LY, value);
     }
 
     pub fn lyc(&self) -> u8 {
-        self._read(map::LYC)
+        self.read(map::LYC)
     }
 
     pub fn set_lyc(&mut self, value: u8) {
-        self._write(map::LYC, value)
+        self.write(map::LYC, value)
     }
 
     pub fn with_vram<R>(&self, reader: impl FnOnce(&[u8]) -> R) -> R {
@@ -435,14 +420,14 @@ impl Bus {
     }
 
     pub fn ie(&self) -> u8 {
-        self._read(map::IE)
+        self.read(map::IE)
     }
 
     pub fn iflag(&self) -> u8 {
-        self._read(map::IF)
+        self.read(map::IF)
     }
 
     pub fn set_iflag(&mut self, value: u8) {
-        self._write(map::IF, value)
+        self.write(map::IF, value)
     }
 }
