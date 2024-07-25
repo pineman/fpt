@@ -29,16 +29,20 @@ pub const EXT_WRAM: MemoryRange = 0xA000..0xC000;
 /// Unit Working RAM (8 KB)
 pub const WRAM: MemoryRange = 0xC000..0xE000;
 
-/// Not usable (Mirror of C000~DDFF (ECHO RAM)) https://gbdev.io/pandocs/Memory_Map.html#echo-ram
+/// Not usable (Mirror of C000~DDFF (ECHO RAM)) <https://gbdev.io/pandocs/Memory_Map.html#echo-ram>
 pub const NOT_USABLE1: MemoryRange = 0xE000..0xFE00;
 
 /// Object Attribute Memory (40 OBJs, 40 x 32 bits)
 pub const OAM: MemoryRange = 0xFE00..0xFEA0;
 
-/// Not usable https://gbdev.io/pandocs/Memory_Map.html#fea0-feff-range
+/// Not usable <https://gbdev.io/pandocs/Memory_Map.html#fea0-feff-range>
 pub const NOT_USABLE2: MemoryRange = 0xFEA0..0xFF00;
 
+/// Hardware registers section <https://gbdev.io/pandocs/Memory_Map.html#io-ranges>
 pub const IO_REGISTERS: MemoryRange = 0xFF00..0xFF80;
+
+/// Working & Stack RAM (127 bytes)
+pub const HRAM: MemoryRange = 0xFF80..0xFFFF;
 
 //-------------------------------------------------------------------------
 // I/O Registers
@@ -176,13 +180,6 @@ pub const OPRI: Address = 0xFF6C;
 pub const PCM12: Address = 0xFF76;
 /// Audio digital outputs 3 & 4 (CGB)
 pub const PCM34: Address = 0xFF77;
-
-//-------------------------------------------------------------------------
-// High RAM
-//-------------------------------------------------------------------------
-
-/// Working & Stack RAM (127 bytes)
-pub const HRAM: MemoryRange = 0xFF80..0xFFFF;
 
 //-------------------------------------------------------------------------
 // Interrupts

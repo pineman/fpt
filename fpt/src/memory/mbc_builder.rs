@@ -8,7 +8,7 @@ use super::Cartridge;
 pub fn create_mbc(cartridge_data: &[u8]) -> Rc<RefCell<dyn Cartridge>> {
     let cartridge_type = get_cartridge_type(cartridge_data);
 
-    match dbg!(cartridge_type) {
+    match cartridge_type {
         0x00 => Rc::new(RefCell::new(NoMbcCartridge::new(cartridge_data))),
         _ => panic!(),
     }
