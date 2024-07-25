@@ -9,7 +9,9 @@ pub trait Cartridge {
     fn read(&self, address: Address) -> u8;
     fn write(&mut self, address: Address, value: u8);
 
-    fn read_range(&self, memory_range: MemoryRange) -> Vec<u8>;
+    fn read_range(&self, memory_range: MemoryRange) -> Vec<u8> {
+        memory_range.map(|address| self.read(address)).collect()
+    }
 
     fn get_title(&self) -> String {
         String::from_utf8(self.read_range(map::TITLE)).unwrap()
@@ -55,13 +57,10 @@ impl EmptyCartridge {
         EmptyCartridge {}
     }
 }
+
 impl Cartridge for EmptyCartridge {
     fn read(&self, _address: Address) -> u8 {
         0xFF
     }
     fn write(&mut self, _address: Address, _value: u8) {}
-
-    fn read_range(&self, _memory_range: MemoryRange) -> Vec<u8> {
-        Vec::new()
-    }
 }
