@@ -175,14 +175,14 @@ impl FPT {
         let cycles_want = self.accum_time.div_euclid(T_CYCLE * self.slow_factor) as u32;
         let mut cycles_ran = 0;
         while cycles_ran < cycles_want && !self.gb.paused() {
-            let cycles = self.gb.step();
-            self.cycles_since_last_frame += cycles as u32;
+            let cycles = self.gb.step() as u32;
+            self.cycles_since_last_frame += cycles;
             if self.cycles_since_last_frame >= self.gb.cycles_in_one_frame() {
                 frame = Some(*self.gb.get_frame()); // Copies the whole [u8; WIDTH * HEIGHT] into frame
                 self.gb_frame_count += 1;
                 self.cycles_since_last_frame = 0;
             }
-            cycles_ran += cycles as u32;
+            cycles_ran += cycles;
         }
         self.accum_time -= cycles_ran as f64 * T_CYCLE * self.slow_factor;
         frame

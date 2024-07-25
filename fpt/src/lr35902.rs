@@ -656,28 +656,29 @@ impl LR35902 {
 
         self.execute(inst);
 
-        let inst_cycles = if inst.kind == InstructionKind::Jump && !self.mutated_pc() {
-            inst.cycles_not_taken
-        } else {
-            inst.cycles
-        };
         if !self.mutated_pc() {
             self.set_pc(self.pc() + inst.size as u16);
         }
-        self.set_mutated_pc(false);
 
-        let intr_preamble_cycles = if self.ime { self.run_interrupts() } else { 0 };
-
-        let total_cycles = inst_cycles + intr_preamble_cycles;
-        self.set_clock_cycles(self.clock_cycles() + total_cycles as u64);
-        self.set_inst_cycle_count(0);
+        let intr_service_routine_cycles = if self.ime { self.run_interrupts() } else { 0 };
 
         if self.debugger.step {
             self.set_paused(true);
             self.debugger.step = false;
         }
 
-        total_cycles
+        let inst_cycles = if inst.kind == InstructionKind::Jump && !self.mutated_pc() {
+            inst.cycles_not_taken
+        } else {
+            inst.cycles
+        };
+        self.set_clock_cycles(
+            self.clock_cycles() + inst_cycles as u64 + intr_service_routine_cycles as u64,
+        );
+        self.set_inst_cycle_count(0);
+        self.set_mutated_pc(false);
+
+        1 + intr_service_routine_cycles
     }
 
     /// To run an interrupt, we first run the interrupt service routine (ISR).
