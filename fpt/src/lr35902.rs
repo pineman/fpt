@@ -277,7 +277,7 @@ impl LR35902 {
         self.bus.write(index as usize, value);
         // TODO: watchpoint trigger write
         // Write triggers (TODO: better solution)
-        if index == memory::map::BANK as u16 && value != 0 {
+        if (index == memory::map::BANK as u16) && (value != 0) {
             self.bus.unload_bootrom();
         }
         if index == memory::map::LCDC as u16
