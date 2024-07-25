@@ -21,6 +21,7 @@ fn rom_test(rom_path: &str, termination_address: u16, passing: bool) {{
     gb.boot_fake();
 
     let mut success = true;
+    #[allow(clippy::never_loop)]
     'outer: loop {{
         gb.step();
         let debug_events = gb.get_debug_events();

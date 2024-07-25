@@ -2,26 +2,25 @@ name: main
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -D warnings
 
-
 jobs:
   CI:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: Swatinem/rust-cache@v2
-    - name: Version
-      run: rustc --version
-    - name: Run rustfmt
-      run: cargo fmt --check
-    - name: Unit tests
-      run: cargo test -- --include-ignored --nocapture
-    - name : Clippy
-      run: cargo clippy --all-features
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - name: Version
+        run: rustc --version
+      - name: Run rustfmt
+        run: cargo fmt --check
+      - name: Unit tests
+        run: cargo test -- --include-ignored --nocapture
+      - name: Clippy
+        run: cargo clippy --all-features
