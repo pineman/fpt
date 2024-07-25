@@ -661,15 +661,16 @@ impl LR35902 {
         } else {
             inst.cycles
         };
-        let intr_preamble_cycles = if self.ime { self.run_interrupts() } else { 0 };
-        let total_cycles = inst_cycles + intr_preamble_cycles;
-        self.set_clock_cycles(self.clock_cycles() + total_cycles as u64);
-        self.set_inst_cycle_count(0);
-
         if !self.mutated_pc() {
             self.set_pc(self.pc() + inst.size as u16);
         }
         self.set_mutated_pc(false);
+
+        let intr_preamble_cycles = if self.ime { self.run_interrupts() } else { 0 };
+
+        let total_cycles = inst_cycles + intr_preamble_cycles;
+        self.set_clock_cycles(self.clock_cycles() + total_cycles as u64);
+        self.set_inst_cycle_count(0);
 
         if self.debugger.step {
             self.set_paused(true);
