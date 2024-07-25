@@ -38,6 +38,8 @@ pub const OAM: MemoryRange = 0xFE00..0xFEA0;
 /// Not usable https://gbdev.io/pandocs/Memory_Map.html#fea0-feff-range
 pub const NOT_USABLE2: MemoryRange = 0xFEA0..0xFF00;
 
+pub const IO_REGISTERS: MemoryRange = 0xFF00..0xFF80;
+
 //-------------------------------------------------------------------------
 // I/O Registers
 //-------------------------------------------------------------------------

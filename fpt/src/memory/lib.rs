@@ -123,8 +123,22 @@ impl Bus {
             self.memory().cartridge.borrow().read(address)
         } else if address == map::JOYP {
             self.joyp()
-        } else {
+        } else if map::IO_REGISTERS.contains(&address)
+            || map::VRAM.contains(&address)
+            || map::HRAM.contains(&address)
+            || map::WRAM.contains(&address)
+            || map::NOT_USABLE2.contains(&address)
+            || map::OAM.contains(&address)
+        {
             self.memory().mem[address as Address]
+        } else if map::NOT_USABLE1.contains(&address) {
+            self.memory().mem[(address - 0x2000) as Address]
+        } else if address == map::IE {
+            self.memory().mem[address as Address]
+        } else {
+            //self.memory().mem[address as Address]
+            dbg!(address);
+            panic!();
         }
     }
 
@@ -133,12 +147,27 @@ impl Bus {
             || map::ROM_BANK1.contains(&address)
             || map::EXT_WRAM.contains(&address)
         {
-            self.memory_mut()
-                .cartridge
-                .borrow_mut()
-                .write(address, value);
-        } else {
+            //self.memory_mut()
+            //    .cartridge
+            //    .borrow_mut()
+            //    .write(address, value);
+        } else if map::IO_REGISTERS.contains(&address)
+            || map::VRAM.contains(&address)
+            || map::HRAM.contains(&address)
+            || map::WRAM.contains(&address)
+            || map::NOT_USABLE2.contains(&address)
+            || map::OAM.contains(&address)
+        {
             self.memory_mut().mem[address as Address] = value;
+        } else if map::NOT_USABLE1.contains(&address) {
+            self.memory_mut().mem[address - 0x2000 as Address] = value;
+        } else if address == map::IE {
+            self.memory_mut().mem[address as Address] = value;
+        } else {
+            //self.memory_mut().mem[address as Address] = value;
+            dbg!(address);
+            dbg!(value);
+            panic!();
         }
     }
 
