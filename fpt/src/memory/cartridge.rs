@@ -5,6 +5,43 @@ pub fn get_cartridge_type(cartridge_rom_data: &[u8]) -> u8 {
     cartridge_rom_data[map::CARTRIDGE_TYPE]
 }
 
+pub fn get_rom_size(cartridge_rom_data: &[u8]) -> u8 {
+    cartridge_rom_data[map::ROM_SIZE]
+}
+
+pub fn get_ram_size(cartridge_rom_data: &[u8]) -> u8 {
+    cartridge_rom_data[map::RAM_SIZE]
+}
+
+pub fn convert_rom_size(rom_size: u8) -> usize {
+    match rom_size {
+        0x00 => 2,
+        0x01 => 4,
+        0x02 => 8,
+        0x03 => 16,
+        0x04 => 32,
+        0x05 => 64,
+        0x06 => 128,
+        0x07 => 256,
+        0x08 => 512,
+        0x52 => 72,
+        0x53 => 80,
+        0x54 => 96,
+        _ => panic!(),
+    }
+}
+
+pub fn convert_ram_size(ram_size: u8) -> usize {
+    match ram_size {
+        0x00 => 0,
+        0x02 => 1,
+        0x03 => 4,
+        0x04 => 16,
+        0x05 => 8,
+        _ => panic!(),
+    }
+}
+
 pub trait Cartridge {
     fn read(&self, address: Address) -> u8;
 
