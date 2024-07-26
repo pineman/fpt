@@ -1,16 +1,15 @@
 mod cartridge;
 pub mod map;
+mod mbc3;
 mod mbc_builder;
 mod mbc_none;
-mod mbc3;
 
 use std::cell::{Ref, RefCell, RefMut};
 use std::ops::Range;
 use std::rc::Rc;
 
-pub use cartridge::Cartridge;
+use cartridge::Cartridge;
 use mbc_builder::{create_empty_mbc, create_mbc};
-pub use mbc_none::NoMbcCartridge;
 
 use crate::bw;
 
