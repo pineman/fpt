@@ -5,7 +5,7 @@ use super::{map, Address};
 ///
 /// <https://gbdev.io/pandocs/nombc.html>
 pub struct NoMbcCartridge {
-    memory: Vec<u8>,
+    memory: [u8; 0x8000],
 }
 
 impl NoMbcCartridge {
@@ -15,7 +15,7 @@ impl NoMbcCartridge {
             "Expected cartridge size of 0x8000"
         );
         NoMbcCartridge {
-            memory: cartridge.to_vec(),
+            memory: cartridge.try_into().unwrap(),
         }
     }
 }
