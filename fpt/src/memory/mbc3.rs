@@ -1,5 +1,6 @@
+use super::cartridge::Cartridge;
 use super::cartridge::{convert_ram_size, convert_rom_size, get_ram_size, get_rom_size};
-use super::{map, Address, Cartridge, MemoryRange};
+use super::{map, Address, MemoryRange};
 
 pub struct Mbc3Cartridge {
     memory: Vec<u8>,

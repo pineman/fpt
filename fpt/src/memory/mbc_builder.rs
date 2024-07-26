@@ -1,9 +1,9 @@
 use std::cell::RefCell;
 
+use super::cartridge::Cartridge;
 use super::cartridge::{get_cartridge_type, EmptyCartridge};
-use super::mbc_none::NoMbcCartridge;
 use super::mbc3::Mbc3Cartridge;
-use super::Cartridge;
+use super::mbc_none::NoMbcCartridge;
 
 pub fn create_mbc(cartridge_data: &[u8]) -> Option<Box<RefCell<dyn Cartridge>>> {
     // https://gbdev.io/pandocs/The_Cartridge_Header.html#0147--cartridge-type
