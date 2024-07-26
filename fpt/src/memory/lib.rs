@@ -9,11 +9,10 @@ use crate::memory::{create_empty_mbc, create_mbc, Cartridge};
 pub type Address = usize;
 pub type MemoryRange = Range<Address>;
 
-#[derive(Clone)]
 pub struct Memory {
     mem: Vec<u8>,
     pub bootrom_loaded: bool,
-    pub cartridge: Rc<RefCell<dyn Cartridge>>,
+    pub cartridge: Box<RefCell<dyn Cartridge>>,
     bootrom: &'static [u8; 256],
     code_listing: Vec<Option<String>>,
     pub buttons: Buttons,
