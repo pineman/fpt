@@ -2,6 +2,7 @@ mod cartridge;
 pub mod map;
 mod mbc_builder;
 mod mbc_none;
+mod mbc3;
 
 use std::cell::{Ref, RefCell, RefMut};
 use std::ops::Range;
