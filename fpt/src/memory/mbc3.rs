@@ -21,21 +21,20 @@ impl Mbc3Cartridge {
     pub fn new(cartridge: &[u8]) -> Mbc3Cartridge {
         let rom_size = convert_rom_size(get_rom_size(cartridge));
         let ram_size = convert_ram_size(get_ram_size(cartridge));
-        let mut rom_banks = vec![[0; 0x4000]; rom_size as usize];
-        let mut ram_banks = vec![[0; 0x2000]; ram_size as usize];
 
-        // TODO: wtf is this initialization
-        for i in 0..rom_size {
-            for j in 0..0x4000 {
-                rom_banks[i][j] = cartridge[0x4000 * i + j];
-            }
-        }
+        assert!(
+            rom_size * ROM_BANK_SIZE == cartridge.len(),
+            "Cartridge data size should be equal to the reported number of rom banks"
+        );
 
-        for i in 0..ram_size {
-            for j in 0..0x2000 {
-                ram_banks[i][j] = cartridge[0x2000 * i + j];
-            }
-        }
+        let ram_banks = vec![[0; RAM_BANK_SIZE]; ram_size as usize];
+        let rom_banks = (0..rom_size)
+            .map(|i| {
+                cartridge[ROM_BANK_SIZE * i..(ROM_BANK_SIZE * (i + 1))]
+                    .try_into()
+                    .unwrap()
+            })
+            .collect();
 
         Mbc3Cartridge {
             rom_banks,
