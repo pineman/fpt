@@ -148,14 +148,23 @@ impl Bus {
                 .cartridge
                 .borrow_mut()
                 .write(address, value);
-        } else if map::IO_REGISTERS.contains(&address)
-            || map::VRAM.contains(&address)
+        } else if map::IO_REGISTERS.contains(&address) {
+            self.memory_mut().mem[address as Address] = value;
+            if address == 0xFF46 {
+                // dma transfer takes time, we do it instantaneously
+                let oam_data =
+                    self.copy_range(value as usize * 0x100..value as usize * 0x100 + 0x0A0);
+                self.clone_from_slice(map::OAM, &oam_data)
+            }
+        } else if map::VRAM.contains(&address)
             || map::HRAM.contains(&address)
             || map::WRAM.contains(&address)
             || map::NOT_USABLE2.contains(&address)
-            || map::OAM.contains(&address)
             || address == map::IE
         {
+            self.memory_mut().mem[address as Address] = value;
+        } else if map::OAM.contains(&address) {
+            println!("{}:{}", address, value);
             self.memory_mut().mem[address as Address] = value;
         } else if map::NOT_USABLE1.contains(&address) {
             self.memory_mut().mem[address - 0x2000 as Address] = value;
