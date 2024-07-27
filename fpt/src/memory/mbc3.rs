@@ -3,7 +3,6 @@ use super::cartridge::{convert_ram_size, convert_rom_size, get_ram_size, get_rom
 use super::{map, Address, MemoryRange};
 
 pub struct Mbc3Cartridge {
-    memory: Vec<u8>,
     rom_banks: Vec<[u8; 0x4000]>,
     ram_banks: Vec<[u8; 0x2000]>,
     ext_ram_enabled: bool,
@@ -39,7 +38,6 @@ impl Mbc3Cartridge {
         }
 
         Mbc3Cartridge {
-            memory: cartridge.to_vec(),
             rom_banks,
             ram_banks,
             ext_ram_enabled: false,
@@ -60,7 +58,7 @@ impl Cartridge for Mbc3Cartridge {
         } else if map::ROM_BANK1.contains(&address) {
             self.rom_banks[self.rom_bank_number][address - map::ROM_BANK1.start]
         } else {
-            self.memory[address]
+            panic!()
         }
     }
     fn write(&mut self, address: Address, value: u8) {
@@ -79,7 +77,7 @@ impl Cartridge for Mbc3Cartridge {
             self.ram_bank_number = ram_bank_number as usize; // TODO: needs to be checked for number of ram
                                                              // banks
         } else if map::EXT_WRAM.contains(&address) && self.ext_ram_enabled {
-            self.memory[address] = value;
+            self.ram_banks[self.ram_bank_number][address - map::EXT_WRAM.start] = value;
         }
     }
 
