@@ -2,9 +2,12 @@ use std::fmt::{Display, Formatter};
 
 use tile::VRamContents;
 
-use crate::{bw, memory::Bus};
+use crate::{bw, memory::map, memory::Bus};
 
+mod sprite;
 pub mod tile;
+
+use sprite::Sprite;
 
 pub const WIDTH: usize = 160;
 pub const HEIGHT: usize = 144;
@@ -19,6 +22,7 @@ pub struct Ppu {
     frame_counter: u32,
     mode: Mode,
     tilemap: VRamContents,
+    sprites: Vec<Sprite>,
 }
 
 #[repr(u8)]
@@ -62,6 +66,7 @@ impl Ppu {
             frame_counter: 0,
             mode: Mode::OamScan,
             tilemap: VRamContents::default(),
+            sprites: Vec::new(),
         }
     }
 
@@ -78,6 +83,10 @@ impl Ppu {
     fn oam_scan(&mut self) {
         if self.dots_this_frame % 456 == (80 - 1) {
             self.tilemap = self.bus.with_vram(VRamContents::load);
+            let oam = self.bus.copy_range(map::OAM);
+            self.sprites = (0..40)
+                .map(|sprite_index| Sprite::load(&oam[sprite_index * 4..(sprite_index * 4 + 4)]))
+                .collect::<Vec<Sprite>>();
             self.set_mode(Mode::PixelTransfer);
         }
     }
@@ -102,7 +111,21 @@ impl Ppu {
         let tile = self
             .tilemap
             .get_tile(tile_data_address as usize, bw::test_bit8::<4>(lcdc));
-        let pixel = tile.get_pixel(yy % 8, xx % 8);
+        let mut pixel = tile.get_pixel(yy % 8, xx % 8);
+
+        for sprite in self.sprites.iter() {
+            if (x as u8 > (sprite.x - 8) && (x as u8) < sprite.x)
+                && (y as u8 > sprite.y - 8 && (y as u8) < sprite.y)
+            {
+                let tile = self.tilemap.get_tile(sprite.tile_index as usize, true);
+                let tile_x: usize = dbg!(sprite.x as usize - x);
+                let tile_y: usize = dbg!(sprite.y as usize - y);
+                let bit_index = tile_y * 8 + tile_x;
+                pixel = dbg!((tile.bytes[2 * tile_y] >> tile_x) & 1);
+                //pixel = tile.bytes[(dbg!(8*(dbg!(sprite.y) as i16 - dbg!(y) as i16) + dbg!(sprite.x) as i16 - dbg!(x) as i16)) as usize] ;
+                println!("found sprite");
+            }
+        }
         self.frame[WIDTH * y + x] = pixel;
     }
 
