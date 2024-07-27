@@ -79,11 +79,4 @@ impl Cartridge for Mbc3Cartridge {
             self.ram_banks[self.ram_bank_number][address - map::EXT_WRAM.start] = value;
         }
     }
-
-    fn read_range(&self, memory_range: MemoryRange) -> Vec<u8> {
-        memory_range
-            .into_iter()
-            .map(|address| self.read(address))
-            .collect()
-    }
 }
