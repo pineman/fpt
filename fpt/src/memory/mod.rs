@@ -161,10 +161,8 @@ impl Bus {
             || map::WRAM.contains(&address)
             || map::NOT_USABLE2.contains(&address)
             || address == map::IE
+            || map::OAM.contains(&address)
         {
-            self.memory_mut().mem[address as Address] = value;
-        } else if map::OAM.contains(&address) {
-            println!("{}:{}", address, value);
             self.memory_mut().mem[address as Address] = value;
         } else if map::NOT_USABLE1.contains(&address) {
             self.memory_mut().mem[address - 0x2000 as Address] = value;
