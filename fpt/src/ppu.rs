@@ -114,16 +114,15 @@ impl Ppu {
         let mut pixel = tile.get_pixel(yy % 8, xx % 8);
 
         for sprite in self.sprites.iter() {
-            if (x as u8 > (sprite.x - 8) && (x as u8) < sprite.x)
-                && (y as u8 > sprite.y - 8 && (y as u8) < sprite.y)
+            let sprite_x: i32 = sprite.x as i32 - 8;
+            let sprite_y: i32 = sprite.y as i32 - 16;
+            if (x as i32 >= (sprite_x) && (x as i32) < sprite_x + 8)
+                && (y as i32 >= sprite_y && (y as i32) < sprite_y + 8)
             {
                 let tile = self.tilemap.get_tile(sprite.tile_index as usize, true);
-                let tile_x: usize = dbg!(sprite.x as usize - x);
-                let tile_y: usize = dbg!(sprite.y as usize - y);
-                let bit_index = tile_y * 8 + tile_x;
-                pixel = dbg!((tile.bytes[2 * tile_y] >> tile_x) & 1);
-                //pixel = tile.bytes[(dbg!(8*(dbg!(sprite.y) as i16 - dbg!(y) as i16) + dbg!(sprite.x) as i16 - dbg!(x) as i16)) as usize] ;
-                println!("found sprite");
+                let tile_x = (x as i32 - sprite_x) as usize;
+                let tile_y = (y as i32 - sprite_y) as usize;
+                pixel = tile.get_pixel(tile_y, tile_x);
             }
         }
         self.frame[WIDTH * y + x] = pixel;
