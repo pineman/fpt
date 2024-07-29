@@ -8,10 +8,13 @@ use std::cell::{Ref, RefCell, RefMut};
 use std::ops::Range;
 use std::rc::Rc;
 
+use rand::prelude::*;
+
+use crate::bw;
+
 use cartridge::Cartridge;
 use mbc_builder::{create_empty_mbc, create_mbc};
 
-use crate::bw;
 
 pub type Address = usize;
 pub type MemoryRange = Range<Address>;
