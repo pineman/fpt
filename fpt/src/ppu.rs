@@ -119,14 +119,15 @@ impl Ppu {
         let mut pixel = tile.get_pixel(yy % 8, xx % 8);
 
         for sprite in self.sprites.iter() {
-            let sprite_x: i32 = sprite.x as i32 - 8;
-            let sprite_y: i32 = sprite.y as i32 - 16;
-            if (x as i32 >= (sprite_x) && (x as i32) < sprite_x + 8)
-                && (y as i32 >= sprite_y && (y as i32) < sprite_y + 8)
-            {
+            let sprite_x = sprite.x as i32 - 8;
+            let sprite_y = sprite.y as i32 - 16;
+
+            let x = x as i32;
+            let y = y as i32;
+            if x >= (sprite_x) && x < sprite_x + 8 && y >= sprite_y && y < sprite_y + 8 {
                 let tile = self.tilemap.get_tile(sprite.tile_index as usize, true);
-                let tile_x = (x as i32 - sprite_x) as usize;
-                let tile_y = (y as i32 - sprite_y) as usize;
+                let tile_x = (x - sprite_x) as usize;
+                let tile_y = (y - sprite_y) as usize;
                 pixel = tile.get_pixel(tile_y, tile_x);
             }
         }
