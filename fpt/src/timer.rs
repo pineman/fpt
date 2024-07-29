@@ -125,57 +125,57 @@ impl Timer {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    //#[test]
-    fn test_basic_timer() {
-        let mut bus = Bus::new();
-        let mut timer = Timer::new(bus.clone());
-
-        bus.write(map::TAC, 0b101);
-        bus.write(map::TMA, 0xFE);
-
-        timer._step();
-
-        assert_eq!(bus.read(map::DIV), 1);
-        assert_eq!(bus.read(map::TIMA), 254);
-
-        timer._step();
-
-        assert_eq!(bus.read(map::DIV), 2);
-        assert_eq!(bus.read(map::TIMA), 254);
-
-        timer._step();
-
-        assert_eq!(bus.read(map::DIV), 3);
-        assert_eq!(bus.read(map::TIMA), 254);
-
-        timer._step();
-
-        assert_eq!(bus.read(map::DIV), 4);
-        assert_eq!(bus.read(map::TIMA), 255);
-
-        timer._step();
-
-        assert_eq!(bus.read(map::DIV), 5);
-        assert_eq!(bus.read(map::TIMA), 255);
-
-        timer._step();
-
-        assert_eq!(bus.read(map::DIV), 6);
-        assert_eq!(bus.read(map::TIMA), 255);
-
-        timer._step();
-
-        assert_eq!(bus.read(map::DIV), 7);
-        assert_eq!(bus.read(map::TIMA), 255);
-
-        timer._step();
-
-        assert_eq!(bus.read(map::DIV), 8);
-        assert_eq!(bus.read(map::TIMA), 254);
-        assert_eq!(bus.read(map::IF), 4);
-    }
-}
+//#[cfg(test)]
+//mod tests {
+//    use super::*;
+//
+//    //#[test]
+//    fn test_basic_timer() {
+//        let mut bus = Bus::new();
+//        let mut timer = Timer::new(bus.clone());
+//
+//        bus.write(map::TAC, 0b101);
+//        bus.write(map::TMA, 0xFE);
+//
+//        timer._step();
+//
+//        assert_eq!(bus.read(map::DIV), 1);
+//        assert_eq!(bus.read(map::TIMA), 254);
+//
+//        timer._step();
+//
+//        assert_eq!(bus.read(map::DIV), 2);
+//        assert_eq!(bus.read(map::TIMA), 254);
+//
+//        timer._step();
+//
+//        assert_eq!(bus.read(map::DIV), 3);
+//        assert_eq!(bus.read(map::TIMA), 254);
+//
+//        timer._step();
+//
+//        assert_eq!(bus.read(map::DIV), 4);
+//        assert_eq!(bus.read(map::TIMA), 255);
+//
+//        timer._step();
+//
+//        assert_eq!(bus.read(map::DIV), 5);
+//        assert_eq!(bus.read(map::TIMA), 255);
+//
+//        timer._step();
+//
+//        assert_eq!(bus.read(map::DIV), 6);
+//        assert_eq!(bus.read(map::TIMA), 255);
+//
+//        timer._step();
+//
+//        assert_eq!(bus.read(map::DIV), 7);
+//        assert_eq!(bus.read(map::TIMA), 255);
+//
+//        timer._step();
+//
+//        assert_eq!(bus.read(map::DIV), 8);
+//        assert_eq!(bus.read(map::TIMA), 254);
+//        assert_eq!(bus.read(map::IF), 4);
+//    }
+//}

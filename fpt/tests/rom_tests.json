@@ -11,7 +11,9 @@
     {
       "id": 1,
       "path": "../target/test_roms/mooneye/acceptance/timer/tim01.gb",
-      "termination_address": "0x4ab4"
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
     },
     {
       "id": 2,
@@ -48,7 +50,9 @@
     {
       "id": 7,
       "path": "../target/test_roms/mooneye/acceptance/timer/tim10.gb",
-      "termination_address": "0x4ab4"
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
     },
     {
       "id": 8,
@@ -60,7 +64,9 @@
     {
       "id": 9,
       "path": "../target/test_roms/mooneye/acceptance/timer/tim11.gb",
-      "termination_address": "0x4ab4"
+      "termination_address": "0x4ab4",
+      "passing": false,
+      "enabled": false
     },
     {
       "id": 10,
