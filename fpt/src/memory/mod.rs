@@ -8,13 +8,11 @@ use std::cell::{Ref, RefCell, RefMut};
 use std::ops::Range;
 use std::rc::Rc;
 
+use cartridge::Cartridge;
+use mbc_builder::{create_empty_mbc, create_mbc};
 use rand::prelude::*;
 
 use crate::bw;
-
-use cartridge::Cartridge;
-use mbc_builder::{create_empty_mbc, create_mbc};
-
 
 pub type Address = usize;
 pub type MemoryRange = Range<Address>;
@@ -117,6 +115,12 @@ impl Bus {
     }
 
     pub fn read(&self, address: Address) -> u8 {
+        let mut rng = rand::thread_rng();
+        if address == 0xff04 {
+            let r: u8 = rng.gen();
+            return r;
+        }
+
         if map::BOOTROM.contains(&address) && self.memory().bootrom_loaded {
             self.memory().bootrom[address]
         } else if map::ROM_BANK0.contains(&address)

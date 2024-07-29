@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 regex = "1.10"
 num-traits = "0.2"
+rand = "0.8"
 
 [dev-dependencies]
 rstest = "0.18"
