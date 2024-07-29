@@ -9,6 +9,8 @@ pub mod tile;
 
 use sprite::Sprite;
 
+pub const SPRITE_SIZE: usize = 4;
+
 pub const WIDTH: usize = 160;
 pub const HEIGHT: usize = 144;
 pub type Frame = [u8; WIDTH * HEIGHT]; // TODO: wasteful, each pixel is 2 bits only
@@ -83,10 +85,13 @@ impl Ppu {
     fn oam_scan(&mut self) {
         if self.dots_this_frame % 456 == (80 - 1) {
             self.tilemap = self.bus.with_vram(VRamContents::load);
-            let oam = self.bus.copy_range(map::OAM);
-            self.sprites = (0..40)
-                .map(|sprite_index| Sprite::load(&oam[sprite_index * 4..(sprite_index * 4 + 4)]))
-                .collect::<Vec<Sprite>>();
+            self.sprites = map::OAM
+                .step_by(SPRITE_SIZE)
+                .map(|index| {
+                    self.bus
+                        .with_slice(index..index + SPRITE_SIZE, Sprite::load)
+                })
+                .collect();
             self.set_mode(Mode::PixelTransfer);
         }
     }
