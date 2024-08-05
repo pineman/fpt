@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use clap::{Parser, ValueEnum};
 use eframe::Frame;
+#[allow(unused_imports)]
 use egui::{
     menu, CentralPanel, Color32, ColorImage, Context, Grid, Key, RichText, ScrollArea, SidePanel,
     TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2, ViewportBuilder, ViewportCommand,
@@ -129,6 +130,7 @@ impl Default for FPT {
 
 impl FPT {
     /// Called once before the first frame.
+    #[allow(unused_variables)]
     fn new(
         _cc: &eframe::CreationContext,
         fake_bootrom: Option<BootromToFake>,
@@ -143,6 +145,9 @@ impl FPT {
                 panic!("Unable to open {}", rom_path);
             }
         }
+        #[cfg(target_arch = "wasm32")]
+        app.gb
+            .load_rom(include_bytes!("../../roms/Tetris_World_Rev_1.gb"));
         // XXX duplicated logic from fpt-cli main.rs
         if let Some(BootromToFake::DMG0) = fake_bootrom {
             app.gb.boot_fake();
@@ -152,8 +157,8 @@ impl FPT {
         app
     }
 
+    #[allow(dead_code)]
     fn top_panel(&mut self, ctx: &Context) {
-        #[cfg(not(target_arch = "wasm32"))]
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
             menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
@@ -576,6 +581,7 @@ impl FPT {
 
 impl eframe::App for FPT {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
+        #[cfg(not(target_arch = "wasm32"))]
         self.top_panel(ctx);
         SidePanel::right("right_panel")
             .resizable(true)
@@ -645,7 +651,7 @@ fn main() {
             .start(
                 "the_canvas_id",
                 web_options,
-                Box::new(|cc| Box::new(FPT::new(cc))),
+                Box::new(|cc| Box::new(FPT::new(cc, None, ""))),
             )
             .await
             .expect("failed to start eframe");
