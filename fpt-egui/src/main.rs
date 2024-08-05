@@ -1,6 +1,7 @@
 #![feature(array_chunks)]
 
 use std::collections::VecDeque;
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::Duration;
 
 use clap::{Parser, ValueEnum};
@@ -101,6 +102,9 @@ pub struct FPT {
 
     bg_map: ColorImage,
     bg_map_texture: Option<TextureHandle>,
+
+    #[allow(dead_code)]
+    rom_channel: (Sender<Vec<u8>>, Receiver<Vec<u8>>),
 }
 
 impl Default for FPT {
@@ -124,6 +128,8 @@ impl Default for FPT {
 
             bg_map: ColorImage::new([BMV_X_SIZE, BMV_Y_SIZE], Color32::TRANSPARENT),
             bg_map_texture: None,
+
+            rom_channel: channel(),
         }
     }
 }
@@ -146,8 +152,7 @@ impl FPT {
             }
         }
         #[cfg(target_arch = "wasm32")]
-        app.gb
-            .load_rom(include_bytes!("../../roms/Tetris_World_Rev_1.gb"));
+        app.gb.cpu_mut().set_paused(true);
         // XXX duplicated logic from fpt-cli main.rs
         if let Some(BootromToFake::DMG0) = fake_bootrom {
             app.gb.boot_fake();
@@ -155,20 +160,6 @@ impl FPT {
             app.gb.boot_real();
         }
         app
-    }
-
-    #[allow(dead_code)]
-    fn top_panel(&mut self, ctx: &Context) {
-        TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            menu::bar(ui, |ui| {
-                ui.menu_button("File", |ui| {
-                    if ui.button("Quit").clicked() {
-                        ctx.send_viewport_cmd(ViewportCommand::Close)
-                    }
-                });
-                ui.add_space(16.0);
-            });
-        });
     }
 
     fn emulator(&mut self, ui: &mut Ui) -> Option<fpt::ppu::Frame> {
@@ -577,15 +568,37 @@ impl FPT {
         // self.sleep(ctx, frame_start, gb_frame_count_before);
         ctx.request_repaint();
     }
+
+    #[cfg(target_arch = "wasm32")]
+    // https://github.com/woelper/egui_pick_file/blob/main/src/app.rs
+    fn load_rom(&mut self, ui: &mut Ui) {
+        if let Ok(text) = self.rom_channel.1.try_recv() {
+            self.gb.load_rom(&text);
+            self.gb.cpu_mut().set_paused(false);
+        }
+        if ui.button("Load rom").clicked() {
+            let sender = self.rom_channel.0.clone();
+            let task = rfd::AsyncFileDialog::new().pick_file();
+            let ctx = ui.ctx().clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                let file = task.await;
+                if let Some(file) = file {
+                    let text = file.read().await;
+                    let _ = sender.send(text);
+                    ctx.request_repaint();
+                }
+            });
+        }
+    }
 }
 
 impl eframe::App for FPT {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
-        #[cfg(not(target_arch = "wasm32"))]
-        self.top_panel(ctx);
         SidePanel::right("right_panel")
             .resizable(true)
             .show(ctx, |ui| {
+                #[cfg(target_arch = "wasm32")]
+                self.load_rom(ui);
                 self.timing_info(ui);
                 self.debug_panel(ctx, ui);
             });
