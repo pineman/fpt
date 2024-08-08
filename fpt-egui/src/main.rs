@@ -89,6 +89,7 @@ pub struct FPT {
     accum_time: f64,
     egui_frame_count: u64,
     gb_frame_count: u64,
+    bootrom: Option<BootromToFake>,
 
     slow_factor: f64,
     // Debug Console (DC)
@@ -115,6 +116,7 @@ impl Default for FPT {
             accum_time: 0.0,
             egui_frame_count: 0,
             gb_frame_count: 0,
+            bootrom: None,
 
             slow_factor: 1.0,
 
@@ -137,16 +139,15 @@ impl Default for FPT {
 impl FPT {
     /// Called once before the first frame.
     #[allow(unused_variables)]
-    fn new(
-        _cc: &eframe::CreationContext,
-        fake_bootrom: Option<BootromToFake>,
-        rom_path: &str,
-    ) -> Self {
-        let mut app = FPT::default();
+    fn new(_cc: &eframe::CreationContext, bootrom: Option<BootromToFake>, rom_path: &str) -> Self {
+        let mut fpt = FPT {
+            bootrom: bootrom.clone(),
+            ..Default::default()
+        };
         #[cfg(not(target_arch = "wasm32"))]
         if std::env::var("CI").is_err() {
             if let Ok(rom) = std::fs::read(rom_path) {
-                app.gb.load_rom(&rom);
+                fpt.gb.load_rom(&rom);
             } else {
                 panic!("Unable to open {}", rom_path);
             }
@@ -154,12 +155,12 @@ impl FPT {
         #[cfg(target_arch = "wasm32")]
         app.gb.cpu_mut().set_paused(true);
         // XXX duplicated logic from fpt-cli main.rs
-        if let Some(BootromToFake::DMG0) = fake_bootrom {
-            app.gb.boot_fake();
+        if let Some(BootromToFake::DMG0) = bootrom {
+            fpt.gb.boot_fake();
         } else {
-            app.gb.boot_real();
+            fpt.gb.boot_real();
         }
-        app
+        fpt
     }
 
     fn emulator(&mut self, ui: &mut Ui) -> Option<fpt::ppu::Frame> {
@@ -574,6 +575,11 @@ impl FPT {
     fn load_rom(&mut self, ui: &mut Ui) {
         if let Ok(text) = self.rom_channel.1.try_recv() {
             self.gb.load_rom(&text);
+            if let Some(BootromToFake::DMG0) = bootrom {
+                self..gb.boot_fake();
+            } else {
+                self.gb.boot_real();
+            }
             self.gb.cpu_mut().set_paused(false);
         }
         if ui.button("Load rom").clicked() {
@@ -590,6 +596,23 @@ impl FPT {
             });
         }
     }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn load_rom(&mut self, ui: &mut Ui) {
+        if ui.button("Load rom").clicked() {
+            let file = rfd::FileDialog::new().pick_file();
+            if let Some(file) = file {
+                let text: Box<[u8]> = std::fs::read(file).unwrap().into_boxed_slice();
+                self.gb.load_rom(&text);
+                if let Some(BootromToFake::DMG0) = self.bootrom {
+                    self.gb.boot_fake();
+                } else {
+                    self.gb.boot_real();
+                }
+                self.gb.cpu_mut().set_paused(false);
+            }
+        }
+    }
 }
 
 impl eframe::App for FPT {
@@ -597,7 +620,6 @@ impl eframe::App for FPT {
         SidePanel::right("right_panel")
             .resizable(true)
             .show(ctx, |ui| {
-                #[cfg(target_arch = "wasm32")]
                 self.load_rom(ui);
                 self.timing_info(ui);
                 self.debug_panel(ctx, ui);
