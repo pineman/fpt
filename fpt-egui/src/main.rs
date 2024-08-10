@@ -146,13 +146,11 @@ impl FPT {
         };
         if cfg!(target_arch = "wasm32") {
             fpt.gb.cpu_mut().set_paused(true);
-        } else {
-            if std::env::var("CI").is_err() {
-                if let Ok(rom) = std::fs::read(rom_path) {
-                    fpt.gb.load_rom(&rom);
-                } else {
-                    panic!("Unable to open {}", rom_path);
-                }
+        } else if std::env::var("CI").is_err() {
+            if let Ok(rom) = std::fs::read(rom_path) {
+                fpt.gb.load_rom(&rom);
+            } else {
+                panic!("Unable to open {}", rom_path);
             }
         }
         // XXX duplicated logic from fpt-cli main.rs
