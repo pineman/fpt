@@ -128,7 +128,11 @@ impl Ppu {
                 let tile = self.tilemap.get_tile(sprite.tile_index as usize, true);
                 let tile_x = (x - sprite_x) as usize;
                 let tile_y = (y - sprite_y) as usize;
-                pixel = tile.get_pixel(tile_y, tile_x);
+                let sprite_pixel = tile.get_pixel(tile_y, tile_x);
+                // Color 0 means transparent
+                if sprite_pixel != 0 {
+                    pixel = sprite_pixel;
+                }
             }
         }
         self.frame[WIDTH * y + x] = pixel;
