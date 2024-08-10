@@ -115,6 +115,7 @@ impl Bus {
     }
 
     pub fn read(&self, address: Address) -> u8 {
+        // TODO
         let mut rng = rand::thread_rng();
         if address == 0xff04 {
             let r: u8 = rng.gen();
