@@ -1,10 +1,12 @@
 #![feature(array_chunks)]
 
 use std::collections::VecDeque;
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::Duration;
 
 use clap::{Parser, ValueEnum};
 use eframe::Frame;
+#[allow(unused_imports)]
 use egui::{
     menu, CentralPanel, Color32, ColorImage, Context, Grid, Key, RichText, ScrollArea, SidePanel,
     TextureHandle, TextureOptions, TopBottomPanel, Ui, Vec2, ViewportBuilder, ViewportCommand,
@@ -87,6 +89,7 @@ pub struct FPT {
     accum_time: f64,
     egui_frame_count: u64,
     gb_frame_count: u64,
+    bootrom: Option<BootromToFake>,
 
     slow_factor: f64,
     // Debug Console (DC)
@@ -100,6 +103,9 @@ pub struct FPT {
 
     bg_map: ColorImage,
     bg_map_texture: Option<TextureHandle>,
+
+    #[allow(dead_code)]
+    rom_channel: (Sender<Vec<u8>>, Receiver<Vec<u8>>),
 }
 
 impl Default for FPT {
@@ -110,6 +116,7 @@ impl Default for FPT {
             accum_time: 0.0,
             egui_frame_count: 0,
             gb_frame_count: 0,
+            bootrom: None,
 
             slow_factor: 1.0,
 
@@ -123,47 +130,36 @@ impl Default for FPT {
 
             bg_map: ColorImage::new([BMV_X_SIZE, BMV_Y_SIZE], Color32::TRANSPARENT),
             bg_map_texture: None,
+
+            rom_channel: channel(),
         }
     }
 }
 
 impl FPT {
     /// Called once before the first frame.
-    fn new(
-        _cc: &eframe::CreationContext,
-        fake_bootrom: Option<BootromToFake>,
-        rom_path: &str,
-    ) -> Self {
-        let mut app = FPT::default();
-        #[cfg(not(target_arch = "wasm32"))]
-        if std::env::var("CI").is_err() {
+    #[allow(unused_variables)]
+    fn new(_cc: &eframe::CreationContext, bootrom: Option<BootromToFake>, rom_path: &str) -> Self {
+        let mut fpt = FPT {
+            bootrom: bootrom.clone(),
+            ..Default::default()
+        };
+        if cfg!(target_arch = "wasm32") {
+            fpt.gb.cpu_mut().set_paused(true);
+        } else if std::env::var("CI").is_err() {
             if let Ok(rom) = std::fs::read(rom_path) {
-                app.gb.load_rom(&rom);
+                fpt.gb.load_rom(&rom);
             } else {
                 panic!("Unable to open {}", rom_path);
             }
         }
         // XXX duplicated logic from fpt-cli main.rs
-        if let Some(BootromToFake::DMG0) = fake_bootrom {
-            app.gb.boot_fake();
+        if let Some(BootromToFake::DMG0) = bootrom {
+            fpt.gb.boot_fake();
         } else {
-            app.gb.boot_real();
+            fpt.gb.boot_real();
         }
-        app
-    }
-
-    fn top_panel(&mut self, ctx: &Context) {
-        #[cfg(not(target_arch = "wasm32"))]
-        TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            menu::bar(ui, |ui| {
-                ui.menu_button("File", |ui| {
-                    if ui.button("Quit").clicked() {
-                        ctx.send_viewport_cmd(ViewportCommand::Close)
-                    }
-                });
-                ui.add_space(16.0);
-            });
-        });
+        fpt
     }
 
     fn emulator(&mut self, ui: &mut Ui) -> Option<fpt::ppu::Frame> {
@@ -572,14 +568,58 @@ impl FPT {
         // self.sleep(ctx, frame_start, gb_frame_count_before);
         ctx.request_repaint();
     }
+
+    #[cfg(target_arch = "wasm32")]
+    // https://github.com/woelper/egui_pick_file/blob/main/src/app.rs
+    fn load_rom(&mut self, ui: &mut Ui) {
+        if let Ok(text) = self.rom_channel.1.try_recv() {
+            self.gb.load_rom(&text);
+            if let Some(BootromToFake::DMG0) = bootrom {
+                self..gb.boot_fake();
+            } else {
+                self.gb.boot_real();
+            }
+            self.gb.cpu_mut().set_paused(false);
+        }
+        if ui.button("Load rom").clicked() {
+            let sender = self.rom_channel.0.clone();
+            let task = rfd::AsyncFileDialog::new().pick_file();
+            let ctx = ui.ctx().clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                let file = task.await;
+                if let Some(file) = file {
+                    let text = file.read().await;
+                    let _ = sender.send(text);
+                    ctx.request_repaint();
+                }
+            });
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn load_rom(&mut self, ui: &mut Ui) {
+        if ui.button("Load rom").clicked() {
+            let file = rfd::FileDialog::new().pick_file();
+            if let Some(file) = file {
+                let text: Box<[u8]> = std::fs::read(file).unwrap().into_boxed_slice();
+                self.gb.load_rom(&text);
+                if let Some(BootromToFake::DMG0) = self.bootrom {
+                    self.gb.boot_fake();
+                } else {
+                    self.gb.boot_real();
+                }
+                self.gb.cpu_mut().set_paused(false);
+            }
+        }
+    }
 }
 
 impl eframe::App for FPT {
     fn update(&mut self, ctx: &Context, _frame: &mut Frame) {
-        self.top_panel(ctx);
         SidePanel::right("right_panel")
             .resizable(true)
             .show(ctx, |ui| {
+                self.load_rom(ui);
                 self.timing_info(ui);
                 self.debug_panel(ctx, ui);
             });
@@ -645,7 +685,7 @@ fn main() {
             .start(
                 "the_canvas_id",
                 web_options,
-                Box::new(|cc| Box::new(FPT::new(cc))),
+                Box::new(|cc| Box::new(FPT::new(cc, None, ""))),
             )
             .await
             .expect("failed to start eframe");
