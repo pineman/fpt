@@ -25,6 +25,7 @@ pub struct LR35902 {
     clock_cycles: u64,
     inst_cycle_count: u8,
     branch_taken: bool,
+    halted: bool,
     bus: Bus,
     debugger: Debugger,
 }
@@ -74,6 +75,7 @@ impl LR35902 {
             clock_cycles: 0,
             inst_cycle_count: 0,
             branch_taken: false,
+            halted: false,
             bus: bus.clone(),
             // Debugging
             debugger: Debugger::new(bus.clone()),
@@ -639,45 +641,48 @@ impl LR35902 {
     /// But, for now, it's easier to run multiple cycles in each step().
     pub fn step(&mut self) -> u8 {
         let inst = self.decode();
+        if !self.halted {
+            // Only actually mutate CPU state on the last t-cycle of the instruction
+            if self.inst_cycle_count() + 1 < inst.cycles {
+                self.set_inst_cycle_count(self.inst_cycle_count() + 1);
+                return 1;
+            }
 
-        // Only actually mutate CPU state on the last t-cycle of the instruction
-        if self.inst_cycle_count() + 1 < inst.cycles {
-            self.set_inst_cycle_count(self.inst_cycle_count() + 1);
-            return 1;
+            self.update_code_listing(inst);
+            if self.debugger.match_breakpoint(self.pc()) {
+                return 0;
+            }
+            if self.debugger.match_instrpoint(inst.opcode) {
+                return 0;
+            }
+
+            self.execute(inst);
+
+            if !self.mutated_pc() {
+                self.set_pc(self.pc() + inst.size as u16);
+            }
         }
-
-        self.update_code_listing(inst);
-        if self.debugger.match_breakpoint(self.pc()) {
-            return 0;
-        }
-        if self.debugger.match_instrpoint(inst.opcode) {
-            return 0;
-        }
-
-        self.execute(inst);
-
-        if !self.mutated_pc() {
-            self.set_pc(self.pc() + inst.size as u16);
-        }
-
         let intr_service_routine_cycles = if self.ime { self.run_interrupts() } else { 0 };
-
-        if self.debugger.step {
-            self.set_paused(true);
-            self.debugger.step = false;
+        if intr_service_routine_cycles != 0 && self.halted {
+            self.halted = false;
         }
+        if !self.halted {
+            if self.debugger.step {
+                self.set_paused(true);
+                self.debugger.step = false;
+            }
 
-        let inst_cycles = if inst.kind == InstructionKind::Jump && !self.mutated_pc() {
-            inst.cycles_not_taken
-        } else {
-            inst.cycles
-        };
-        self.set_clock_cycles(
-            self.clock_cycles() + inst_cycles as u64 + intr_service_routine_cycles as u64,
-        );
-        self.set_inst_cycle_count(0);
-        self.set_mutated_pc(false);
-
+            let inst_cycles = if inst.kind == InstructionKind::Jump && !self.mutated_pc() {
+                inst.cycles_not_taken
+            } else {
+                inst.cycles
+            };
+            self.set_clock_cycles(
+                self.clock_cycles() + inst_cycles as u64 + intr_service_routine_cycles as u64,
+            );
+            self.set_inst_cycle_count(0);
+            self.set_mutated_pc(false);
+        }
         1 + intr_service_routine_cycles
     }
 
@@ -1279,9 +1284,9 @@ impl LR35902 {
             }
             0x76 => {
                 // HALT
-                // Take care for halt bug: https://gbdev.io/pandocs/halt.html
+                // TODO: Take care for halt bug: https://gbdev.io/pandocs/halt.html
                 // https://rgbds.gbdev.io/docs/v0.6.1/gbz80.7/#HALT
-                todo!("0x76 HALT")
+                self.halted = true;
             }
             0x77 => {
                 // LD (HL),A
