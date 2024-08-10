@@ -144,16 +144,17 @@ impl FPT {
             bootrom: bootrom.clone(),
             ..Default::default()
         };
-        #[cfg(not(target_arch = "wasm32"))]
-        if std::env::var("CI").is_err() {
-            if let Ok(rom) = std::fs::read(rom_path) {
-                fpt.gb.load_rom(&rom);
-            } else {
-                panic!("Unable to open {}", rom_path);
+        if cfg!(target_arch = "wasm32") {
+            fpt.gb.cpu_mut().set_paused(true);
+        } else {
+            if std::env::var("CI").is_err() {
+                if let Ok(rom) = std::fs::read(rom_path) {
+                    fpt.gb.load_rom(&rom);
+                } else {
+                    panic!("Unable to open {}", rom_path);
+                }
             }
         }
-        #[cfg(target_arch = "wasm32")]
-        app.gb.cpu_mut().set_paused(true);
         // XXX duplicated logic from fpt-cli main.rs
         if let Some(BootromToFake::DMG0) = bootrom {
             fpt.gb.boot_fake();
