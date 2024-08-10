@@ -16,11 +16,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
-      - name: Version
-        run: rustc --version
       - name: Run rustfmt
         run: cargo fmt --check
       - name: Unit tests
         run: cargo test -- --include-ignored --nocapture
       - name: Clippy
         run: cargo clippy --all-features
+
+  deploy:
+    needs: CI
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - name: Trunk
+        run: |
+          rustup target add wasm32-unknown-unknown
+          cargo install trunk
+          trunk build --public-url 'https://pineman.github.io/fpt' --release fpt-egui/index.html
+      - name: Docs
+        run: |
+          cargo doc --no-deps
+          cp -r target/doc/* fpt-egui/dist
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: fpt-egui/dist
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

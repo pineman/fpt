@@ -4,7 +4,8 @@ FILES=$(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g')
 cargo fmt
 
 if CARGO_TERM_COLOR=always cargo clippy --all-features --fix --allow-dirty --allow-staged 2>&1 | tee >(grep -q "warning"); then
-    exit 0
+  git add $FILES
+  exit 0
 else
-    exit 1
+  exit 1
 fi
