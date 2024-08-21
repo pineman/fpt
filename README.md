@@ -1,6 +1,6 @@
 # FPT - Gameboy emulator
 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=tbH8Rr-0o-Q" target="_blank"><img src="https://i.imgur.com/dtFd3q7.jpeg" alt="Tetris" width="600" /></a>
+https://github.com/user-attachments/assets/c9985470-3581-48ed-9436-5cc90f24025c
 
 ## GUI
 
