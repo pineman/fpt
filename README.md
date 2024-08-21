@@ -1,4 +1,6 @@
-# Supposedly some ~~forth implementation~~ gameboy color emulator
+# FPT - Gameboy emulator
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=tbH8Rr-0o-Q" target="_blank"><img src="https://i.imgur.com/dtFd3q7.jpeg" alt="Tetris" width="600" /></a>
 
 ## GUI
 
