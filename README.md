@@ -1,6 +1,6 @@
 # FPT - Gameboy emulator
 
-https://github.com/user-attachments/assets/c9985470-3581-48ed-9436-5cc90f24025c
+https://github.com/user-attachments/assets/0ce5deba-9589-428d-bdc6-2fb27aa5042b
 
 ## GUI
 
