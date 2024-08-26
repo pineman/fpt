@@ -158,7 +158,7 @@ impl Bus {
                 .write(address, value);
         } else if map::IO_REGISTERS.contains(&address) {
             self.memory_mut().mem[address as Address] = value;
-            if address == 0xFF46 {
+            if address == map::DMA {
                 // dma transfer takes time, we do it instantaneously
                 let oam_data =
                     self.copy_range(value as usize * 0x100..value as usize * 0x100 + 0x0A0);
