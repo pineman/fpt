@@ -5,6 +5,8 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::Duration;
 
 use clap::{Parser, ValueEnum};
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::{Sample, SampleFormat, Stream};
 use eframe::Frame;
 #[allow(unused_imports)]
 use egui::{
@@ -106,6 +108,8 @@ pub struct FPT {
 
     #[allow(dead_code)]
     rom_channel: (Sender<Vec<u8>>, Receiver<Vec<u8>>),
+
+    stream: Stream,
 }
 
 impl Default for FPT {
@@ -132,8 +136,37 @@ impl Default for FPT {
             bg_map_texture: None,
 
             rom_channel: channel(),
+            stream: play_audio(),
         }
     }
+}
+
+fn play_audio() -> Stream {
+    let host = cpal::default_host();
+    let device = host
+        .default_output_device()
+        .expect("no output device available");
+    let supported_config = device
+        .default_output_config()
+        .expect("error while querying configs");
+
+    let sample_format = supported_config.sample_format();
+
+    let err_fn = |err| eprintln!("an error occurred on the output audio stream: {}", err);
+    let config = supported_config.into();
+    let stream = match sample_format {
+        SampleFormat::F32 => device.build_output_stream(&config, write_silence, err_fn, None),
+        sample_format => panic!("Unsupported sample format '{sample_format}'"),
+    }
+    .unwrap();
+
+    fn write_silence(data: &mut [f32], _: &cpal::OutputCallbackInfo) {
+        for sample in data.iter_mut() {
+            *sample = Sample::EQUILIBRIUM;
+        }
+    }
+
+    stream
 }
 
 impl FPT {
@@ -159,6 +192,8 @@ impl FPT {
         } else {
             fpt.gb.boot_real();
         }
+
+        fpt.stream.play().unwrap();
         fpt
     }
 
