@@ -61,19 +61,30 @@ fn write_header(test_file: &mut File) {
     write!(test_file, include_str!("./tests/templates/header")).unwrap();
 }
 
-const SH: &str = if cfg!(windows) {
-    // 💀 Assume a regular Git for Windows install
-    concat!(env!("ProgramFiles"), r#"\Git\bin\sh.exe"#)
-} else {
+#[cfg(target_os = "windows")]
+fn get_sh() -> String {
+    std::env::var("ProgramFiles").unwrap_or(r#"C:\Program Files"#.to_string())
+        + r#"\Git\bin\sh.exe"#
+}
+
+#[cfg(not(target_os = "windows"))]
+fn get_sh() -> &'static str {
     "sh"
-};
+}
 
 fn run_cmd(cmd: &str) -> String {
-    let output = Command::new(SH)
+    let output = Command::new(get_sh())
         .arg("-c")
         .arg(cmd)
         .output()
-        .unwrap_or_else(|e| panic!("failed to execute process: {:#?}: {:#?}", cmd, e));
+        .unwrap_or_else(|e| {
+            panic!(
+                "failed to execute process: {:#?} under {:#?}: {:#?}",
+                cmd,
+                get_sh(),
+                e
+            )
+        });
     if !output.status.success() {
         panic!("Command {} failed with exit code: {}", cmd, output.status);
     }
