@@ -4,7 +4,10 @@ use std::collections::VecDeque;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::Duration;
 
+use blip_buf::BlipBuf;
 use clap::{Parser, ValueEnum};
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::{Sample, SampleFormat, Stream};
 use eframe::Frame;
 #[allow(unused_imports)]
 use egui::{
@@ -106,6 +109,8 @@ pub struct FPT {
 
     #[allow(dead_code)]
     rom_channel: (Sender<Vec<u8>>, Receiver<Vec<u8>>),
+
+    stream: Stream,
 }
 
 impl Default for FPT {
@@ -132,8 +137,60 @@ impl Default for FPT {
             bg_map_texture: None,
 
             rom_channel: channel(),
+            stream: play_audio(),
         }
     }
+}
+
+fn play_audio() -> Stream {
+    let host = cpal::default_host();
+    let device = host
+        .default_output_device()
+        .expect("no output device available");
+    let supported_config = device
+        .default_output_config()
+        .expect("error while querying configs");
+
+    let sample_format = supported_config.sample_format();
+
+    let err_fn = |err| eprintln!("an error occurred on the output audio stream: {}", err);
+    let config = supported_config.clone().into();
+
+    let sample_rate: u32 = supported_config.sample_rate().0;
+    //let mut blip_buf = BlipBuf::new(dbg!(sample_rate / 10));
+    //blip_buf.set_rates(512.0, dbg!(sample_rate as f64));
+
+    let stream = match sample_format {
+        SampleFormat::F32 => device.build_output_stream(
+            &config,
+            move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
+                for sample in data {
+                    *sample = Sample::EQUILIBRIUM;
+                }
+                //let time = dbg!(data.len() as f32 / sample_rate as f32);
+
+                //for i in 0..dbg!((((512.0 * time) / 10.0) as usize)) {
+                //    dbg!(i);
+                //    blip_buf.add_delta(0, 10);
+                //    blip_buf.add_delta(5, -10);
+                //    blip_buf.end_frame(10);
+                //}
+
+                //let mut buf: Vec<i16> = vec![0; dbg!(data.len())];
+                //blip_buf.read_samples(&mut buf, false);
+
+                //for (i, sample) in buf.iter().enumerate() {
+                //    data[i] = *sample as f32;
+                //}
+            },
+            err_fn,
+            None,
+        ),
+        sample_format => panic!("Unsupported sample format '{sample_format}'"),
+    }
+    .unwrap();
+
+    stream
 }
 
 impl FPT {
@@ -159,6 +216,8 @@ impl FPT {
         } else {
             fpt.gb.boot_real();
         }
+
+        fpt.stream.play().unwrap();
         fpt
     }
 

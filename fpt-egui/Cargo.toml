@@ -12,6 +12,8 @@ eframe = { version = "0.26.2", default-features = false, features = ["glow"] }
 log = "0.4.14"
 clap = { version = "4.5", features = ["derive"] }
 rfd = "0.14.1"
+cpal = "0.15"
+blip_buf = "0.1"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 env_logger = "0.11.2"

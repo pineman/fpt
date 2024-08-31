@@ -19,7 +19,11 @@ jobs:
       - name: Run rustfmt
         run: cargo fmt --check
       - name: Unit tests
-        run: cargo test -- --include-ignored --nocapture
+
+        run: |
+          sudo apt update -y; 
+          sudo apt install -y libasound2-dev; 
+          cargo test -- --include-ignored --nocapture
       - name: Clippy
         run: cargo clippy --all-features
 

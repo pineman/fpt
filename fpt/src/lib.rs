@@ -8,6 +8,7 @@ pub use debug_interface::{DebugCmd, DebugEvent, DebugInterface};
 use lr35902::LR35902;
 use memory::{Bus, Buttons};
 use ppu::{Frame, Ppu, DOTS_IN_ONE_FRAME};
+use apu::Apu;
 use timer::Timer;
 
 pub mod bw;
@@ -16,12 +17,15 @@ pub mod debugger;
 pub mod lr35902;
 pub mod memory;
 pub mod ppu;
+pub mod apu;
 pub mod timer;
+
 
 pub struct Gameboy {
     bus: Bus,
     cpu: LR35902,
     ppu: Ppu,
+    apu: Apu,
     timer: Timer,
 }
 
@@ -33,6 +37,7 @@ impl Gameboy {
             bus: bus.clone(),
             cpu: LR35902::new(bus.clone()),
             ppu: Ppu::new(bus.clone()),
+            apu: Apu::new(bus.clone()),
             timer: Timer::new(bus),
         }
     }
@@ -134,6 +139,7 @@ impl Gameboy {
         let cycles = self.cpu.step();
         // TODO: care for double speed mode (need to run half as much dots)
         self.ppu.step(cycles as u32);
+        self.apu.step(cycles as u32);
         self.timer.step(self.cpu.clock_cycles());
         cycles
     }
@@ -142,6 +148,7 @@ impl Gameboy {
         let cycles = self.cpu.instruction() as u32;
         // TODO: care for double speed mode (need to run half as much dots)
         self.ppu.step(cycles);
+        self.apu.step(cycles);
         self.timer.step(self.cpu.clock_cycles());
         cycles
     }
